@@ -1,6 +1,7 @@
 import numpy as np
 from qlearn import QLearn
-
+from trade import Trade
+from order_type import OrderType
 
 class Strategy(object):
 
@@ -46,14 +47,157 @@ class Strategy(object):
         self.lastAction = action
 
 
+class ActionSpace(object):
+    def __init__(self, side, levels=3):
+        self.side = side
+        self.levels = levels
+        self.orderbookState = None
+
+    def oppositeSide(self):
+        if self.side == OrderType.BUY:
+            return OrderType.SELL
+        if self.side == OrderType.SELL:
+            return OrderType.BUY
+
+    def getOrders(self, side):
+        if side == OrderType.BUY:
+            a = self.orderbookState[1]
+        elif side == OrderType.SELL:
+            a = self.orderbookState[0]
+        return a
+
+    def getBasePrice(self):
+        return self.getOrders(self.side)[0][0]
+
+    def getActions(self):
+        return(self.getSideActions(self.side)
+               + self.getSideActions(self.oppositeSide()))
+
+    def getSideActions(self, side):
+        actions = []
+        basePrice = self.getBasePrice()
+        orders = self.getOrders(side)
+        for i in range(self.levels):
+            price = orders[i][0]
+            if self.side == OrderType.BUY:
+                a = price - basePrice
+            else:
+                a = basePrice - price
+            actions.append((a, price))
+        return actions
+
+
+orderbook = [
+        # state 1
+        [
+            # sellers
+            [
+                [1.1, 1],
+                [1.2, 1],
+                [1.3, 1]
+            ],
+            # buyers
+            [
+                [0.9, 1],
+                [0.8, 1],
+                [0.7, 1]
+            ]
+        ],
+        # state 2
+        [
+            # sellers
+            [
+                [1.2, 1],
+                [1.3, 1],
+                [1.4, 1]
+            ],
+            # buyers
+            [
+                [1.0, 1],
+                [0.9, 1],
+                [0.8, 1]
+            ]
+        ]
+    ]
+
+
+def getBidAskMid(orderbookState):
+    return (orderbookState[0][0][0] + orderbookState[1][0][0]) / 2.0
+
+
+def executeMarket(side, qty, orderbookState):
+    trades = []
+    if side == OrderType.BUY:
+        book = orderbookState[0]
+    elif side == OrderType.SELL:
+        book = orderbookState[1]
+
+    for p in book:
+        price = p[0]
+        amount = p[1]
+        if amount >= qty:
+            t = Trade(side, qty, price, 0.0)
+            trades.append(t)
+            qty = 0
+            break
+        else:
+            t = Trade(side, amount, price, 0.0)
+            trades.append(t)
+            qty = qty - amount
+
+    if qty > 0:
+        raise Exception('Not enough liquidity in orderbook state.')
+    return trades
+
+
+def executeLimit(side, qty, price):
+    return Trade(side, qty, price, 0.0)
+
+
+side = OrderType.SELL
 s = Strategy()
-n_episodes = 1E4
-for episode in range(int(n_episodes)):
+actionSpace = ActionSpace(side)
+episodes = 45000
+V = 2.0
+T = [4, 3, 2, 1, 0]
+I = [1.0, 2.0, 3.0, 4.0]
+for episode in range(int(episodes)):
+    bidAskMid = getBidAskMid(orderbook[0])
+    bidAskMid
+
     s.resetState()
-    while not s.goal():
-        s.update()
-        # s.lastState
-        # s.lastAction
-        # s.ai.q
+    for t in T:
+        o = 0
+        while len(orderbook) > o:
+            # orderbook -> o{}
+            for i in I:
+                i = 2.0
+                remaining = i*(V/max(I))
+                orderbookState = orderbook[o]
+                if t == 0:
+                    tradeActions = executeMarket(side, remaining, orderbookState)
+                    tradeActions
+                    #reward = avg(a of trades) - bidAskMid
+                else:
+                    actionSpace.orderbookState = orderbookState
+                    actions = actionSpace.getActions()
+                    actions
+                    tradeActions = []
+                    for action in actions:
+                        a = action[0]
+                        price = action[1]
+                        tradeActions.append((a, executeLimit(side, o, actions)))
+                        tradeActions
+                    tradeActions
+                for trade in trades:
+                    print(trade)
+
+            #     L = s.getPossibleActions()
+            #     for a in L:
+            #         s.update()
+            #         # s.lastState
+            #         # s.lastAction
+            #         # s.ai.q
+            o = o + 1
 
 print(s.ai.q)
