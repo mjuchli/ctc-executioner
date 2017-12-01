@@ -117,13 +117,28 @@ class ActionSpace(object):
             raise Exception('Not enough liquidity in orderbook state.')
         return trades
 
+    def calculateMarketActionPrice(self, actions):
+        # price = 0.0
+        # for action in actions:
+        #     order = action[1]
+        #     price = price + order.getCty() * order.getPrice()
+        # return price
+        return reduce(
+            lambda a, b: a + b[1].getCty() * b[1].getPrice(), actions, 0.0
+        )
+
+    def calculateBidAskMidPrice(self, actions):
+        return reduce(
+            lambda a, b: a + b[1].getCty() * self.getBidAskMid(), actions, 0.0
+        )
+
     def calculateMarketActionValue(self, actions):
         actionValue = 0
         for action in actions:
             a = action[0]
             print("action value: " + str(a))
             order = action[1]
-            print("limit order: " + str(order))
+            print("market order: " + str(order))
             print("add action value: " + str(a * order.getCty()))
             actionValue = actionValue + a * order.getCty()
         actionValue = actionValue / remaining
@@ -199,13 +214,13 @@ orderbook = [
             [
                 [1.1, 1],
                 [1.2, 1],
-                [1.3, 1]
+                [1.3, 3]
             ],
             # buyers
             [
-                [0.9, 0.5],
+                [0.9, 1.5],
                 [0.8, 1],
-                [0.7, 1]
+                [0.7, 2]
             ]
         ],
         # state 2
@@ -214,13 +229,13 @@ orderbook = [
             [
                 [1.2, 1],
                 [1.3, 1],
-                [1.4, 1]
+                [1.4, 2]
             ],
             # buyers
             [
                 [1.0, 1],
-                [0.9, 0.25],
-                [0.8, 1]
+                [0.9, 1.25],
+                [0.8, 2]
             ]
         ]
     ]
@@ -233,15 +248,15 @@ orderbook = [
 
 
 
-side = OrderType.SELL
+side = OrderType.BUY
 s = Strategy()
 actionSpace = ActionSpace(orderbook, side)
 episodes = 1
-V = 1.0
+V = 4.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2]
 # I = [1.0, 2.0, 3.0, 4.0]
-I = [1.0, 2.0, 3.5]
+I = [1.0, 2.0, 3.0, 4.0]
 
 
 for episode in range(int(episodes)):
@@ -262,6 +277,11 @@ for episode in range(int(episodes)):
                 orders = actionSpace.createMarketOrder(remaining)
                 actionValue = actionSpace.calculateMarketActionValue(orders)
                 print("actionValue: " + str(actionValue))
+                actionPrice = actionSpace.calculateMarketActionPrice(orders)
+                print("actionPrice: " + str(actionPrice))
+                basePrice = actionSpace.calculateBidAskMidPrice(orders)
+                print("basePrice: " + str(basePrice))
+
             else:
                 print("time left: limit order")
                 actionSpace.orderbookState = orderbookState
