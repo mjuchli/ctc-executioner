@@ -117,17 +117,17 @@ class ActionSpace(object):
             raise Exception('Not enough liquidity in orderbook state.')
         return trades
 
-    def calculateReward(self, actions):
-        reward = 0
+    def calculateMarketActionValue(self, actions):
+        actionValue = 0
         for action in actions:
             a = action[0]
             print("action value: " + str(a))
             order = action[1]
             print("limit order: " + str(order))
-            print("add reward: " + str(a * order.getCty()))
-            reward = reward + a * order.getCty()
-        reward = reward / remaining
-        return reward
+            print("add action value: " + str(a * order.getCty()))
+            actionValue = actionValue + a * order.getCty()
+        actionValue = actionValue / remaining
+        return actionValue
 
     def matchTrade(self, trade, orderbookState):
         sellers = orderbookState[0]
@@ -169,7 +169,7 @@ class ActionSpace(object):
             i = i+1
         return trades, remaining
 
-    def calculateLimitReward(self, action):
+    def calculateLimitActionValue(self, action):
         a = action[0]
         print("action value: " + str(a))
         order = action[1]
@@ -178,18 +178,18 @@ class ActionSpace(object):
         print("all countertrades: " + str(counterTrades))
         print("remaining: "+str(qtyRemain))
         if qtyRemain == 0.0:
-            reward = a
+            actionValue = a
         else:
-            reward = 0
+            actionValue = 0
             for ct in counterTrades:
-                print("add reward: " + str(a * ct.getCty()))
-                reward = reward + a * ct.getCty()
-            print("reward total: " + str(reward))
+                print("add actionValue: " + str(a * ct.getCty()))
+                actionValue = actionValue + a * ct.getCty()
+            print("actionValue total: " + str(actionValue))
             print("qty total: " + str(remaining))
-            reward = reward / remaining
+            actionValue = actionValue / remaining
             marketActions = actionSpace.createMarketOrder(qtyRemain)
-            reward = reward + actionSpace.calculateReward(marketActions)
-        return reward
+            actionValue = actionValue + actionSpace.calculateMarketActionValue(marketActions)
+        return actionValue
 
 
 orderbook = [
@@ -233,21 +233,20 @@ orderbook = [
 
 
 
-
-
-side = OrderType.BUY
+side = OrderType.SELL
 s = Strategy()
 actionSpace = ActionSpace(orderbook, side)
 episodes = 1
 V = 1.0
 # T = [4, 3, 2, 1, 0]
-T = [0, 1]
+T = [0, 1, 2]
 # I = [1.0, 2.0, 3.0, 4.0]
-I = [1.0]
+I = [1.0, 2.0, 3.5]
 
 
 for episode in range(int(episodes)):
     s.resetState()
+    M = []
     for t in T:
         o = 0
         print("\n"+"t=="+str(t))
@@ -260,21 +259,24 @@ for episode in range(int(episodes)):
             orderbookState = orderbook[o]
             if t == 0:
                 print("time consumed: market order")
-                action = actionSpace.createMarketOrder(remaining)
-                reward = actionSpace.calculateReward(action)
-                print("reward: " + str(reward))
-
+                orders = actionSpace.createMarketOrder(remaining)
+                actionValue = actionSpace.calculateMarketActionValue(orders)
+                print("actionValue: " + str(actionValue))
             else:
                 print("time left: limit order")
                 actionSpace.orderbookState = orderbookState
                 actions = actionSpace.createLimitOrders(remaining)
                 actions
                 print("actions:"+str(actions)+"\n")
+                actionValues = []
                 for action in actions:
-                    reward = actionSpace.calculateLimitReward(action)
-                    print("reward: " + str(reward))
+                    actionValue = actionSpace.calculateLimitActionValue(action)
+                    actionValues.append(actionValue)
+                    print("actionValue: " + str(actionValue))
                     print("")
-
+                actionValue = min(actionValues)
+            M.append([t, i, actionValue])
+    print(np.asarray(M))
             #     L = s.getPossibleActions()
             #     for a in L:
             #         s.update()
