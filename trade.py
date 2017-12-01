@@ -22,6 +22,9 @@ class Trade:
     def getCty(self):
         return self.cty
 
+    def setCty(self, cty):
+        self.cty = cty
+
     def getPrice(self):
         return self.price
 
