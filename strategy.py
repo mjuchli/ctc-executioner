@@ -3,6 +3,8 @@ from qlearn import QLearn
 from trade import Trade
 from order_type import OrderType
 from orderbook import Orderbook, OrderbookEntry, OrderbookState
+from match_engine import MatchEngine
+
 
 class Strategy(object):
 
@@ -47,8 +49,23 @@ class Strategy(object):
         self.lastState = state
         self.lastAction = action
 
+class Action(object):
+
+    def __init__(self, a, type):
+        self.a = a
+        self.type = type
+        self.orders = []
+        self.fills = []
+
+    def addOrder(self, order):
+        self.orders.append(order)
+
+    def addFill(self, order):
+        self.fills.append(order)
+
 
 class ActionSpace(object):
+
     def __init__(self, orderbook, side, levels=3):
         self.orderbook = orderbook
         self.index = 0
@@ -69,7 +86,7 @@ class ActionSpace(object):
     def getBasePrice(self):
         return self.getBookPositions(self.side)[0].getPrice()
 
-    def createLimitOrder(self, qty, level):
+    def createLimitAction(self, qty, level):
         basePrice = self.getBasePrice()
         positions = self.getBookPositions(self.side)
         price = positions[level].getPrice()
@@ -80,13 +97,13 @@ class ActionSpace(object):
         trade = Trade(self.side, qty, price, 0.0)
         return (a, trade)
 
-    def createLimitOrders(self, qty):
+    def createLimitActions(self, qty):
         actions = []
         for level in range(self.levels):
-            actions.append(self.createLimitOrder(qty, level))
+            actions.append(self.createLimitAction(qty, level))
         return actions
 
-    def createMarketOrder(self, qty):
+    def createMarketAction(self, qty):
         trades = []
         positions = self.getBookPositions(self.side.opposite())
         basePrice = self.getBasePrice()
@@ -114,7 +131,7 @@ class ActionSpace(object):
             raise Exception('Not enough liquidity in orderbook state.')
         return trades
 
-    def calculateMarketActionPrice(self, actions):
+    def calculateActionPrice(self, actions):
         # price = 0.0
         # for action in actions:
         #     order = action[1]
@@ -141,52 +158,13 @@ class ActionSpace(object):
         actionValue = actionValue / remaining
         return actionValue
 
-    def matchTrade(self, trade, orderbookState):
-        sellers = orderbookState.getSellers()
-        buyers = orderbookState.getBuyers()
-        totalQty = trade.getCty()
-        if trade.getType == OrderType.BUY:
-            for p in sellers:
-                price = p.getPrice()
-                qty = p.getQty()
-                if price == trade.getPrice():
-                    if qty >= totalQty:
-                        return Trade(OrderType.SELL, totalQty, price)
-                    else:
-                        # partial execution
-                        return Trade(OrderType.SELL, qty, price)
-        else:
-            for p in buyers:
-                price = p.getPrice()
-                qty = p.getQty()
-                if price == trade.getPrice():
-                    if qty >= totalQty:
-                        return Trade(OrderType.BUY, totalQty, price, 0.0)
-                    else:
-                        # partial execution
-                        return Trade(OrderType.BUY, qty, price, 0.0)
-
-    def matchTradeOverTime(self, trade):
-        i = self.index
-        remaining = trade.getCty()
-        trades = []
-        while len(orderbook.getStates()) > i and remaining > 0:
-            orderbookState = self.orderbook.getState(i)
-            counterTrade = self.matchTrade(trade, orderbookState)
-            if counterTrade:
-                print("counter trade: " + str(counterTrade))
-                remaining = remaining - counterTrade.getCty()
-                trade.setCty(remaining)
-                trades.append(counterTrade)
-            i = i+1
-        return trades, remaining
-
     def calculateLimitActionValue(self, action):
         a = action[0]
         print("action value: " + str(a))
         order = action[1]
         print("limit order: " + str(order))
-        counterTrades, qtyRemain = self.matchTradeOverTime(order)
+        matchEngine = MatchEngine(orderbook, index=self.index)
+        counterTrades, qtyRemain = matchEngine.matchTradeOverTime(order)
         print("all countertrades: " + str(counterTrades))
         print("remaining: "+str(qtyRemain))
         if qtyRemain == 0.0:
@@ -199,7 +177,7 @@ class ActionSpace(object):
             print("actionValue total: " + str(actionValue))
             print("qty total: " + str(remaining))
             actionValue = actionValue / remaining
-            marketActions = actionSpace.createMarketOrder(qtyRemain)
+            marketActions = actionSpace.createMarketAction(qtyRemain)
             actionValue = actionValue + actionSpace.calculateMarketActionValue(marketActions)
         return actionValue
 
@@ -237,7 +215,7 @@ orderbook.addState(s2)
 # actionSpace.orderbookState = orderbook[0]
 # actions = actionSpace.getLimitOrders(qty=1)
 # print(actions)
-# print(actionSpace.createMarketOrder(1.5))
+# print(actionSpace.createMarketAction(1.5))
 
 
 
@@ -267,22 +245,25 @@ for episode in range(int(episodes)):
             orderbookState = orderbook.getState(o)
             if t == 0:
                 print("time consumed: market order")
-                orders = actionSpace.createMarketOrder(remaining)
-                actionValue = actionSpace.calculateMarketActionValue(orders)
+                actions = actionSpace.createMarketAction(remaining) # [(a, trade executed)]
+                actionValue = actionSpace.calculateMarketActionValue(actions)
                 print("actionValue: " + str(actionValue))
-                actionPrice = actionSpace.calculateMarketActionPrice(orders)
+                actionPrice = actionSpace.calculateActionPrice(actions)
                 print("actionPrice: " + str(actionPrice))
-                basePrice = actionSpace.calculateBidAskMidPrice(orders)
+                basePrice = actionSpace.calculateBidAskMidPrice(actions)
                 print("basePrice: " + str(basePrice))
 
             else:
                 print("time left: limit order")
                 actionSpace.orderbookState = orderbookState
-                actions = actionSpace.createLimitOrders(remaining)
+                actions = actionSpace.createLimitActions(remaining) # [(a, trade unexecuted)]
                 actions
                 print("actions:"+str(actions)+"\n")
                 actionValues = []
                 for action in actions:
+                    a = action[0]
+                    trade = action[1]
+                    #executedTrades =
                     actionValue = actionSpace.calculateLimitActionValue(action)
                     actionValues.append(actionValue)
                     print("actionValue: " + str(actionValue))
