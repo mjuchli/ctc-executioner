@@ -1,6 +1,6 @@
 from trade import Trade
 from order_type import OrderType
-
+import copy
 
 class MatchEngine(object):
 
@@ -37,6 +37,7 @@ class MatchEngine(object):
                         return Trade(OrderType.BUY, qty, price, 0.0)
 
     def matchTradeOverTime(self, trade):
+        trade = copy.deepcopy(trade)  # Do not modify original trade!
         i = self.index
         remaining = trade.getCty()
         trades = []
@@ -44,9 +45,9 @@ class MatchEngine(object):
             orderbookState = self.orderbook.getState(i)
             counterTrade = self.matchTrade(trade, orderbookState)
             if counterTrade:
+                trades.append(counterTrade)
                 print("counter trade: " + str(counterTrade))
                 remaining = remaining - counterTrade.getCty()
                 trade.setCty(remaining)
-                trades.append(counterTrade)
             i = i+1
         return trades, remaining
