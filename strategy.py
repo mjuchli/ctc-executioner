@@ -207,6 +207,111 @@ class ActionSpace(object):
         return actionValue
 
 
+class OrderbookEntry(object):
+
+    def __init__(self, price, qty):
+        self.price = price
+        self.qty = qty
+
+    def __str__(self):
+        return str(self.price) + ": " + str(self.qty)
+
+    def __repr__(self):
+        return str(self)
+
+
+class OrderbookState(object):
+
+    def __init__(self, tradePrice=0.0):
+        self.tradePrice = tradePrice
+        self.buyers = []
+        self.sellers = []
+
+    def __str__(self):
+        s = ""
+        s = s + "Price: " + str(self.tradePrice) + "\n"
+        s = s + "Buyers: " + str(self.buyers) + "\n"
+        s = s + "Sellers: " + str(self.sellers)
+        return s
+
+    def __repr__(self):
+        return str(self)
+
+    def setTradePrice(self, tradePrice):
+        self.tradePrice = tradePrice
+
+    def addBuyer(self, entry):
+        self.buyers.append(entry)
+
+    def addBuyers(self, entries):
+        for entry in entries:
+            self.buyers.append(entry)
+
+    def addSeller(self, entry):
+        self.sellers.append(entry)
+
+    def addSellers(self, entries):
+        for entry in entries:
+            self.sellers.append(entry)
+
+
+class Orderbook(object):
+
+    def __init__(self):
+        self.states = []
+
+    def __str__(self):
+        s = ''
+        i = 1
+        for state in self.states:
+            s = s + 'State ' + str(i) + "\n"
+            s = s + '-------' + "\n"
+            s = s + str(state)
+            s = s + "\n\n"
+            i = i + 1
+        return s
+
+    def __repr__(self):
+        return str(self)
+
+    def addState(self, state):
+        self.states.append(state)
+
+    def addStates(self, states):
+        for state in states:
+            self.states.append(state)
+
+
+s1 = OrderbookState(1.0)
+s1.addBuyers([
+    OrderbookEntry(price=0.9, qty=1.5),
+    OrderbookEntry(price=0.8, qty=1.0),
+    OrderbookEntry(price=0.7, qty=2.0)
+    ])
+s1.addSellers([
+    OrderbookEntry(price=1.1, qty=1.0),
+    OrderbookEntry(price=0.2, qty=1.0),
+    OrderbookEntry(price=0.3, qty=3.0)
+    ])
+
+s2 = OrderbookState(1.1)
+s2.addBuyers([
+    OrderbookEntry(price=0.9, qty=1.5),
+    OrderbookEntry(price=0.8, qty=1.0),
+    OrderbookEntry(price=0.7, qty=2.0)
+    ])
+s2.addSellers([
+    OrderbookEntry(price=1.1, qty=1.0),
+    OrderbookEntry(price=0.2, qty=1.0),
+    OrderbookEntry(price=0.3, qty=3.0)
+    ])
+
+ob = Orderbook()
+ob.addState(s1)
+ob.addState(s2)
+# ob.addState(s3)
+print(ob)
+
 orderbook = [
         # state 1
         [
