@@ -2,6 +2,7 @@ from trade import Trade
 from order_type import OrderType
 import copy
 
+
 class MatchEngine(object):
 
     def __init__(self, orderbook, index=0):
