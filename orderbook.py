@@ -96,3 +96,37 @@ class Orderbook(object):
         if len(self.states) <= index:
             raise Exception('Index out of orderbook state.')
         return self.states[index]
+
+    def loadFromFile(self, file):
+        import csv
+        with open(file, 'rt', encoding="utf8") as tsvin:
+            tsvin = csv.reader(tsvin, delimiter='\t')
+            for row in tsvin:
+                p = float(row[1])
+                b1 = float(row[3])
+                b2 = float(row[4])
+                b3 = float(row[5])
+                a1 = float(row[8])
+                a2 = float(row[9])
+                a3 = float(row[10])
+                bq1 = float(row[13])
+                bq2 = float(row[14])
+                bq3 = float(row[15])
+                aq1 = float(row[18])
+                aq2 = float(row[19])
+                aq3 = float(row[20])
+                buyers = [
+                    OrderbookEntry(b1, bq1),
+                    OrderbookEntry(b2, bq2),
+                    OrderbookEntry(b3, bq3)
+                ]
+                sellers = [
+                    OrderbookEntry(a1, aq1),
+                    OrderbookEntry(a2, aq2),
+                    OrderbookEntry(a3, aq3)
+                ]
+                s = OrderbookState()
+                s.setTradePrice(p)
+                s.addBuyers(buyers)
+                s.addSellers(sellers)
+                self.addState(s)

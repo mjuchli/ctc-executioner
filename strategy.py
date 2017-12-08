@@ -2,7 +2,7 @@ import numpy as np
 from qlearn import QLearn
 from trade import Trade
 from order_type import OrderType
-from orderbook import Orderbook, OrderbookEntry, OrderbookState
+from orderbook import Orderbook
 from match_engine import MatchEngine
 
 
@@ -48,6 +48,7 @@ class Strategy(object):
         self.ai.learn(self.lastState, action, reward, state)
         self.lastState = state
         self.lastAction = action
+
 
 class Action(object):
 
@@ -266,57 +267,11 @@ class ActionSpace(object):
         return (action, actionValue, orderPrice)
 
 
-s1 = OrderbookState(1.0)
-s1.addBuyers([
-    OrderbookEntry(price=0.9, qty=1.5),
-    OrderbookEntry(price=0.8, qty=1.0),
-    OrderbookEntry(price=0.7, qty=2.0)
-    ])
-s1.addSellers([
-    OrderbookEntry(price=1.1, qty=1.0),
-    OrderbookEntry(price=1.2, qty=1.0),
-    OrderbookEntry(price=1.3, qty=3.0)
-    ])
-
-s2 = OrderbookState(1.1)
-s2.addBuyers([
-    OrderbookEntry(price=1.0, qty=1.5),
-    OrderbookEntry(price=0.9, qty=1.0),
-    OrderbookEntry(price=0.8, qty=2.0)
-    ])
-s2.addSellers([
-    OrderbookEntry(price=1.2, qty=1.0),
-    OrderbookEntry(price=1.3, qty=1.0),
-    OrderbookEntry(price=1.4, qty=3.0)
-    ])
-
-s3 = OrderbookState(1.2)
-s3.addBuyers([
-    OrderbookEntry(price=1.1, qty=1.5),
-    OrderbookEntry(price=1.0, qty=1.0),
-    OrderbookEntry(price=0.9, qty=2.0)
-    ])
-s3.addSellers([
-    OrderbookEntry(price=1.3, qty=1.0),
-    OrderbookEntry(price=1.4, qty=1.0),
-    OrderbookEntry(price=1.5, qty=3.0)
-    ])
-
 orderbook = Orderbook()
-orderbook.addState(s1)
-orderbook.addState(s2)
-orderbook.addState(s3)
-
-# actionSpace = ActionSpace(orderbook, OrderType.BUY)
-# actionSpace.orderbookState = orderbook[0]
-# actions = actionSpace.getLimitOrders(qty=1)
-# print(actions)
-# print(actionSpace.createMarketActions(1.5))
-
-
+orderbook.loadFromFile('query_result.tsv')
 side = OrderType.BUY
 actionSpace = ActionSpace(orderbook, side)
-episodes = 100
+episodes = 1
 V = 4.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2]
