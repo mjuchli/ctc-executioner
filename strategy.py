@@ -85,8 +85,8 @@ class ActionSpace(object):
         self.state = None
         self.initialState()
         self.side = side
-        self.levels = levels
-        self.qty = 0
+        self.levels = range(levels)
+        self.ai = QLearn(self.levels)  # levels are our qlearn actions
 
     def initialState(self):
         self.index = 0
@@ -129,7 +129,7 @@ class ActionSpace(object):
 
     def createLimitActions(self, qty):
         actions = []
-        for level in range(self.levels):
+        for level in self.levels:
             actions.append(self.createLimitAction(qty, level))
         return actions
 
@@ -225,28 +225,46 @@ class ActionSpace(object):
             actionAs = []
             actionPrices = []
 
-            while True:
-                print("time left: limit order")
-                #self.orderbookState = orderbookState
-                actions = self.createLimitActions(remaining) # [(a, trade unexecuted)]
-                for action in actions:
-                    actionAs.append(action.getA())
-                    print(action.getOrder())
-                    filledActions = self.fillAndMarketLimitAction(action)
-                    actionValue = self.calculateActionValue(filledActions)
-                    actionValues.append(actionValue)
-                    actionPrice = self.calculateActionPriceMid(filledActions)
-                    actionPrices.append(actionPrice)
+            #while True:
+            print("time left: limit order")
+            #self.orderbookState = orderbookState
+            actions = self.createLimitActions(remaining) # [(a, trade unexecuted)]
+            for action in actions:
+                actionAs.append(action.getA())
+                filledActions = self.fillAndMarketLimitAction(action)
+                actionValue = self.calculateActionValue(filledActions)
+                actionValues.append(actionValue)
+                actionPrice = self.calculateActionPriceMid(filledActions)
+                actionPrices.append(actionPrice)
 
-                if not self.hasNextState():
-                    bestActionValue = min(actionValues)
-                    bestIndex = actionValues.index(bestActionValue)
-                    bestPrice = actionPrices[bestIndex]
-                    bestA = actionAs[bestIndex]
-                    break
-                self.nextState()
+            # if not self.hasNextState():
+            bestActionValue = min(actionValues)
+            bestIndex = actionValues.index(bestActionValue)
+            bestPrice = actionPrices[bestIndex]
+            bestA = actionAs[bestIndex]
+            #     break
+            # self.nextState()
 
         return (bestA, bestActionValue, bestPrice)
+
+    # todo: change level->action, action->order and define state as class
+    # for all other functions. this serves as the reference
+    def chooseAction(self, t, i, V, H):
+        state = (t, i)
+        remaining = i*(V/H)
+        if t == 0:
+            action = 100
+            orders = self.createMarketActions(remaining)
+            actionValue = self.calculateActionValue(orders)
+            orderPrice = self.calculateActionPriceMid(orders)
+        else:
+            action = self.ai.chooseAction(state)
+            order = self.createLimitAction(remaining, action)
+            counterOrders = self.fillAndMarketLimitAction(order)
+            actionValue = self.calculateActionValue(counterOrders)
+            orderPrice = self.calculateActionPriceMid(counterOrders)
+        return (action, actionValue, orderPrice)
+
 
 s1 = OrderbookState(1.0)
 s1.addBuyers([
@@ -295,18 +313,10 @@ orderbook.addState(s3)
 # print(actions)
 # print(actionSpace.createMarketActions(1.5))
 
-import itertools
-
-def initializeQ(T, I):
-    d = {}
-    for k in list(itertools.product(T, I)):
-        d[k] = 0.0
-    return d
 
 side = OrderType.BUY
-s = Strategy()
 actionSpace = ActionSpace(orderbook, side)
-episodes = 1
+episodes = 100
 V = 4.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2]
@@ -314,27 +324,31 @@ T = [0, 1, 2]
 I = [1.0, 2.0, 3.0, 4.0]
 H = max(I)
 
+
 for episode in range(int(episodes)):
-    s.resetState()
+    actionSpace.initialState()
     M = []
     for t in T:
-        actionSpace.initialState()
         print("\n"+"t=="+str(t))
         # while len(orderbook) > o:
         # print("observe orderbook with state: " + str(o))
         # orderbook -> o{}
         for i in I:
-            bidAskMid = actionSpace.state.getBidAskMid()
-            (bestA, bestActionValue, bestPrice) = actionSpace.chooseOptimalAction(t, i, V, H)
-            M.append([t, i, bestA, bestActionValue, bidAskMid, bestPrice])
+            # --- actionspace.update
+            state = (t, i)
+            (action, actionValue, orderPrice) = actionSpace.chooseAction(t, i, V, H)
+            M.append([state, action, actionValue, orderPrice])
+            actionSpace.ai.learn(state1=state, action1=action, reward=actionValue, state2=state)
+            #print("action: " + str(action))
+            # match
+            # reward
+            # learn
+            # ---
+
+            #bidAskMid = actionSpace.state.getBidAskMid()
+            #(bestA, bestActionValue, bestPrice) = actionSpace.chooseOptimalAction(t, i, V, H)
+            #M.append([t, i, bestA, bestActionValue, bidAskMid, bestPrice])
     print(np.asarray(M))
-            #     L = s.getPossibleActions()
-            #     for a in L:
-            #         s.update()
-            #         # s.lastState
-            #         # s.lastAction
-            #         # s.ai.q
 
-            # o = o + 1
 
-print(s.ai.q)
+print(actionSpace.ai.q)
