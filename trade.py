@@ -2,7 +2,7 @@ from datetime import datetime
 
 """ A trade is an extended version of a Position, indicating the purchases made """
 class Trade:
-    def __init__(self, orderType, cty, price, fee, timestamp = str(datetime.now()).split('.')[0]):
+    def __init__(self, orderType, cty, price, fee=0.0, timestamp=str(datetime.now()).split('.')[0]):
         self.orderType = orderType
         self.cty = cty
         self.price = price

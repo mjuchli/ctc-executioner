@@ -99,7 +99,7 @@ class Orderbook(object):
 
     def loadFromFile(self, file):
         import csv
-        with open(file, 'rt', encoding="utf8") as tsvin:
+        with open(file, 'rt') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
             for row in tsvin:
                 p = float(row[1])

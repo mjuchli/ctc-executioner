@@ -1,7 +1,7 @@
 from trade import Trade
 from order_type import OrderType
 import copy
-
+import logging
 
 class MatchEngine(object):
 
@@ -12,43 +12,55 @@ class MatchEngine(object):
     def setIndex(self, index):
         self.index = index
 
-    def matchTrade(self, trade, orderbookState):
-        sellers = orderbookState.getSellers()
-        buyers = orderbookState.getBuyers()
-        totalQty = trade.getCty()
-        if trade.getType == OrderType.BUY:
-            for p in sellers:
-                price = p.getPrice()
-                qty = p.getQty()
-                if price == trade.getPrice():
-                    if qty >= totalQty:
-                        return Trade(OrderType.SELL, totalQty, price)
-                    else:
-                        # partial execution
-                        return Trade(OrderType.SELL, qty, price)
+    def matchLimitOrder(self, order, orderbookState):
+        if order.getType() == OrderType.BUY:
+            bookSide = orderbookState.getSellers()
         else:
-            for p in buyers:
-                price = p.getPrice()
-                qty = p.getQty()
-                if price == trade.getPrice():
-                    if qty >= totalQty:
-                        return Trade(OrderType.BUY, totalQty, price, 0.0)
-                    else:
-                        # partial execution
-                        return Trade(OrderType.BUY, qty, price, 0.0)
+            bookSide = orderbookState.getBuyers()
 
-    def matchTradeOverTime(self, trade):
-        trade = copy.deepcopy(trade)  # Do not modify original trade!
+        partialTrades = []
+        totalQty = order.getCty()
+        sidePosition = 0
+        while len(bookSide) > sidePosition and bookSide[sidePosition].getPrice() <= order.getPrice():
+            p = bookSide[sidePosition]
+            price = p.getPrice()
+            qty = p.getQty()
+            if qty >= totalQty:
+                logging.info("Full execution: " + str(qty) + " pcs available")
+                return [Trade(order.getType(), totalQty, price)]
+            else:
+                logging.info("Partial execution: " + str(qty) + " pcs available")
+                partialTrades.append(Trade(order.getType(), qty, price))
+                sidePosition = sidePosition + 1
+        return partialTrades
+
+    def matchOrderOverTime(self, order):
+        order = copy.deepcopy(order)  # Do not modify original order!
         i = self.index
-        remaining = trade.getCty()
+        remaining = order.getCty()
         trades = []
         while len(self.orderbook.getStates()) > i and remaining > 0:
             orderbookState = self.orderbook.getState(i)
-            counterTrade = self.matchTrade(trade, orderbookState)
-            if counterTrade:
-                trades.append(counterTrade)
-                print("counter trade: " + str(counterTrade))
-                remaining = remaining - counterTrade.getCty()
-                trade.setCty(remaining)
-            i = i+1
+            counterTrades = self.matchLimitOrder(order, orderbookState)
+            if counterTrades:
+                trades = trades + counterTrades
+                logging.info("Trades executed:")
+                for counterTrade in counterTrades:
+                    logging.info(counterTrade)
+                    remaining = remaining - counterTrade.getCty()
+                order.setCty(remaining)
+                logging.info("In state " + str(i) + ":\n" + str(orderbookState))
+                logging.info("Remaining: " + str(remaining) + "\n")
+            i = i + 1
+        logging.info("Total number of trades: " + str(len(trades)))
         return trades, remaining
+
+
+# logging.basicConfig(level=logging.INFO)
+# from orderbook import Orderbook
+# orderbook = Orderbook()
+# orderbook.loadFromFile('query_result_small.tsv')
+# engine = MatchEngine(orderbook, index=0)
+#
+# order = Trade(orderType=OrderType.BUY, cty=20.0, price=16559.0)
+# engine.matchOrderOverTime(order)
