@@ -75,13 +75,25 @@ class MatchEngine(object):
 
         return partialTrades
 
-    def matchOrder(self, order):
+    def matchOrder(self, order, seconds=None):
         order = copy.deepcopy(order)  # Do not modify original order!
         i = self.index
         remaining = order.getCty()
         trades = []
         while len(self.orderbook.getStates()) > i and remaining > 0:
             orderbookState = self.orderbook.getState(i)
+            logging.info("Evaluate state " + str(i) + ":\n" + str(orderbookState))
+
+            # Stop matching process after defined seconds are consumed
+            if seconds:
+                t_start = self.orderbook.getState(self.index).getTimestamp()
+                t_now = orderbookState.getTimestamp()
+                t_delta = (t_now - t_start).total_seconds()
+                logging.info(str(t_delta) + " of " + str(seconds) + " consumed.")
+                if t_delta >= seconds:
+                    logging.info("Time delta consumed, stop matching.")
+                    break
+
             if order.getType() == OrderType.LIMIT:
                 counterTrades = self.matchLimitOrder(order, orderbookState)
             elif order.getType() == OrderType.MARKET:
@@ -96,13 +108,13 @@ class MatchEngine(object):
                     logging.info(counterTrade)
                     remaining = remaining - counterTrade.getCty()
                 order.setCty(remaining)
-                logging.info("In state " + str(i) + ":\n" + str(orderbookState))
                 logging.info("Remaining: " + str(remaining) + "\n")
+            else:
+                logging.info("No orders matched.\n")
             i = i + 1
         logging.info("Total number of trades: " + str(len(trades)))
         logging.info("Remaining qty of order: " + str(remaining))
         return trades, remaining
-
 
 
 # logging.basicConfig(level=logging.INFO)
@@ -111,9 +123,9 @@ class MatchEngine(object):
 # orderbook.loadFromFile('query_result_small.tsv')
 # engine = MatchEngine(orderbook, index=0)
 #
-# #order = Order(orderType=OrderType.LIMIT, orderSide=OrderSide.BUY, cty=11.0, price=16559.0)
-# order = Order(orderType=OrderType.MARKET, orderSide=OrderSide.BUY, cty=11.5, price=None)
-# trades, remaining = engine.matchOrder(order)
+# order = Order(orderType=OrderType.LIMIT, orderSide=OrderSide.BUY, cty=11.0, price=16559.0)
+# #order = Order(orderType=OrderType.MARKET, orderSide=OrderSide.BUY, cty=25.5, price=None)
+# trades, remaining = engine.matchOrder(order, seconds=1.0)
 # c = 0.0
 # for trade in trades:
 #     c = c + trade.getCty()

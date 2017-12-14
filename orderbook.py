@@ -1,3 +1,5 @@
+from dateutil import parser
+
 class OrderbookEntry(object):
 
     def __init__(self, price, qty):
@@ -19,13 +21,14 @@ class OrderbookEntry(object):
 
 class OrderbookState(object):
 
-    def __init__(self, tradePrice=0.0):
+    def __init__(self, tradePrice=0.0, timestamp=None):
         self.tradePrice = tradePrice
+        self.timestamp = timestamp
         self.buyers = []
         self.sellers = []
 
     def __str__(self):
-        s = ""
+        s = "DateTime: " + str(self.timestamp) + "\n"
         s = s + "Price: " + str(self.tradePrice) + "\n"
         s = s + "Buyers: " + str(self.buyers) + "\n"
         s = s + "Sellers: " + str(self.sellers)
@@ -56,6 +59,9 @@ class OrderbookState(object):
 
     def getSellers(self):
         return self.sellers
+
+    def getTimestamp(self):
+        return self.timestamp
 
     def getBidAskMid(self):
         firstBuy = self.getBuyers()[0]
@@ -115,6 +121,7 @@ class Orderbook(object):
                 aq1 = float(row[18])
                 aq2 = float(row[19])
                 aq3 = float(row[20])
+                dt = parser.parse(row[24])  # trade timestamp as reference
                 buyers = [
                     OrderbookEntry(b1, bq1),
                     OrderbookEntry(b2, bq2),
@@ -125,8 +132,18 @@ class Orderbook(object):
                     OrderbookEntry(a2, aq2),
                     OrderbookEntry(a3, aq3)
                 ]
-                s = OrderbookState()
-                s.setTradePrice(p)
+                s = OrderbookState(tradePrice=p, timestamp=dt)
                 s.addBuyers(buyers)
                 s.addSellers(sellers)
                 self.addState(s)
+
+
+# o = Orderbook()
+# o.loadFromFile('query_result_small.tsv')
+# s0 = o.getState(0).getTimestamp()
+# s1 = o.getState(1).getTimestamp()
+# print(s0)
+# print("")
+# print(s1)
+# print("")
+# print((s1-s0).total_seconds())
