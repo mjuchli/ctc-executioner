@@ -80,6 +80,7 @@ class MatchEngine(object):
         i = self.index
         remaining = order.getCty()
         trades = []
+
         while len(self.orderbook.getStates()) > i and remaining > 0:
             orderbookState = self.orderbook.getState(i)
             logging.info("Evaluate state " + str(i) + ":\n" + str(orderbookState))
@@ -91,13 +92,17 @@ class MatchEngine(object):
                 t_delta = (t_now - t_start).total_seconds()
                 logging.info(str(t_delta) + " of " + str(seconds) + " consumed.")
                 if t_delta >= seconds:
-                    logging.info("Time delta consumed, stop matching.")
+                    logging.info("Time delta consumed, stop matching.\n")
                     break
 
             if order.getType() == OrderType.LIMIT:
                 counterTrades = self.matchLimitOrder(order, orderbookState)
             elif order.getType() == OrderType.MARKET:
                 counterTrades = self.matchMarketOrder(order, orderbookState)
+            elif order.getType() == OrderType.LIMIT_T_MARKET:
+                if not seconds:
+                    raise Exception(str(OrderType.LIMIT_T_MARKET) + ' requires a time limit.')
+                counterTrades = self.matchLimitOrder(order, orderbookState)
             else:
                 raise Exception('Order type not known or not implemented yet.')
 
@@ -112,6 +117,27 @@ class MatchEngine(object):
             else:
                 logging.info("No orders matched.\n")
             i = i + 1
+
+        # Execute remaining qty as market if LIMIT_T_MARKET
+        if remaining > 0.0 and order.getType() == OrderType.LIMIT_T_MARKET:
+            logging.info('Execute remaining as MARKET order.')
+            i = i + 1
+            if not len(self.orderbook.getStates()) > i:
+                raise Exception('Not enough data for following market order.')
+
+            orderbookState = self.orderbook.getState(i)
+            logging.info("Evaluate state " + str(i) + ":\n" + str(orderbookState))
+            counterTrades = self.matchMarketOrder(order, orderbookState)
+            if not counterTrades:
+                raise Exception('Remaining market order matching failed.')
+            trades = trades + counterTrades
+            logging.info("Trades executed:")
+            for counterTrade in counterTrades:
+                logging.info(counterTrade)
+                remaining = remaining - counterTrade.getCty()
+            order.setCty(remaining)
+            logging.info("Remaining: " + str(remaining) + "\n")
+
         logging.info("Total number of trades: " + str(len(trades)))
         logging.info("Remaining qty of order: " + str(remaining))
         return trades, remaining
@@ -123,8 +149,9 @@ class MatchEngine(object):
 # orderbook.loadFromFile('query_result_small.tsv')
 # engine = MatchEngine(orderbook, index=0)
 #
-# order = Order(orderType=OrderType.LIMIT, orderSide=OrderSide.BUY, cty=11.0, price=16559.0)
+# #order = Order(orderType=OrderType.LIMIT, orderSide=OrderSide.BUY, cty=11.0, price=16559.0)
 # #order = Order(orderType=OrderType.MARKET, orderSide=OrderSide.BUY, cty=25.5, price=None)
+# order = Order(orderType=OrderType.LIMIT_T_MARKET, orderSide=OrderSide.BUY, cty=21.0, price=16559.0)
 # trades, remaining = engine.matchOrder(order, seconds=1.0)
 # c = 0.0
 # for trade in trades:
