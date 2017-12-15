@@ -100,7 +100,7 @@ class MatchEngine(object):
             elif order.getType() == OrderType.MARKET:
                 counterTrades = self.matchMarketOrder(order, orderbookState)
             elif order.getType() == OrderType.LIMIT_T_MARKET:
-                if not seconds:
+                if seconds is None:
                     raise Exception(str(OrderType.LIMIT_T_MARKET) + ' requires a time limit.')
                 counterTrades = self.matchLimitOrder(order, orderbookState)
             else:

@@ -1,4 +1,6 @@
 from dateutil import parser
+from order_side import OrderSide
+
 
 class OrderbookEntry(object):
 
@@ -67,6 +69,15 @@ class OrderbookState(object):
         firstBuy = self.getBuyers()[0]
         firstSell = self.getSellers()[0]
         return (firstBuy.getPrice() + firstSell.getPrice()) / 2.0
+
+    def getSidePositions(self, side):
+        if side == OrderSide.BUY:
+            return self.getBuyers()
+        elif side == OrderSide.SELL:
+            return self.getSellers()
+
+    def getBasePrice(self, side):
+        return self.getSidePositions(side)[0].getPrice()
 
 
 class Orderbook(object):

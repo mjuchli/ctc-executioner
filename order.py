@@ -1,13 +1,16 @@
 from datetime import datetime
 from order_type import OrderType
 
+
 class Order:
-    """ An order indicates the purchases to be made.
-        The MatchEngine will try to execute an order given orders from other
-        parties. Therefore, an order may result in one or many Trades.
+    """
+    An order indicates the purchases to be made.
+
+    The MatchEngine will try to execute an order given orders from other
+    parties. Therefore, an order may result in one or many Trades.
     """
 
-    def __init__(self, orderType, orderSide, cty, price, timestamp=None):
+    def __init__(self, orderType, orderSide, cty, price=None, timestamp=None):
         self.timestamp = timestamp
         if not self.timestamp:
             self.timestamp = str(datetime.now()).split('.')[0]
