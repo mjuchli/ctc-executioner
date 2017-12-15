@@ -4,7 +4,7 @@ from order_type import OrderType
 from order_side import OrderSide
 import copy
 import logging
-
+import numpy as np
 
 class MatchEngine(object):
 
@@ -68,10 +68,14 @@ class MatchEngine(object):
         # TODO: Simulate in more appropriate way, such as executing multiple
         # trades whereas the trade size increases exponentially and the price
         # increases logarithmically.
-        if remaining > 0.0:
+        average_qty = np.mean([x.getCty() for x in partialTrades])
+        derivative_price = np.mean(np.gradient([x.getPrice() for x in partialTrades]))
+        while remaining > 0.0:
             price = price + derivative_price
-            logging.info("Partial execution: assume " + str(remaining) + " availabile")
-            partialTrades.append(Trade(orderSide=order.getSide(), cty=remaining, price=price))
+            qty = min(average_qty, remaining)
+            logging.info("Partial execution: assume " + str(qty) + " availabile")
+            partialTrades.append(Trade(orderSide=order.getSide(), cty=qty, price=price))
+            remaining = remaining - qty
 
         return partialTrades
 
@@ -86,7 +90,7 @@ class MatchEngine(object):
             logging.info("Evaluate state " + str(i) + ":\n" + str(orderbookState))
 
             # Stop matching process after defined seconds are consumed
-            if seconds:
+            if seconds is not None:
                 t_start = self.orderbook.getState(self.index).getTimestamp()
                 t_now = orderbookState.getTimestamp()
                 t_delta = (t_now - t_start).total_seconds()
@@ -151,7 +155,7 @@ class MatchEngine(object):
 #
 # #order = Order(orderType=OrderType.LIMIT, orderSide=OrderSide.BUY, cty=11.0, price=16559.0)
 # #order = Order(orderType=OrderType.MARKET, orderSide=OrderSide.BUY, cty=25.5, price=None)
-# order = Order(orderType=OrderType.LIMIT_T_MARKET, orderSide=OrderSide.BUY, cty=21.0, price=16559.0)
+# order = Order(orderType=OrderType.LIMIT_T_MARKET, orderSide=OrderSide.BUY, cty=100.0, price=16559.0)
 # trades, remaining = engine.matchOrder(order, seconds=1.0)
 # c = 0.0
 # for trade in trades:
