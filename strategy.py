@@ -91,6 +91,9 @@ class Action(object):
             qty = qty + trade.getCty()
         return qty
 
+    def getQtyNotExecuted(self):
+        return self.getOrder().getCty() - self.getQtyExecuted()
+
     def isFilled(self):
         return self.getQtyExecuted() == self.order.getCty()
 
@@ -113,7 +116,7 @@ class Action(object):
 
 class ActionSpace(object):
 
-    def __init__(self, orderbook, side, levels=3):
+    def __init__(self, orderbook, side, V, T, I, H, levels=3):
         self.orderbook = orderbook
         self.index = 0
         self.state = None
@@ -121,6 +124,10 @@ class ActionSpace(object):
         self.side = side
         self.levels = range(-levels + 1, levels)
         self.ai = QLearn(self.levels)  # levels are our qlearn actions
+        self.V = V
+        self.T = T
+        self.I = I
+        self.H = H
 
     def initialState(self):
         self.index = 0
@@ -195,57 +202,59 @@ class ActionSpace(object):
                 bestAction = action
         return bestAction
 
-    def chooseAction(self, t, i, V, I, force_execution=False):
-        inventory = i * (V / max(I))
+    def chooseAction(self, t, i, force_execution=False):
+        inventory = i * (self.V / max(self.I))
         actions = self.createActions(t, inventory, force_execution)
         for action in actions:
             self.runAction(action, t)
         return self.determineBestAction(actions)
 
+    def demonstrateActionBehaviour(self, episodes=1):
+        for episode in range(int(episodes)):
+            self.initialState()
+            M = []
+            for t in self.T:
+                print("\n"+"t=="+str(t))
+                for i in self.I:
+                    print("     i=="+str(i))
+                    action = self.chooseAction(t, i, True)
+                    state = (t, i)
+                    M.append([state, action.getA(), action.getAvgPrice()])
+        return M
 
+    # def update(self, episodes=1):
+    #     for episode in range(int(episodes)):
+    #         self.initialState()
+    #         M = []
+    #         for t in self.T:
+    #             print("\n"+"t=="+str(t))
+    #             for i in self.I:
+    #                 print("     i=="+str(i))
+    #                 action = self.chooseAction(t, i, False)
+    #                 remaining_inventory = action.getQtyNotExecuted()
+    #                 print('remain after execution: ' + str(remaining_inventory))
+    #                 print(min(self.I, key=lambda x:abs(x-remaining_inventory)))
+    #
+    #                 self.ai.learn(
+    #                     state1=state,
+    #                     action1=action.getA(),
+    #                     reward=(action.getValue(reference) * -1),
+    #                     state2=state
+    #                 )
 
 #logging.basicConfig(level=logging.INFO)
 orderbook = Orderbook()
 orderbook.loadFromFile('query_result.tsv')
 side = OrderSide.BUY
-actionSpace = ActionSpace(orderbook, side)
-episodes = 1
 V = 10000.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2, 5, 10, 30, 60, 120]
 # I = [1.0, 2.0, 3.0, 4.0]
 I = [1.0, 2.0, 3.0, 4.0]
 H = max(I)
+actionSpace = ActionSpace(orderbook, side, V, T, I, H)
+M = actionSpace.demonstrateActionBehaviour()
+print(np.asarray(M))
 
-
-for episode in range(int(episodes)):
-    actionSpace.initialState()
-    M = []
-    for t in T:
-        print("\n"+"t=="+str(t))
-        for i in I:
-            print("     i=="+str(i))
-            reference = actionSpace.state.getBidAskMid()
-
-            state = (t, i)
-            action = actionSpace.chooseAction(t, i, V, I)
-            M.append([state, action.getA(), action.getAvgPrice()])
-            actionSpace.ai.learn(
-                state1=state,
-                action1=action.getA(),
-                reward=(action.getValue(reference) * -1),
-                state2=state
-            )
-            #print("action: " + str(action))
-            # match
-            # reward
-            # learn
-            # ---
-
-            #bidAskMid = actionSpace.state.getBidAskMid()
-            #(bestA, bestActionValue, bestPrice) = actionSpace.chooseOptimalAction(t, i, V, H)
-            #M.append([t, i, bestA, bestActionValue, bidAskMid, bestPrice])
-    print(np.asarray(M))
-
-
-print(actionSpace.ai.q)
+# actionSpace.update()
+# print(actionSpace.ai.q)
