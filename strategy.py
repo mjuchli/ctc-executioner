@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from qlearn import QLearn
 from trade import Trade
@@ -76,6 +77,9 @@ class Action(object):
 
     def getAvgPrice(self):
         """Returns the average price paid for the executed order."""
+        if self.getQtyExecuted() == 0:
+            return 0.0
+
         price = 0.0
         for trade in self.getTrades():
             price = price + trade.getCty() * trade.getPrice()
@@ -100,6 +104,8 @@ class Action(object):
         For SELL: total received at mid price - total received
         """
         if self.getOrder().getSide() == OrderSide.BUY:
+            if self.getAvgPrice() == 0.0:
+                return midPrice
             return self.getAvgPrice() - midPrice
         else:
             return midPrice - self.getAvgPrice()
@@ -139,27 +145,37 @@ class ActionSpace(object):
     #     action.setOrder(order)
     #     return action
 
-    def createAction(self, qty, level):
+    def createAction(self, level, time, qty, force_execution=False):
         if level <= 0:
             positions = self.state.getSidePositions(self.side)
         else:
             level = level - 1  # 1 -> 0, ect., such that array index fits
             positions = self.state.getSidePositions(self.side.opposite())
 
-        price = positions[abs(level)].getPrice()
+        if time <= 0.0:
+            price = None
+            ot = OrderType.MARKET
+        else:
+            price = positions[abs(level)].getPrice()
+            if force_execution:
+                ot = OrderType.LIMIT_T_MARKET
+            else:
+                ot = OrderType.LIMIT
+
         order = Order(
-            orderType=OrderType.LIMIT_T_MARKET,
+            orderType=ot,
             orderSide=self.side,
-            cty=qty, price=price
+            cty=qty,
+            price=price
         )
         action = Action(level)
         action.setOrder(order)
         return action
 
-    def createActions(self, qty):
+    def createActions(self, time, qty, force_execution=False):
         actions = []
         for level in self.levels:
-            actions.append(self.createAction(qty, level))
+            actions.append(self.createAction(level, time, qty, force_execution))
         return actions
 
     def runAction(self, action, t):
@@ -168,12 +184,7 @@ class ActionSpace(object):
         action.setTrades(counterTrades)
         return action, qtyRemain
 
-    def chooseAction(self, t, i, V, H):
-        remaining = i*(V/H)
-        actions = self.createActions(remaining)
-        for action in actions:
-            self.runAction(action, t)
-
+    def determineBestAction(self, actions):
         reference = self.state.getBidAskMid()
         bestAction = None
         for action in actions:
@@ -184,13 +195,22 @@ class ActionSpace(object):
                 bestAction = action
         return bestAction
 
+    def chooseAction(self, t, i, V, I, force_execution=False):
+        inventory = i * (V / max(I))
+        actions = self.createActions(t, inventory, force_execution)
+        for action in actions:
+            self.runAction(action, t)
+        return self.determineBestAction(actions)
 
+
+
+#logging.basicConfig(level=logging.INFO)
 orderbook = Orderbook()
 orderbook.loadFromFile('query_result.tsv')
 side = OrderSide.BUY
 actionSpace = ActionSpace(orderbook, side)
 episodes = 1
-V = 5000.0
+V = 10000.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2, 5, 10, 30, 60, 120]
 # I = [1.0, 2.0, 3.0, 4.0]
@@ -203,15 +223,12 @@ for episode in range(int(episodes)):
     M = []
     for t in T:
         print("\n"+"t=="+str(t))
-        # while len(orderbook) > o:
-        # print("observe orderbook with state: " + str(o))
-        # orderbook -> o{}
         for i in I:
-            # --- actionspace.update
+            print("     i=="+str(i))
             reference = actionSpace.state.getBidAskMid()
 
             state = (t, i)
-            action = actionSpace.chooseAction(t, i, V, H)
+            action = actionSpace.chooseAction(t, i, V, I)
             M.append([state, action.getA(), action.getAvgPrice()])
             actionSpace.ai.learn(
                 state1=state,

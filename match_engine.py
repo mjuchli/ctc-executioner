@@ -123,7 +123,7 @@ class MatchEngine(object):
             i = i + 1
 
         # Execute remaining qty as market if LIMIT_T_MARKET
-        if remaining > 0.0 and order.getType() == OrderType.LIMIT_T_MARKET:
+        if remaining > 0.0 and (order.getType() == OrderType.LIMIT_T_MARKET or order.getType() == OrderType.MARKET):
             logging.info('Execute remaining as MARKET order.')
             i = i + 1
             if not len(self.orderbook.getStates()) > i:

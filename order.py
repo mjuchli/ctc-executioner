@@ -28,8 +28,7 @@ class Order:
         return (str(self.timestamp) + ',' +
                 str(self.getType()) + ',' +
                 str(self.getCty()) + ',' +
-                str(self.getPrice()) + ',' +
-                str(self.getFee()))
+                str(self.getPrice()))
 
     def getType(self):
         return self.orderType
