@@ -2,7 +2,6 @@ import logging
 import copy
 import numpy as np
 from qlearn import QLearn
-from trade import Trade
 from order import Order
 from order_type import OrderType
 from order_side import OrderSide
@@ -10,50 +9,6 @@ from orderbook import Orderbook
 from match_engine import MatchEngine
 import pprint
 import random
-
-
-class Strategy(object):
-
-    def __init__(self):
-        self.reward_table = np.array([
-            [0,     0],
-            [1,     0.625],
-            [0.5,   1.25],
-            [0.625, 2.5],
-            [1.25,  5],
-            [0,     0]]
-        ).astype("float32")
-        self.ai = QLearn(actions=[-1, 1], epsilon=0.3, alpha=0.5, gamma=0.5)
-        self.states = [0, 1, 2, 3, 4, 5]
-        self.lastState = None
-        self.lastAction = None
-
-    def getReward(self, state, action):
-        if action == 1:
-            i = 1
-        else:
-            i = 0
-        return(self.reward_table[state, i])
-
-    def goal(self):
-        return not(self.lastState > 0 and self.lastState < 5)
-
-    def resetState(self):
-        random_state = np.random.RandomState(1999)
-        states = self.states
-        random_state.shuffle(states)
-        self.lastState = states[0]
-
-    def update(self):
-        if not self.lastState:
-            self.resetState()
-
-        action = self.ai.chooseAction(self.lastState)
-        state = self.lastState + action
-        reward = self.getReward(self.lastState, action)
-        self.ai.learn(self.lastState, action, reward, state)
-        self.lastState = state
-        self.lastAction = action
 
 
 class Action(object):
@@ -162,6 +117,7 @@ class ActionSpace(object):
         self.state = self.orderbook.getState(self.index)
 
     def createAction(self, level, runtime, qty, force_execution=False):
+        self.setState(runtime)  # Important to set orderbook index beforehand
         if level <= 0:
             positions = self.state.getSidePositions(self.side)
         else:
@@ -194,9 +150,10 @@ class ActionSpace(object):
             actions.append(self.createAction(level, runtime, qty, force_execution))
         return actions
 
-    def runAction(self, action, t):
+    def runAction(self, action):
+        self.setState(action.getRuntime())  # Important to set orderbook index while matching
         matchEngine = MatchEngine(self.orderbook, index=self.index)
-        counterTrades, qtyRemain = matchEngine.matchOrder(action.getOrder(), t)
+        counterTrades, qtyRemain = matchEngine.matchOrder(action.getOrder(), action.getRuntime())
         action.setTrades(counterTrades)
         return action, qtyRemain
 
@@ -211,26 +168,12 @@ class ActionSpace(object):
                 bestAction = action
         return bestAction
 
-    def chooseAction(self, t, i, force_execution=False):
-        self.setState(t)  # Important to set orderbook index while matching
+    def getMostRewardingAction(self, t, i, force_execution=False):
         inventory = i * (self.V / max(self.I))
         actions = self.createActions(t, inventory, force_execution)
         for action in actions:
-            self.runAction(action, t)
+            self.runAction(action)
         return self.determineBestAction(actions)
-
-    def demonstrateActionBehaviour(self, episodes=1):
-        for episode in range(int(episodes)):
-            self.setRandomOffset()
-            M = []
-            for t in self.T:
-                logging.info("\n"+"t=="+str(t))
-                for i in self.I:
-                    logging.info("     i=="+str(i))
-                    action = self.chooseAction(t, i, True)
-                    state = (t, i)
-                    M.append([state, action.getA(), action.getAvgPrice()])
-        return M
 
     def determineNextState(self, action):
         qty_remaining = action.getQtyNotExecuted()
@@ -254,54 +197,63 @@ class ActionSpace(object):
         logging.info('Next state for action: ' + str((t_next, i_next)))
         return (t_next, i_next)
 
-    def update(self, episodes=1):
+    def update(self, aiState):
+        a = self.ai.chooseAction(aiState)
+        t = aiState[0]
+        i = aiState[1]
+        inventory = i * (self.V / max(self.I))
+        action = self.createAction(a, t, inventory)
+        self.runAction(action)
+        (t_next, i_next) = self.determineNextState(action)
+        reference = self.state.getBidAskMid()
+        reward = action.getValue(reference)
+        self.ai.learn(
+            state1=(t, i),
+            action1=action.getA(),
+            reward=(reward),
+            state2=(t_next, i_next))
+        return (t_next, i_next)
+
+    def run(self, episodes=1):
         for episode in range(int(episodes)):
             self.setRandomOffset()
             for t in self.T:
                 logging.info("\n"+"t=="+str(t))
                 for i in self.I:
                     logging.info("     i=="+str(i))
-                    action = self.chooseAction(t, i, False)
-                    (t_next, i_next) = self.determineNextState(action)
-                    reference = self.state.getBidAskMid()
-                    self.ai.learn(
-                        state1=(t, i),
-                        action1=action.getA(),
-                        reward=(action.getValue(reference)),
-                        state2=(t_next, i_next))
-
+                    (t_next, i_next) = self.update((t, i))
                     while i_next != 0:
-                        t_old = t_next
-                        i_old = i_next
-                        inventory_next = i_next * (self.V / max(self.I))
-                        #action = action.move(t_next, inventory_next)  # this would proceed with the same level (e.g. a) only
-                        action = self.chooseAction(t_next, i_next, False)
-                        (t_next, i_next) = self.determineNextState(action)
-                        logging.info('next state: ' + str((t_next, i_next)))
-                        reference = self.state.getBidAskMid()
-                        self.ai.learn(
-                            state1=(t_old, i_old),
-                            action1=action.getA(),
-                            reward=(action.getValue(reference)),
-                            state2=(t_next, i_next))
+                        (t_next, i_next) = self.update((t_next, i_next))
 
+    def runActionBehaviour(self, episodes=1):
+        for episode in range(int(episodes)):
+            self.setRandomOffset()
+            M = []
+            for t in self.T:
+                logging.info("\n"+"t=="+str(t))
+                for i in self.I:
+                    logging.info("     i=="+str(i))
+                    action = self.getMostRewardingAction(t, i, True)
+                    state = (t, i)
+                    M.append([state, action.getA(), action.getAvgPrice()])
+        return M
 
 
 #logging.basicConfig(level=logging.INFO)
 orderbook = Orderbook()
 orderbook.loadFromFile('query_result.tsv')
-side = OrderSide.BUY
+side = OrderSide.SELL
 V = 1000.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2, 5, 10, 30, 60, 120]
 # I = [1.0, 2.0, 3.0, 4.0]
-I = [1.0, 2.0, 3.0, 4.0]
+I = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
 H = max(I)
 actionSpace = ActionSpace(orderbook, side, V, T, I, H)
 
-#M = actionSpace.demonstrateActionBehaviour()
+#M = actionSpace.runActionBehaviour()
 #print(np.asarray(M))
 
-actionSpace.update(1)
+actionSpace.run(20)
 pp = pprint.PrettyPrinter(indent=4)
 pp.pprint(actionSpace.ai.q)
