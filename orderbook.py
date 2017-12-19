@@ -115,7 +115,16 @@ class Orderbook(object):
         return self.states[index]
 
     def getOffsetIndex(self, offset):
-        """The index of the first state past the given offset in seconds."""
+        """The index of the first state past the given offset in seconds.
+        For example, if offset=3 with 10 states availble, whereas for
+        simplicity every state has 1 second diff, then the resulting index
+        would be the one marked with 'i':
+
+        |x|x|x|i|_|_|_|_|_|_|
+
+        As a result, the elements marked with 'x' are not meant to be used.
+
+        """
         if offset == 0:
             return 0
 
@@ -130,13 +139,25 @@ class Orderbook(object):
 
         if consumed < offset:
             raise Exception('Not enough data for offset. Found states for '
-                            + str(consumed) + ' seconds, required: ' +
+                            + str(consumed) + ' seconds, required: '
                             + str(offset))
 
         return offsetIndex
 
-    def getStateWithTimeRemain(self, seconds, offset=0):
-        """ Returns the state with seconds remaining starting from the end. """
+    def getIndexWithTimeRemain(self, seconds, offset=0):
+        """ Returns the state with seconds remaining starting from the end.
+        For example, if seconds=3 and offset=1 with 10 states availble, whereas
+        for simplicity every state has 1 second diff, then the resulting index
+        would be the one marked with 'i' and the cap set by the offset is 'c'
+        and 'x' indicating the non-usable elements:
+
+        |x|c|_|_|_|_|i|>|>|>|
+
+        As a result, the maximum seconds to retrieve would be 8, however only 3
+        (4 counting the element of the index position) are used in this case
+        and 4 are not being used (marked with '_').
+
+        """
         if not self.getStates:
             raise Exception('Order book does not contain states.')
 
@@ -154,7 +175,7 @@ class Orderbook(object):
             raise Exception('Not enough data available. Found states for '
                             + str(consumed) + ' seconds, required: '
                             + str(seconds))
-        return state, index
+        return index
 
     def getTotalDuration(self, offset=0):
         """Time span of data in seconds.
@@ -217,7 +238,7 @@ class Orderbook(object):
 # o = Orderbook()
 # o.loadFromFile('query_result_small.tsv')
 # print(o.getTotalDuration(offset=0))
-# print(o.getStateWithTimeRemain(seconds=99, offset=10))
+# print(o.getIndexWithTimeRemain(seconds=99, offset=10))
 # s0 = o.getState(0).getTimestamp()
 # s1 = o.getState(1).getTimestamp()
 # print(s0)
