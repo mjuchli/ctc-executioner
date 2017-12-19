@@ -114,6 +114,59 @@ class Orderbook(object):
             raise Exception('Index out of orderbook state.')
         return self.states[index]
 
+    def getOffsetIndex(self, offset):
+        """The index of the first state past the given offset in seconds."""
+        if offset == 0:
+            return 0
+
+        states = self.getStates()
+        startState = states[0]
+        offsetIndex = 0
+        consumed = 0.0
+        while(consumed < offset and offsetIndex < len(states)):
+            state = states[offsetIndex]
+            consumed = (state.getTimestamp() - startState.getTimestamp()).total_seconds()
+            offsetIndex = offsetIndex + 1
+
+        if consumed < offset:
+            raise Exception('Not enough data for offset. Found states for '
+                            + str(consumed) + ' seconds, required: ' +
+                            + str(offset))
+
+        return offsetIndex
+
+    def getStateWithTimeRemain(self, seconds, offset=0):
+        """ Returns the state with seconds remaining starting from the end. """
+        if not self.getStates:
+            raise Exception('Order book does not contain states.')
+
+        states = self.getStates()
+        endState = states[-1]
+        index = len(states) - 2
+        offsetIndex = self.getOffsetIndex(offset)
+        consumed = 0.0
+        while(consumed < seconds and index >= offsetIndex):
+            state = states[index]
+            consumed = (endState.getTimestamp() - state.getTimestamp()).total_seconds()
+            index = index - 1
+
+        if consumed < seconds:
+            raise Exception('Not enough data available. Found states for '
+                            + str(consumed) + ' seconds, required: '
+                            + str(seconds))
+        return state, index
+
+    def getTotalDuration(self, offset=0):
+        """Time span of data in seconds.
+        The offset fixes the pointer starting from the beginning of the data
+        feed.
+        """
+        states = self.getStates()
+        offsetIndex = self.getOffsetIndex(offset)
+        start = states[offsetIndex].getTimestamp()
+        end = states[-1].getTimestamp()
+        return (end - start).total_seconds()
+
     def loadFromFile(self, file):
         import csv
         with open(file, 'rt') as tsvin:
@@ -123,25 +176,37 @@ class Orderbook(object):
                 b1 = float(row[3])
                 b2 = float(row[4])
                 b3 = float(row[5])
+                b4 = float(row[6])
+                b5 = float(row[7])
                 a1 = float(row[8])
                 a2 = float(row[9])
                 a3 = float(row[10])
+                a4 = float(row[11])
+                a5 = float(row[12])
                 bq1 = float(row[13])
                 bq2 = float(row[14])
                 bq3 = float(row[15])
+                bq4 = float(row[16])
+                bq5 = float(row[17])
                 aq1 = float(row[18])
                 aq2 = float(row[19])
                 aq3 = float(row[20])
+                aq4 = float(row[21])
+                aq5 = float(row[22])
                 dt = parser.parse(row[24])  # trade timestamp as reference
                 buyers = [
                     OrderbookEntry(b1, bq1),
                     OrderbookEntry(b2, bq2),
-                    OrderbookEntry(b3, bq3)
+                    OrderbookEntry(b3, bq3),
+                    OrderbookEntry(b4, bq4),
+                    OrderbookEntry(b5, bq5)
                 ]
                 sellers = [
                     OrderbookEntry(a1, aq1),
                     OrderbookEntry(a2, aq2),
-                    OrderbookEntry(a3, aq3)
+                    OrderbookEntry(a3, aq3),
+                    OrderbookEntry(a4, aq4),
+                    OrderbookEntry(a5, aq5)
                 ]
                 s = OrderbookState(tradePrice=p, timestamp=dt)
                 s.addBuyers(buyers)
@@ -151,6 +216,8 @@ class Orderbook(object):
 
 # o = Orderbook()
 # o.loadFromFile('query_result_small.tsv')
+# print(o.getTotalDuration(offset=0))
+# print(o.getStateWithTimeRemain(seconds=99, offset=10))
 # s0 = o.getState(0).getTimestamp()
 # s1 = o.getState(1).getTimestamp()
 # print(s0)
