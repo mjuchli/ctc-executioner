@@ -1,5 +1,6 @@
 from dateutil import parser
 from order_side import OrderSide
+import numpy as np
 
 
 class OrderbookEntry(object):
@@ -79,6 +80,23 @@ class OrderbookState(object):
     def getBasePrice(self, side):
         return self.getSidePositions(side)[0].getPrice()
 
+    def getPriceAtLevel(self, side, level):
+        """ Returns price at a certain level of the orderbook.
+        In case not enough levels are present in the orderbook, we assume
+        linear price increase (seller side) / decrease (buyer side) for the
+        following levels.
+        """
+        positions = self.getSidePositions(side)
+        level = abs(level)
+        if level < len(positions):
+            return positions[level].getPrice()
+
+        # Estimate subsequent levels
+        derivative_price = np.mean(np.gradient([x.getPrice() for x in positions]))
+        missingLevels = level - len(positions)
+        priceEnd = positions[-1].getPrice()
+        priceEstimated = priceEnd + missingLevels * derivative_price
+        return priceEstimated
 
 class Orderbook(object):
 

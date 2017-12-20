@@ -65,15 +65,32 @@ class Action(object):
     def getTotalPaidReceived(self):
         return self.getAvgPrice() * self.getQtyExecuted()
 
-    def getValue(self, midPrice):
-        """Retuns price difference to bid/ask-mid. The lower, the better.
-
-        For BUY: total paid - total paid at mid price
-        For SELL: total received at mid price - total received
+    def getValueAbs(self, midPrice):
+        """Retuns difference of the paid amount to the total bid/ask-mid amount.
+        The higher, the better,
+        For BUY: total paid at mid price - total paid
+        For SELL: total received - total received at mid price
         """
+        # In case of no executed trade, the value is the negative reference
+        if self.getTotalPaidReceived() == 0.0:
+            return -midPrice
+
         if self.getOrder().getSide() == OrderSide.BUY:
-            if self.getAvgPrice() == 0.0:
-                return midPrice
+            return midPrice - self.getTotalPaidReceived()
+        else:
+            return self.getTotalPaidReceived() - midPrice
+
+    def getValueAvg(self, midPrice):
+        """Retuns difference of the average paid price to bid/ask-mid price.
+        The higher, the better,
+        For BUY: total paid at mid price - total paid
+        For SELL: total received - total received at mid price
+        """
+        # In case of no executed trade, the value is the negative reference
+        if self.getAvgPrice() == 0.0:
+            return -midPrice
+
+        if self.getOrder().getSide() == OrderSide.BUY:
             return midPrice - self.getAvgPrice()
         else:
             return self.getAvgPrice() - midPrice
@@ -87,7 +104,7 @@ class Action(object):
 
 class ActionSpace(object):
 
-    def __init__(self, orderbook, side, V, T, I, H, levels=5):
+    def __init__(self, orderbook, side, V, T, I, H, levels=10):
         self.orderbook = orderbook
         self.index = 0
         self.state = None
@@ -119,16 +136,16 @@ class ActionSpace(object):
     def createAction(self, level, runtime, qty, force_execution=False):
         self.setState(runtime)  # Important to set orderbook index beforehand
         if level <= 0:
-            positions = self.state.getSidePositions(self.side)
+            side = self.side
         else:
             level = level - 1  # 1 -> 0, ect., such that array index fits
-            positions = self.state.getSidePositions(self.side.opposite())
+            side = self.side.opposite()
 
         if runtime <= 0.0:
             price = None
             ot = OrderType.MARKET
         else:
-            price = positions[abs(level)].getPrice()
+            price = self.state.getPriceAtLevel(side, level)
             if force_execution:
                 ot = OrderType.LIMIT_T_MARKET
             else:
@@ -164,7 +181,7 @@ class ActionSpace(object):
             if not bestAction:
                 bestAction = action
                 continue
-            if action.getValue(reference) < bestAction.getValue(reference):
+            if action.getValueAvg(reference) < bestAction.getValueAvg(reference):
                 bestAction = action
         return bestAction
 
@@ -202,11 +219,12 @@ class ActionSpace(object):
         t = aiState[0]
         i = aiState[1]
         inventory = i * (self.V / max(self.I))
-        action = self.createAction(a, t, inventory)
+        action = self.createAction(a, t, inventory, force_execution=False)
+        #action = self.createAction(a, t, inventory, force_execution=True)
         self.runAction(action)
         (t_next, i_next) = self.determineNextState(action)
         reference = self.state.getBidAskMid()
-        reward = action.getValue(reference)
+        reward = action.getValueAvg(reference)
         self.ai.learn(
             state1=(t, i),
             action1=action.getA(),
@@ -239,11 +257,11 @@ class ActionSpace(object):
         return M
 
 
-#logging.basicConfig(level=logging.INFO)
+
 orderbook = Orderbook()
 orderbook.loadFromFile('query_result.tsv')
-side = OrderSide.SELL
-V = 1000.0
+side = OrderSide.BUY
+V = 10.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2, 5, 10, 30, 60, 120]
 # I = [1.0, 2.0, 3.0, 4.0]
@@ -251,9 +269,11 @@ I = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
 H = max(I)
 actionSpace = ActionSpace(orderbook, side, V, T, I, H)
 
-#M = actionSpace.runActionBehaviour()
-#print(np.asarray(M))
+#logging.basicConfig(level=logging.INFO)
 
-actionSpace.run(20)
+# M = actionSpace.runActionBehaviour()
+# print(np.asarray(M))
+
+actionSpace.run(100)
 pp = pprint.PrettyPrinter(indent=4)
 pp.pprint(actionSpace.ai.q)
