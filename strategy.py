@@ -88,7 +88,7 @@ class Action(object):
         """
         # In case of no executed trade, the value is the negative reference
         if self.getAvgPrice() == 0.0:
-            return -midPrice
+            return -2.0 * abs(self.getA())
 
         if self.getOrder().getSide() == OrderSide.BUY:
             return midPrice - self.getAvgPrice()
@@ -104,14 +104,18 @@ class Action(object):
 
 class ActionSpace(object):
 
-    def __init__(self, orderbook, side, V, T, I, H, levels=10):
+    def __init__(self, orderbook, side, V, T, I, H, ai=None, levels=None):
         self.orderbook = orderbook
         self.index = 0
         self.state = None
         self.randomOffset = 0
         self.side = side
-        self.levels = range(-levels + 1, levels)
-        self.ai = QLearn(self.levels)  # levels are our qlearn actions
+        if not levels:
+            levels = [-2, -1, 0, 1, 2, 3]
+        self.levels = levels
+        if not ai:
+            ai = QLearn(self.levels)  # levels are our qlearn actions
+        self.ai = ai
         self.V = V
         self.T = T
         self.I = I
@@ -232,7 +236,7 @@ class ActionSpace(object):
             state2=(t_next, i_next))
         return (t_next, i_next)
 
-    def run(self, episodes=1):
+    def train(self, episodes=1):
         for episode in range(int(episodes)):
             self.setRandomOffset()
             for t in self.T:
@@ -257,51 +261,63 @@ class ActionSpace(object):
         return M
 
 
+    def backtest(self, q=None):
+        if q is None:
+            q = self.ai.q
+        if not q:
+            raise Exception('Q-Table is empty, please train first.')
+
+        self.setRandomOffset()
+        M = []
+        for t in self.T:
+            logging.info("\n"+"t=="+str(t))
+            for i in self.I:
+                logging.info("     i=="+str(i))
+                state = (t, i)
+                values = [q.get((state, x)) for x in list(reversed(self.levels))]
+                maxQ = max(list(filter(None, values)))
+                a = list(reversed(self.levels))[values.index(maxQ)]
+                inventory = i * (self.V / max(self.I))
+                action = self.createAction(a, t, inventory, force_execution=True)
+                self.runAction(action)
+                price = action.getAvgPrice()
+                self.setState(t)
+                midPrice = self.state.getBidAskMid()
+                M.append([state, midPrice, a, price])
+        return M
+
 
 orderbook = Orderbook()
-orderbook.loadFromFile('query_result.tsv')
+orderbook.loadFromFile('query_result_train.tsv')
 side = OrderSide.BUY
-V = 10.0
+V = 1.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2, 5, 10, 30, 60, 120]
 # I = [1.0, 2.0, 3.0, 4.0]
 I = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
 H = max(I)
-actionSpace = ActionSpace(orderbook, side, V, T, I, H)
+levels = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10]
+ai = QLearn(actions=levels, epsilon=0.5, alpha=0.5, gamma=0.5)
+actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
 
 #logging.basicConfig(level=logging.INFO)
 
 # M = actionSpace.runActionBehaviour()
 # print(np.asarray(M))
 
-# actionSpace.run(100)
-#
-# np.save('q.npy', actionSpace.ai.q)
-# pp = pprint.PrettyPrinter(indent=4)
-# pp.pprint(actionSpace.ai.q)
+actionSpace.train(1)
 
-
-
-# Load
-q = np.load('q.npy').item()
-
-actionSpace.setRandomOffset()
-M = []
-for t in actionSpace.T:
-    logging.info("\n"+"t=="+str(t))
-    for i in actionSpace.I:
-        logging.info("     i=="+str(i))
-        state = (t, i)
-        values = [q.get((state, x)) for x in actionSpace.levels]
-        maxQ = max(list(filter(None, values)))
-        a = actionSpace.levels[values.index(maxQ)]
-        inventory = i * (actionSpace.V / max(actionSpace.I))
-        action = actionSpace.createAction(a, t, inventory, force_execution=True)
-        actionSpace.runAction(action)
-        price = action.getAvgPrice()
-        actionSpace.setState(t)
-        midPrice = actionSpace.state.getBidAskMid()
-        M.append([state, midPrice, a, price])
-
+np.save('q.npy', actionSpace.ai.q)
 pp = pprint.PrettyPrinter(indent=4)
+pp.pprint(actionSpace.ai.q)
+
+
+# # Backtest
+orderbook = Orderbook()
+orderbook.loadFromFile('query_result_test.tsv')
+actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
+q = np.load('q.npy').item()
+M = actionSpace.backtest(q)
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint(q)
 pp.pprint(M)
