@@ -206,7 +206,7 @@ class ActionSpace(object):
         else:
             i_next = 0.0
 
-        if action.getRuntime > 0:
+        if action.getRuntime() > 0:
             t_next = T[T.index(action.getRuntime()) - 1]
         else:
             t_next = action.getRuntime()
@@ -274,6 +274,34 @@ actionSpace = ActionSpace(orderbook, side, V, T, I, H)
 # M = actionSpace.runActionBehaviour()
 # print(np.asarray(M))
 
-actionSpace.run(100)
+# actionSpace.run(100)
+#
+# np.save('q.npy', actionSpace.ai.q)
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(actionSpace.ai.q)
+
+
+
+# Load
+q = np.load('q.npy').item()
+
+actionSpace.setRandomOffset()
+M = []
+for t in actionSpace.T:
+    logging.info("\n"+"t=="+str(t))
+    for i in actionSpace.I:
+        logging.info("     i=="+str(i))
+        state = (t, i)
+        values = [q.get((state, x)) for x in actionSpace.levels]
+        maxQ = max(list(filter(None, values)))
+        a = actionSpace.levels[values.index(maxQ)]
+        inventory = i * (actionSpace.V / max(actionSpace.I))
+        action = actionSpace.createAction(a, t, inventory, force_execution=True)
+        actionSpace.runAction(action)
+        price = action.getAvgPrice()
+        actionSpace.setState(t)
+        midPrice = actionSpace.state.getBidAskMid()
+        M.append([state, midPrice, a, price])
+
 pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(actionSpace.ai.q)
+pp.pprint(M)
