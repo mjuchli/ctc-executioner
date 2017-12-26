@@ -9,6 +9,7 @@ from orderbook import Orderbook
 from match_engine import MatchEngine
 import pprint
 import random
+import threading
 
 
 class Action(object):
@@ -223,8 +224,8 @@ class ActionSpace(object):
         t = aiState[0]
         i = aiState[1]
         inventory = i * (self.V / max(self.I))
-        action = self.createAction(a, t, inventory, force_execution=False)
-        #action = self.createAction(a, t, inventory, force_execution=True)
+        #action = self.createAction(a, t, inventory, force_execution=False)
+        action = self.createAction(a, t, inventory, force_execution=True)
         self.runAction(action)
         (t_next, i_next) = self.determineNextState(action)
         reference = self.state.getBidAskMid()
@@ -236,7 +237,7 @@ class ActionSpace(object):
             state2=(t_next, i_next))
         return (t_next, i_next)
 
-    def train(self, episodes=1):
+    def train(self, t, episodes=1):
         for episode in range(int(episodes)):
             self.setRandomOffset()
             for t in self.T:
@@ -246,6 +247,16 @@ class ActionSpace(object):
                     (t_next, i_next) = self.update((t, i))
                     while i_next != 0:
                         (t_next, i_next) = self.update((t_next, i_next))
+
+    def trainConcurrent(self, episodes=1):
+        threads = []
+        for episode in range(int(episodes)):
+            t = threading.Thread(target=actionSpace.train, args=(1,))
+            threads.append(t)
+
+        [t.start() for t in threads]
+        [t.join() for t in threads]
+
 
     def runActionBehaviour(self, episodes=1):
         for episode in range(int(episodes)):
@@ -260,15 +271,13 @@ class ActionSpace(object):
                     M.append([state, action.getA(), action.getAvgPrice()])
         return M
 
-
-    def backtest(self, q=None):
+    def backtest(self, q=None, M=[]):
         if q is None:
             q = self.ai.q
         if not q:
             raise Exception('Q-Table is empty, please train first.')
 
         self.setRandomOffset()
-        M = []
         for t in self.T:
             logging.info("\n"+"t=="+str(t))
             for i in self.I:
@@ -283,41 +292,68 @@ class ActionSpace(object):
                 price = action.getAvgPrice()
                 self.setState(t)
                 midPrice = self.state.getBidAskMid()
-                M.append([state, midPrice, a, price])
+                # TODO: last column is for for the BUY scenario only
+                M.append([state, midPrice, a, price, midPrice - price])
         return M
+
+    def backtestConcurrent(self, q=None, episodes=1):
+        threads = []
+        M = []
+        for episode in range(int(episodes)):
+            t = threading.Thread(target=actionSpace.backtest, args=(q, M,))
+            threads.append(t)
+        [t.start() for t in threads]
+        [t.join() for t in threads]
+
+        # Average states within M
+        N = []
+        observed = []
+        for x in M:
+            state = x[0]
+            if state in observed:
+                continue
+            observed.append(state)
+            paid = []
+            reward = []
+            for y in M:
+                if y[0] == state:
+                    paid.append(y[3])
+                    reward.append(y[4])
+            N.append([state, x[1], x[2], np.average(paid), np.average(reward)])
+        return N
 
 
 orderbook = Orderbook()
 orderbook.loadFromFile('query_result_train.tsv')
 side = OrderSide.BUY
-V = 1.0
+V = 10.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 1, 2, 5, 10, 30, 60, 120]
 # I = [1.0, 2.0, 3.0, 4.0]
 I = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
 H = max(I)
 levels = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10]
-ai = QLearn(actions=levels, epsilon=0.5, alpha=0.5, gamma=0.5)
+ai = QLearn(actions=levels, epsilon=0.8, alpha=0.2, gamma=0.8)
 actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
 
 #logging.basicConfig(level=logging.INFO)
 
-# M = actionSpace.runActionBehaviour()
-# print(np.asarray(M))
-
-actionSpace.train(1)
-
-np.save('q.npy', actionSpace.ai.q)
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(actionSpace.ai.q)
+M = actionSpace.runActionBehaviour()
+print(np.asarray(M))
 
 
-# # Backtest
-orderbook = Orderbook()
-orderbook.loadFromFile('query_result_test.tsv')
-actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
-q = np.load('q.npy').item()
-M = actionSpace.backtest(q)
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(q)
-pp.pprint(M)
+# # Train
+# actionSpace.trainConcurrent(episodes=100)
+# np.save('q.npy', actionSpace.ai.q)
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(actionSpace.ai.q)
+
+
+# Backtest
+# orderbook = Orderbook()
+# orderbook.loadFromFile('query_result_test.tsv')
+# actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
+# q = np.load('q.npy').item()
+# M = actionSpace.backtestConcurrent(q, 10)
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(M)
