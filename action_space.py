@@ -98,13 +98,12 @@ class ActionSpace(object):
         logging.info('Next state for action: ' + str((t_next, i_next)))
         return (t_next, i_next)
 
-    def update(self, aiState):
+    def update(self, aiState, force_execution=False):
         a = self.ai.chooseAction(aiState)
         t = aiState[0]
         i = aiState[1]
         inventory = i * (self.V / max(self.I))
-        #action = self.createAction(a, t, inventory, force_execution=False)
-        action = self.createAction(a, t, inventory, force_execution=True)
+        action = self.createAction(a, t, inventory, force_execution=force_execution)
         action.run(self.orderbook)
         (t_next, i_next) = self.determineNextState(action)
         reward = action.getValueAvg()
@@ -115,26 +114,17 @@ class ActionSpace(object):
             state2=(t_next, i_next))
         return (t_next, i_next)
 
-    def train(self, t, episodes=1):
+    def train(self, episodes=1, force_execution=False):
         for episode in range(int(episodes)):
             for t in self.T:
                 logging.info("\n"+"t=="+str(t))
                 for i in self.I:
                     logging.info("     i=="+str(i))
-                    (t_next, i_next) = self.update((t, i))
+                    logging.info("Action run " + str((t, i)))
+                    (t_next, i_next) = self.update((t, i), force_execution)
                     while i_next != 0:
-                        print("should not happen. state: " + str((t, i)))
-                        (t_next, i_next) = self.update((t_next, i_next))
-
-    def trainConcurrent(self, episodes=1):
-        threads = []
-        for episode in range(int(episodes)):
-            t = threading.Thread(target=self.train, args=(1,))
-            threads.append(t)
-
-        [t.start() for t in threads]
-        [t.join() for t in threads]
-
+                        logging.info("Action transition " + str((t, i)) + " -> " + str((t_next, i_next)))
+                        (t_next, i_next) = self.update((t_next, i_next), force_execution)
 
     def runActionBehaviour(self, episodes=1):
         for episode in range(int(episodes)):

@@ -30,7 +30,7 @@ pp = pprint.PrettyPrinter(indent=4)
 side = OrderSide.BUY
 V = 10.0
 # T = [4, 3, 2, 1, 0]
-T = [0, 30, 60]
+T = [0, 10, 30, 60]
 # I = [1.0, 2.0, 3.0, 4.0]
 I = [0.5, 1.0, 2.5, 3.5, 5.0]
 H = max(I)
@@ -58,10 +58,10 @@ avgExecutions2 = []
 bestExecutions5 = []
 avgExecutions5 = []
 
-for episode in range(200):
+for episode in range(100):
     pp.pprint("Episode " + str(episode))
     # # Train
-    actionSpace.trainConcurrent(episodes=1)
+    actionSpace.train(episodes=1, force_execution=True)
     np.save('q.npy', actionSpace.ai.q)
     #pp.pprint(actionSpace.ai.q)
 
