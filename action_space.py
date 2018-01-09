@@ -29,7 +29,7 @@ class ActionSpace(object):
         self.H = H
 
     def setRandomOffset(self):
-        self.randomOffset = self.orderbook.getRandomOffset(max(T))
+        self.randomOffset = self.orderbook.getRandomOffset(max(self.T))
 
     def getState(self):
         return self.state
@@ -195,7 +195,7 @@ class ActionSpace(object):
                 maxQ = max(list(filter(None, values)))
                 a = list(reversed(self.levels))[values.index(maxQ)]
                 inventory = i * (self.V / max(self.I))
-                action = self.createAction(a, t, inventory, force_execution=True)
+                action = self.createAction(a, t, inventory, force_execution=False)
                 self.runAction(action)
                 price = action.getAvgPrice()
                 self.setState(t)
