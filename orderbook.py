@@ -1,7 +1,7 @@
 from dateutil import parser
 from order_side import OrderSide
 import numpy as np
-
+import random
 
 class OrderbookEntry(object):
 
@@ -132,8 +132,9 @@ class Orderbook(object):
             raise Exception('Index out of orderbook state.')
         return self.states[index]
 
-    def getOffsetIndex(self, offset):
-        """The index of the first state past the given offset in seconds.
+    def getOffsetHead(self, offset):
+        """The index (from the beginning of the list) of the first state past
+        the given offset in seconds.
         For example, if offset=3 with 10 states availble, whereas for
         simplicity every state has 1 second diff, then the resulting index
         would be the one marked with 'i':
@@ -141,7 +142,6 @@ class Orderbook(object):
         |x|x|x|i|_|_|_|_|_|_|
 
         As a result, the elements marked with 'x' are not meant to be used.
-
         """
         if offset == 0:
             return 0
@@ -162,29 +162,58 @@ class Orderbook(object):
 
         return offsetIndex
 
+    def getOffsetTail(self, offset):
+        """The index (from the end of the list) of the first state past
+        the given offset in seconds.
+        For example, if offset=3 with 10 states availble, whereas for
+        simplicity every state has 1 second diff, then the resulting index
+        would be the one marked with 'i':
+
+        |_|_|_|_|_|_|i|x|x|x|
+
+        As a result, the elements marked with 'x' are not meant to be used.
+        """
+        states = self.getStates()
+        if offset == 0:
+            return len(states) - 1
+
+        startState = states[-1]
+        offsetIndex = len(states) - 1
+        consumed = 0.0
+        while(consumed < offset and offsetIndex > 0):
+            state = states[offsetIndex]
+            consumed = (startState.getTimestamp() - state.getTimestamp()).total_seconds()
+            offsetIndex = offsetIndex - 1
+
+        if consumed < offset:
+            raise Exception('Not enough data for offset. Found states for '
+                            + str(consumed) + ' seconds, required: '
+                            + str(offset))
+
+        return offsetIndex
+
     def getIndexWithTimeRemain(self, seconds, offset=0):
         """ Returns the state with seconds remaining starting from the end.
         For example, if seconds=3 and offset=1 with 10 states availble, whereas
         for simplicity every state has 1 second diff, then the resulting index
-        would be the one marked with 'i' and the cap set by the offset is 'c'
-        and 'x' indicating the non-usable elements:
+        would be the one marked with 'i' and 'x' indicating the non-usable
+        elements capped by the offset. This function uses tail based
+        offsetting:
 
-        |x|c|_|_|_|_|i|>|>|>|
+        |_|_|_|_|_|_|i>|>|>|x|
 
         As a result, the maximum seconds to retrieve would be 8, however only 3
-        (4 counting the element of the index position) are used in this case
-        and 4 are not being used (marked with '_').
-
+        (starting at the index position i>) are used in this case and 6 are not
+        being used (marked with '_').
         """
         if not self.getStates:
             raise Exception('Order book does not contain states.')
 
         states = self.getStates()
-        endState = states[-1]
-        index = len(states) - 2
-        offsetIndex = self.getOffsetIndex(offset)
+        index = self.getOffsetTail(offset)
+        endState = states[index]
         consumed = 0.0
-        while(consumed < seconds and index >= offsetIndex):
+        while(consumed < seconds and index >= 0):
             state = states[index]
             consumed = (endState.getTimestamp() - state.getTimestamp()).total_seconds()
             index = index - 1
@@ -199,12 +228,36 @@ class Orderbook(object):
         """Time span of data in seconds.
         The offset fixes the pointer starting from the beginning of the data
         feed.
+
+        This function uses per default tail based offsetting.
         """
         states = self.getStates()
-        offsetIndex = self.getOffsetIndex(offset)
-        start = states[offsetIndex].getTimestamp()
-        end = states[-1].getTimestamp()
+        offsetIndex = self.getOffsetTail(offset)
+        start = states[0].getTimestamp()
+        end = states[offsetIndex].getTimestamp()
         return (end - start).total_seconds()
+
+    def getRandomOffset(self, seconds_required=120):
+        """Random offset for tail based indexing.
+        From the beginning of the state list the required seconds will be
+        secured, then the leftover of seconds can be used randomize offsets.
+
+        For example, if seconds_required=3 (market with '_') with a total of 10
+        states available, whereas for simplicity every state has 1 second diff,
+        then offset can be either of the indices market with 'o':
+
+        |_|_|_|o|o|o|o|o|o|o|
+
+        Therefore, it is always ensured that at least 3 seconds worth of states
+        will be availble.
+        """
+        indexRequired = self.getOffsetHead(offset=seconds_required)
+        states = self.getStates()
+        start = states[indexRequired].getTimestamp()
+        end = states[-1].getTimestamp()
+        remaining = int((end - start).total_seconds())
+        return random.choice(range(remaining))
+
 
     def loadFromFile(self, file):
         import csv
@@ -256,7 +309,11 @@ class Orderbook(object):
 # o = Orderbook()
 # o.loadFromFile('query_result_small.tsv')
 # print(o.getTotalDuration(offset=0))
-# print(o.getIndexWithTimeRemain(seconds=99, offset=10))
+# print(o.getOffsetTail(offset=0))
+# print(o.getOffsetTail(offset=16))
+#
+# print(o.getRandomOffset(seconds_required=60))
+# print(o.getIndexWithTimeRemain(seconds=60, offset=50))
 # s0 = o.getState(0).getTimestamp()
 # s1 = o.getState(1).getTimestamp()
 # print(s0)
