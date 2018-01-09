@@ -25,35 +25,40 @@ def getBestTimeForInventory(M, inventory_observe):
 
 
 pp = pprint.PrettyPrinter(indent=4)
-
-orderbook = Orderbook()
-orderbook.loadFromFile('query_result_train.tsv')
-orderbook_test = Orderbook()
-orderbook_test.loadFromFile('query_result_test.tsv')
+#logging.basicConfig(level=logging.DEBUG)
 
 side = OrderSide.BUY
 V = 10.0
 # T = [4, 3, 2, 1, 0]
-T = [0, 30, 60, 120]
+T = [0, 30, 60]
 # I = [1.0, 2.0, 3.0, 4.0]
 I = [0.5, 1.0, 2.5, 3.5, 5.0]
 H = max(I)
-levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -8, -10, -15, -16, -17, -18, -19, -20, -25, -30, -50, -100]
-ai = QLearn(actions=levels, epsilon=0.8, alpha=0.5, gamma=0.5)
+levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -8, -10, -15, -16, -17, -18, -19, -20, -25, -30, -50, -100, -1000]
+ai = QLearn(actions=levels, epsilon=0.5, alpha=0.5, gamma=0.5)
+
+orderbook = Orderbook()
+orderbook.loadFromFile('query_result_small.tsv')
 actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
+
+orderbook_test = Orderbook()
+orderbook_test.loadFromFile('query_result_small.tsv')
 actionSpace_test = ActionSpace(orderbook_test, side, V, T, I, H, ai, levels)
 
-#logging.basicConfig(level=logging.INFO)
 
-# M = actionSpace.runActionBehaviour()
-# print(np.asarray(M))
+# testaction = actionSpace.createAction(50, 1.0, 5, True)
+# testaction.getRuntime()
+# len(orderbook.getStates())
+# testaction.run(orderbook)
+# testaction.getAvgPrice()
+
 
 bestExecutions2 = []
 avgExecutions2 = []
 bestExecutions5 = []
 avgExecutions5 = []
 
-for episode in range(100):
+for episode in range(200):
     pp.pprint("Episode " + str(episode))
     # # Train
     actionSpace.trainConcurrent(episodes=1)

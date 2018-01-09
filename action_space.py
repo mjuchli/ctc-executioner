@@ -1,9 +1,7 @@
 import logging
-import random
 import threading
 import numpy as np
 from action import Action
-from match_engine import MatchEngine
 from order import Order
 from order_type import OrderType
 from qlearn import QLearn
@@ -13,9 +11,6 @@ class ActionSpace(object):
 
     def __init__(self, orderbook, side, V, T, I, H, ai=None, levels=None):
         self.orderbook = orderbook
-        self.index = 0
-        self.state = None
-        self.randomOffset = 0
         self.side = side
         if not levels:
             levels = [-2, -1, 0, 1, 2, 3]
@@ -28,21 +23,8 @@ class ActionSpace(object):
         self.I = I
         self.H = H
 
-    def setRandomOffset(self):
-        self.randomOffset = self.orderbook.getRandomOffset(max(self.T))
-
-    def getState(self):
-        return self.state
-
-    def setState(self, t):
-        index = self.orderbook.getIndexWithTimeRemain(t, self.randomOffset)
-        if index >= len(self.orderbook.getStates()):
-            raise Exception('Index out of orderbook state.')
-        self.index = index
-        self.state = self.orderbook.getState(self.index)
-
     def createAction(self, level, runtime, qty, force_execution=False):
-        self.setState(runtime)  # Important to set orderbook index beforehand
+        state, index = self.orderbook.getRandomState(runtime, max(self.T))
         if level <= 0:
             side = self.side
         else:
@@ -53,7 +35,7 @@ class ActionSpace(object):
             price = None
             ot = OrderType.MARKET
         else:
-            price = self.state.getPriceAtLevel(side, level)
+            price = state.getPriceAtLevel(side, level)
             if force_execution:
                 ot = OrderType.LIMIT_T_MARKET
             else:
@@ -67,6 +49,8 @@ class ActionSpace(object):
         )
         action = Action(a=level, runtime=runtime)
         action.setOrder(order)
+        action.setOrderbookState(state)
+        action.setOrderbookIndex(index)
         return action
 
     def createActions(self, runtime, qty, force_execution=False):
@@ -75,25 +59,13 @@ class ActionSpace(object):
             actions.append(self.createAction(level, runtime, qty, force_execution))
         return actions
 
-    def runAction(self, action, break_time_period=False):
-        self.setState(action.getRuntime())  # Important to set orderbook index while matching
-        matchEngine = MatchEngine(self.orderbook, index=self.index)
-        if not break_time_period:
-            counterTrades, qtyRemain = matchEngine.matchOrder(action.getOrder(), action.getRuntime())
-        else:
-            raise Exception("todo")
-
-        action.setTrades(counterTrades)
-        return action, qtyRemain
-
     def determineBestAction(self, actions):
-        reference = self.state.getBidAskMid()
         bestAction = None
         for action in actions:
             if not bestAction:
                 bestAction = action
                 continue
-            if action.getValueAvg(reference) < bestAction.getValueAvg(reference):
+            if action.getValueAvg() < bestAction.getValueAvg():
                 bestAction = action
         return bestAction
 
@@ -101,7 +73,7 @@ class ActionSpace(object):
         inventory = i * (self.V / max(self.I))
         actions = self.createActions(t, inventory, force_execution)
         for action in actions:
-            self.runAction(action)
+            action.run(self.ororderbook)
         return self.determineBestAction(actions)
 
     def determineNextState(self, action):
@@ -133,10 +105,9 @@ class ActionSpace(object):
         inventory = i * (self.V / max(self.I))
         #action = self.createAction(a, t, inventory, force_execution=False)
         action = self.createAction(a, t, inventory, force_execution=True)
-        self.runAction(action)
+        action.run(self.orderbook)
         (t_next, i_next) = self.determineNextState(action)
-        reference = self.state.getBidAskMid()
-        reward = action.getValueAvg(reference)
+        reward = action.getValueAvg()
         self.ai.learn(
             state1=(t, i),
             action1=action.getA(),
@@ -146,7 +117,6 @@ class ActionSpace(object):
 
     def train(self, t, episodes=1):
         for episode in range(int(episodes)):
-            self.setRandomOffset()
             for t in self.T:
                 logging.info("\n"+"t=="+str(t))
                 for i in self.I:
@@ -168,7 +138,6 @@ class ActionSpace(object):
 
     def runActionBehaviour(self, episodes=1):
         for episode in range(int(episodes)):
-            self.setRandomOffset()
             M = []
             for t in self.T:
                 logging.info("\n"+"t=="+str(t))
@@ -185,7 +154,6 @@ class ActionSpace(object):
         if not q:
             raise Exception('Q-Table is empty, please train first.')
 
-        self.setRandomOffset()
         for t in self.T:
             logging.info("\n"+"t=="+str(t))
             for i in self.I:
@@ -195,11 +163,10 @@ class ActionSpace(object):
                 maxQ = max(list(filter(None, values)))
                 a = list(reversed(self.levels))[values.index(maxQ)]
                 inventory = i * (self.V / max(self.I))
-                action = self.createAction(a, t, inventory, force_execution=False)
-                self.runAction(action)
+                action = self.createAction(a, t, inventory, force_execution=True)
+                action.run(self.orderbook)
                 price = action.getAvgPrice()
-                self.setState(t)
-                midPrice = self.state.getBidAskMid()
+                midPrice = action.getOrderbookState().getBidAskMid()
                 # TODO: last column is for for the BUY scenario only
                 M.append([state, midPrice, a, price, midPrice - price])
         return M

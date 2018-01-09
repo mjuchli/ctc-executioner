@@ -1,5 +1,6 @@
 import copy
 from order_side import OrderSide
+from match_engine import MatchEngine
 
 
 class Action(object):
@@ -9,6 +10,8 @@ class Action(object):
         self.runtime = runtime
         self.order = None
         self.trades = []  # filled order
+        self.orderbookState = None
+        self.orderbookIndex = None
 
     def getA(self):
         return self.a
@@ -18,6 +21,18 @@ class Action(object):
 
     def setRuntime(self, runtime):
         self.runtime = runtime
+
+    def setOrderbookState(self, state):
+        self.orderbookState = state
+
+    def getOrderbookState(self):
+        return self.orderbookState
+
+    def setOrderbookIndex(self, index):
+        self.orderbookIndex = index
+
+    def getOrderbookIndex(self):
+        return self.orderbookIndex
 
     def getOrder(self):
         return self.order
@@ -56,12 +71,14 @@ class Action(object):
     def getTotalPaidReceived(self):
         return self.getAvgPrice() * self.getQtyExecuted()
 
-    def getValueAbs(self, midPrice):
+    def getValueAbs(self):
         """Retuns difference of the paid amount to the total bid/ask-mid amount.
         The higher, the better,
         For BUY: total paid at mid price - total paid
         For SELL: total received - total received at mid price
         """
+        midPrice = self.getOrderbookState().getBidAskMid()
+
         # In case of no executed trade, the value is the negative reference
         if self.getTotalPaidReceived() == 0.0:
             return -midPrice
@@ -71,7 +88,7 @@ class Action(object):
         else:
             return self.getTotalPaidReceived() - midPrice
 
-    def getValueAvg(self, midPrice):
+    def getValueAvg(self):
         """Retuns difference of the average paid price to bid/ask-mid price.
         The higher, the better,
         For BUY: total paid at mid price - total paid
@@ -81,13 +98,25 @@ class Action(object):
         if self.getAvgPrice() == 0.0:
             return -2.0 * abs(self.getA())
 
+        midPrice = self.getOrderbookState().getBidAskMid()
         if self.getOrder().getSide() == OrderSide.BUY:
             return (1.0 - (midPrice / self.getAvgPrice()))
         else:
             return (1.0 - (self.getAvgPrice() / midPrice))
 
     def move(self, t_next, i_next):
+        """DEPRECATED"""
         newAction = copy.deepcopy(self)
         newAction.setRuntime(t_next)
         newAction.getOrder().setCty(i_next)
         return newAction
+
+    def run(self, orderbook, break_time_period=False):
+        matchEngine = MatchEngine(orderbook, index=self.getOrderbookIndex())
+        if not break_time_period:
+            counterTrades, qtyRemain = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
+        else:
+            raise Exception("todo")
+
+        self.setTrades(counterTrades)
+        return self, qtyRemain

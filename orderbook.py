@@ -237,12 +237,12 @@ class Orderbook(object):
         end = states[offsetIndex].getTimestamp()
         return (end - start).total_seconds()
 
-    def getRandomOffset(self, seconds_required=120):
+    def getRandomOffset(self, offset_max=120):
         """Random offset for tail based indexing.
         From the beginning of the state list the required seconds will be
         secured, then the leftover of seconds can be used randomize offsets.
 
-        For example, if seconds_required=3 (market with '_') with a total of 10
+        For example, if offset_max=3 (market with '_') with a total of 10
         states available, whereas for simplicity every state has 1 second diff,
         then offset can be either of the indices market with 'o':
 
@@ -251,13 +251,19 @@ class Orderbook(object):
         Therefore, it is always ensured that at least 3 seconds worth of states
         will be availble.
         """
-        indexRequired = self.getOffsetHead(offset=seconds_required)
+        indexRequired = self.getOffsetHead(offset=offset_max)
         states = self.getStates()
         start = states[indexRequired].getTimestamp()
         end = states[-1].getTimestamp()
         remaining = int((end - start).total_seconds())
         return random.choice(range(remaining))
 
+    def getRandomState(self, runtime, offset_max):
+        randomOffset = self.getRandomOffset(offset_max)
+        index = self.getIndexWithTimeRemain(runtime, randomOffset)
+        if index >= len(self.getStates()):
+            raise Exception('Index out of orderbook state.')
+        return self.getState(index), index
 
     def loadFromFile(self, file):
         import csv
@@ -306,13 +312,14 @@ class Orderbook(object):
                 self.addState(s)
 
 
-# o = Orderbook()
-# o.loadFromFile('query_result_small.tsv')
+o = Orderbook()
+o.loadFromFile('query_result_small.tsv')
+
 # print(o.getTotalDuration(offset=0))
 # print(o.getOffsetTail(offset=0))
 # print(o.getOffsetTail(offset=16))
 #
-# print(o.getRandomOffset(seconds_required=60))
+# print(o.getRandomOffset(offset_max=60))
 # print(o.getIndexWithTimeRemain(seconds=60, offset=50))
 # s0 = o.getState(0).getTimestamp()
 # s1 = o.getState(1).getTimestamp()

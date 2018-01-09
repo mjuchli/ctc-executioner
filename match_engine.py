@@ -125,7 +125,7 @@ class MatchEngine(object):
         # Execute remaining qty as market if LIMIT_T_MARKET
         if remaining > 0.0 and (order.getType() == OrderType.LIMIT_T_MARKET or order.getType() == OrderType.MARKET):
             logging.debug('Execute remaining as MARKET order.')
-            i = i + 1
+            #i = i + 1 #TODO: make sure this is not required
             if not len(self.orderbook.getStates()) > i:
                 raise Exception('Not enough data for following market order.')
 
