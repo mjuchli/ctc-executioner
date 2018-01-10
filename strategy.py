@@ -28,21 +28,21 @@ pp = pprint.PrettyPrinter(indent=4)
 #logging.basicConfig(level=logging.INFO)
 
 side = OrderSide.BUY
-V = 10.0
+V = 1.0
 # T = [4, 3, 2, 1, 0]
-T = [0, 10, 30, 60]
+T = [0, 10, 30, 60, 120, 240]
 # I = [1.0, 2.0, 3.0, 4.0]
-I = [0.1, 0.3, 0.5, 0.75, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
+I = [0.1, 0.3, 0.5, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
 H = max(I)
-levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -8, -10, -15, -16, -17, -18, -19, -20, -25, -30, -50, -100, -1000]
+levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -7, -10, -15, -20, -25, -30, -50]
 ai = QLearn(actions=levels, epsilon=0.5, alpha=0.5, gamma=0.5)
 
 orderbook = Orderbook()
-orderbook.loadFromFile('query_result_small.tsv')
+orderbook.loadFromFile('query_result_train.tsv')
 actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
 
 orderbook_test = Orderbook()
-orderbook_test.loadFromFile('query_result_small.tsv')
+orderbook_test.loadFromFile('query_result_test.tsv')
 actionSpace_test = ActionSpace(orderbook_test, side, V, T, I, H, ai, levels)
 
 
@@ -52,18 +52,17 @@ actionSpace_test = ActionSpace(orderbook_test, side, V, T, I, H, ai, levels)
 # testaction.run(orderbook)
 # testaction.getAvgPrice()
 
-for episode in range(100):
-    pp.pprint("Episode " + str(episode))
-    # # Train
-    actionSpace.train(episodes=1, force_execution=False)
-    np.save('q.npy', actionSpace.ai.q)
-    #pp.pprint(actionSpace.ai.q)
+# for episode in range(100):
+#     pp.pprint("Episode " + str(episode))
+#     # # Train
+#     actionSpace.train(episodes=1, force_execution=False)
+#     np.save('q.npy', actionSpace.ai.q)
+#     #pp.pprint(actionSpace.ai.q)
 
 
 # Backtest
 q = np.load('q.npy').item()
 # M <- [t, i, Price, A, Paid, Diff]
-M = actionSpace_test.backtestConcurrent(q, 10)
-
-pp.pprint(actionSpace.ai.q)
+M = actionSpace_test.backtest(q, 100, average=True)
 pp.pprint(M)
+#pp.pprint([x for x in M if x[0][0] != 0])

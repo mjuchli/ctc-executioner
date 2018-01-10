@@ -201,65 +201,60 @@ class ActionSpace(object):
                     M.append([state, action.getA(), action.getAvgPrice()])
         return M
 
-    def backtest(self, q=None, M=[]):
+    def backtest(self, q=None, episodes=10, average=False):
         if q is None:
             q = self.ai.q
+        else:
+            self.ai.q = q
+
         if not q:
             raise Exception('Q-Table is empty, please train first.')
 
-        for t in self.T[1:len(self.T)]:
+        Ms = []
+        T = self.T[1:len(self.T)]
+        for t in T:
             logging.info("\n"+"t=="+str(t))
             for i in self.I:
                 logging.info("     i=="+str(i))
-                a_choosen = []
+                actions = []
                 state = (t, i)
-                values = [q.get((state, x)) for x in list(reversed(self.levels))]
-                maxQ = max(list(filter(None, values)))
-                a = list(reversed(self.levels))[values.index(maxQ)]
-                a_choosen.append(a)
+                #print(state)
+                #try:
+                a = self.ai.getQAction(state)
+                #except:
+                #    continue
+                actions.append(a)
                 inventory = i * (self.V / max(self.I))
                 action = self.createAction(a, t, inventory, force_execution=False)
                 action.run(self.orderbook)
                 i_next = self.determineNextInventory(action)
                 t_next = self.determineNextTime(t)
                 while i_next != 0:
-                    runtime_next = self.determineRuntime(t_next)
-                    aiState_next = (t_next, i_next)
-                    values = [q.get((aiState_next, x)) for x in list(reversed(self.levels))]
-                    maxQ = max(list(filter(None, values)))
-                    a_next = list(reversed(self.levels))[values.index(maxQ)]
-                    a_choosen.append(a_next)
+                    state_next = (t_next, i_next)
+                    try:
+                        a_next = self.ai.getQAction(state_next)
+                    except:
+                        break
+                    actions.append(a_next)
                     #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
-                    if runtime_next <= 0.0:
-                        price = None
-                        action.getOrder().setType(OrderType.MARKET)
-                    else:
-                        price = action.getOrderbookState().getPriceAtLevel(action.getOrder().getSide(), a_next)
 
-                    action.getOrder().setPrice(price)
-                    action.getOrder().setCty(action.getQtyNotExecuted())
-                    action.setRuntime(runtime_next)
+                    runtime_next = self.determineRuntime(t_next)
+                    action.update(a_next, runtime_next)
                     action.run(self.orderbook)
-                    i = i_next
-                    t = t_next
+                    # i = i_next
+                    # t = t_next
                     i_next = self.determineNextInventory(action)
                     t_next = self.determineNextTime(t_next)
 
                 price = action.getAvgPrice()
                 midPrice = action.getOrderbookState().getBidAskMid()
                 # TODO: last column is for for the BUY scenario only
-                M.append([state, midPrice, a_choosen, price, midPrice - price])
-        return M
+                Ms.append([state, midPrice, actions, price, midPrice - price])
+        if not average:
+            return Ms
+        return self.averageBacktest(Ms)
 
-    def backtestConcurrent(self, q=None, episodes=1):
-        threads = []
-        M = []
-        for episode in range(int(episodes)):
-            t = threading.Thread(target=self.backtest, args=(q, M,))
-            threads.append(t)
-        [t.start() for t in threads]
-        [t.join() for t in threads]
-
+    def averageBacktest(self, M):
         # Average states within M
         N = []
         observed = []

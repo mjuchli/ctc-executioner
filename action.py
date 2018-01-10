@@ -1,5 +1,6 @@
 import copy
 from order_side import OrderSide
+from order_type import OrderType
 from match_engine import MatchEngine
 import numpy as np
 
@@ -113,15 +114,31 @@ class Action(object):
 
         return self.getQtyExecuted() + 5.0 * np.log(-1.0 * self.getA())
 
-    def move(self, t_next, i_next):
-        """DEPRECATED"""
-        newAction = copy.deepcopy(self)
-        newAction.setRuntime(t_next)
-        newAction.getOrder().setCty(i_next)
-        return newAction
+    def update(self, a, runtime):
+        """Updates an action to be ready for the next run."""
+        if runtime <= 0.0:
+            price = None
+            self.getOrder().setType(OrderType.MARKET)
+        else:
+            price = self.getOrderbookState().getPriceAtLevel(self.getOrder().getSide(), a)
+
+        self.getOrder().setPrice(price)
+        self.getOrder().setCty(self.getQtyNotExecuted())
+        self.setRuntime(runtime)
+        return self
 
     def run(self, orderbook):
+        """Runs action using match engine.
+        The orderbook is provided and being used in the match engine along with
+        the prviously determined index where the action should start matching.
+        The matching process returns the trades and the remaining quantity
+        along with the index the matching stopped.
+        The action gets updated with those values accordingly such that it can
+        be evaluated or run over again (e.g. with a new runtime).
+        """
         matchEngine = MatchEngine(orderbook, index=self.getOrderbookIndex())
-        counterTrades, qtyRemain = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
+        counterTrades, qtyRemain, index = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
         self.setTrades(counterTrades)
+        self.setOrderbookIndex(index=index)
+        self.setOrderbookState(orderbook.getState(index))
         return self, qtyRemain

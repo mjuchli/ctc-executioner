@@ -145,7 +145,7 @@ class MatchEngine(object):
         logging.debug("Total number of trades: " + str(len(trades)))
         logging.debug("Remaining qty of order: " + str(remaining))
         logging.debug("Index at end of match period: " + str(i))
-        return trades, remaining
+        return trades, remaining, i-1
 
 
 # logging.basicConfig(level=logging.debug)

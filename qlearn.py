@@ -16,6 +16,20 @@ class QLearn:
         """Q-value lookup for state and action,  or else returns default."""
         return self.q.get((state, action), default)
 
+    def getQAction(self, state):
+        """Best action based on Q-Table for given state."""
+        values = []
+        for x in list(reversed(self.actions)):
+            q_value = self.q.get((state, x))
+            if q_value:
+                values.append(q_value)
+            # else:
+                # raise Exception("Q-Table does not contain: " + str((state, x)))
+
+        maxQ = max(list(filter(None, values)))
+        a = list(reversed(self.actions))[values.index(maxQ)]
+        return a
+
     def learnQ(self, state, action, reward, value):
         oldv = self.q.get((state, action), None)
         if oldv is None:
