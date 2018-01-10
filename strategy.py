@@ -25,14 +25,14 @@ def getBestTimeForInventory(M, inventory_observe):
 
 
 pp = pprint.PrettyPrinter(indent=4)
-#logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.INFO)
 
 side = OrderSide.BUY
 V = 10.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 10, 30, 60]
 # I = [1.0, 2.0, 3.0, 4.0]
-I = [0.5, 1.0, 2.5, 3.5, 5.0]
+I = [0.1, 0.3, 0.5, 0.75, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
 H = max(I)
 levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -8, -10, -15, -16, -17, -18, -19, -20, -25, -30, -50, -100, -1000]
 ai = QLearn(actions=levels, epsilon=0.5, alpha=0.5, gamma=0.5)
@@ -52,32 +52,18 @@ actionSpace_test = ActionSpace(orderbook_test, side, V, T, I, H, ai, levels)
 # testaction.run(orderbook)
 # testaction.getAvgPrice()
 
-
-bestExecutions2 = []
-avgExecutions2 = []
-bestExecutions5 = []
-avgExecutions5 = []
-
 for episode in range(100):
     pp.pprint("Episode " + str(episode))
     # # Train
-    actionSpace.train(episodes=1, force_execution=True)
+    actionSpace.train(episodes=1, force_execution=False)
     np.save('q.npy', actionSpace.ai.q)
     #pp.pprint(actionSpace.ai.q)
 
 
-    # Backtest
-    q = np.load('q.npy').item()
-    # M <- [t, i, Price, A, Paid, Diff]
-    M = actionSpace_test.backtestConcurrent(q, 1)
-    #pp.pprint(M)
+# Backtest
+q = np.load('q.npy').item()
+# M <- [t, i, Price, A, Paid, Diff]
+M = actionSpace_test.backtestConcurrent(q, 10)
 
-    bestExecutions2.append(getBestTimeForInventory(M, 2.5))
-    avgExecutions2.append(getAvgPriceDiffForInventory(M, 2.5))
-    bestExecutions5.append(getBestTimeForInventory(M, 5.0))
-    avgExecutions5.append(getAvgPriceDiffForInventory(M, 5.0))
-
-pp.pprint(avgExecutions2)
-pp.pprint(avgExecutions5)
-pp.pprint(bestExecutions2)
-pp.pprint(bestExecutions5)
+pp.pprint(actionSpace.ai.q)
+pp.pprint(M)

@@ -1,7 +1,7 @@
 import copy
 from order_side import OrderSide
 from match_engine import MatchEngine
-
+import numpy as np
 
 class Action(object):
 
@@ -104,6 +104,15 @@ class Action(object):
         else:
             return (1.0 - (self.getAvgPrice() / midPrice))
 
+    def getValueExecuted(self):
+        if self.getQtyExecuted() == 0.0:
+            return -1.0 * abs(self.getA())
+
+        if self.getA() >= 0:
+            return self.getQtyExecuted()
+
+        return self.getQtyExecuted() + 5.0 * np.log(-1.0 * self.getA())
+
     def move(self, t_next, i_next):
         """DEPRECATED"""
         newAction = copy.deepcopy(self)
@@ -111,12 +120,8 @@ class Action(object):
         newAction.getOrder().setCty(i_next)
         return newAction
 
-    def run(self, orderbook, break_time_period=False):
+    def run(self, orderbook):
         matchEngine = MatchEngine(orderbook, index=self.getOrderbookIndex())
-        if not break_time_period:
-            counterTrades, qtyRemain = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
-        else:
-            raise Exception("todo")
-
+        counterTrades, qtyRemain = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
         self.setTrades(counterTrades)
         return self, qtyRemain

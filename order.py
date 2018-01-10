@@ -33,6 +33,9 @@ class Order:
     def getType(self):
         return self.orderType
 
+    def setType(self, type):
+        self.orderType = type
+
     def getSide(self):
         return self.orderSide
 
@@ -44,6 +47,9 @@ class Order:
 
     def getPrice(self):
         return self.price
+
+    def setPrice(self, price):
+        self.price = price
 
     def getTimeStamp(self):
         return self.timestamp
