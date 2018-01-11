@@ -145,6 +145,8 @@ class ActionSpace(object):
                     logging.info("Action run " + str((t, i)))
                     (t_next, i_next) = self.update((t, i), force_execution)
                     while i_next != 0:
+                        if force_execution:
+                            raise Exception("Enforced execution left " + str(i_next) + " unexecuted.")
                         logging.info("Action transition " + str((t, i)) + " -> " + str((t_next, i_next)))
                         (t_next, i_next) = self.update((t_next, i_next), force_execution)
 
@@ -211,18 +213,20 @@ class ActionSpace(object):
             raise Exception('Q-Table is empty, please train first.')
 
         Ms = []
-        T = self.T[1:len(self.T)]
-        for t in T:
+        #T = self.T[1:len(self.T)]
+        for t in self.T:
             logging.info("\n"+"t=="+str(t))
             for i in self.I:
                 logging.info("     i=="+str(i))
                 actions = []
                 state = (t, i)
                 #print(state)
-                #try:
-                a = self.ai.getQAction(state)
-                #except:
-                #    continue
+                try:
+                    a = self.ai.getQAction(state)
+                except:
+                    # State might not be in Q-Table yet, more training requried.
+                    logging.info("State " + str(state) + " not in Q-Table.")
+                    break
                 actions.append(a)
                 inventory = i * (self.V / max(self.I))
                 action = self.createAction(a, t, inventory, force_execution=False)
@@ -234,6 +238,8 @@ class ActionSpace(object):
                     try:
                         a_next = self.ai.getQAction(state_next)
                     except:
+                        # State might not be in Q-Table yet, more training requried.
+                        logging.info("State " + str(state_next) + " not in Q-Table.")
                         break
                     actions.append(a_next)
                     #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
