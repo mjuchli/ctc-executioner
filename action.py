@@ -96,23 +96,30 @@ class Action(object):
         For SELL: total received - total received at mid price
         """
         # In case of no executed trade, the value is the negative reference
-        if self.getAvgPrice() == 0.0:
-            return -2.0 * abs(self.getA())
+        if self.getPcFilled() == 0.0:
+            return 0.0 # -2.0 * abs(self.getA())
 
         midPrice = self.getOrderbookState().getBidAskMid()
         if self.getOrder().getSide() == OrderSide.BUY:
-            return (1.0 - (midPrice / self.getAvgPrice()))
+            return midPrice - self.getAvgPrice()
         else:
-            return (1.0 - (self.getAvgPrice() / midPrice))
+            return self.getAvgPrice() - midPrice
+
+    def getTestReward(self):
+        if self.getA() == 1:
+            return 100.0
+        else:
+            return -100.0
+
+    def getPcFilled(self):
+        return 10 * (self.getQtyExecuted() / self.getOrder().getCty())
 
     def getValueExecuted(self):
-        if self.getQtyExecuted() == 0.0:
-            return -1.0 * abs(self.getA())
+        r = 10.0
+        if self.getA() > 0:
+            r = -r
 
-        if self.getA() >= 0:
-            return self.getQtyExecuted()
-
-        return self.getQtyExecuted() + 5.0 * np.log(-1.0 * self.getA())
+        return self.getPcFilled() + r * np.log(1.0 + abs(self.getA()))
 
     def update(self, a, runtime):
         """Updates an action to be ready for the next run."""
