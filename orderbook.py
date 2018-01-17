@@ -26,9 +26,11 @@ class OrderbookState(object):
 
     def __init__(self, tradePrice=0.0, timestamp=None):
         self.tradePrice = tradePrice
+        self.volume = 0.0
         self.timestamp = timestamp
         self.buyers = []
         self.sellers = []
+        self.market = {}
 
     def __str__(self):
         s = "DateTime: " + str(self.timestamp) + "\n"
@@ -42,6 +44,24 @@ class OrderbookState(object):
 
     def setTradePrice(self, tradePrice):
         self.tradePrice = tradePrice
+
+    def getTradePrice(self):
+        return self.tradePrice
+
+    def setVolume(self, volume):
+        self.volume = volume
+
+    def getVolume(self):
+        return self.volume
+
+    def getMarket(self):
+        return self.market
+
+    def getMarketVar(self, key):
+        return self.market[key]
+
+    def setMarketVar(self, key, value):
+        self.market[key] = value
 
     def addBuyer(self, entry):
         self.buyers.append(entry)
@@ -265,12 +285,13 @@ class Orderbook(object):
             raise Exception('Index out of orderbook state.')
         return self.getState(index), index
 
-    def loadFromFile(self, file):
+    def loadFromFile(self, file, extraFeatures=True):
         import csv
         with open(file, 'rt') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
             for row in tsvin:
                 p = float(row[1])
+                vol = float(row[2])
                 b1 = float(row[3])
                 b2 = float(row[4])
                 b3 = float(row[5])
@@ -309,11 +330,21 @@ class Orderbook(object):
                 s = OrderbookState(tradePrice=p, timestamp=dt)
                 s.addBuyers(buyers)
                 s.addSellers(sellers)
+                s.setVolume(vol)
+                # Hand made features
+                if extraFeatures:
+                    mean60 = float(row[26])
+                    vol60 = float(row[27])
+                    std60 = float(row[28])
+                    s.setMarketVar('mean60', mean60)
+                    s.setMarketVar('vol60', vol60)
+                    s.setMarketVar('std60', std60)
+
                 self.addState(s)
 
 
-o = Orderbook()
-o.loadFromFile('query_result_small.tsv')
+#o = Orderbook()
+#o.loadFromFile('query_result_small.tsv')
 
 # print(o.getTotalDuration(offset=0))
 # print(o.getOffsetTail(offset=0))

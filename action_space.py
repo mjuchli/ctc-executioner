@@ -126,8 +126,9 @@ class ActionSpace(object):
         action.run(self.orderbook)
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
-        #reward = action.getValueAvg()
-        reward = action.getValueExecuted()
+        reward = action.getValueAvg()
+        # reward = action.getValueExecuted()
+        # reward = action.getTestReward()
         self.ai.learn(
             state1=(t, i),
             action1=action.getA(),
