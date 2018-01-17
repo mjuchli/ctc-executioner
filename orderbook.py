@@ -120,8 +120,9 @@ class OrderbookState(object):
 
 class Orderbook(object):
 
-    def __init__(self):
+    def __init__(self, extraFeatures=True):
         self.states = []
+        self.extraFeatures = extraFeatures
 
     def __str__(self):
         s = ''
@@ -285,7 +286,7 @@ class Orderbook(object):
             raise Exception('Index out of orderbook state.')
         return self.getState(index), index
 
-    def loadFromFile(self, file, extraFeatures=True):
+    def loadFromFile(self, file):
         import csv
         with open(file, 'rt') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
@@ -332,7 +333,7 @@ class Orderbook(object):
                 s.addSellers(sellers)
                 s.setVolume(vol)
                 # Hand made features
-                if extraFeatures:
+                if self.extraFeatures:
                     mean60 = float(row[26])
                     vol60 = float(row[27])
                     std60 = float(row[28])

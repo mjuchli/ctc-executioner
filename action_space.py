@@ -9,7 +9,7 @@ from qlearn import QLearn
 
 class ActionSpace(object):
 
-    def __init__(self, orderbook, side, V, T, I, H, ai=None, levels=None):
+    def __init__(self, orderbook, side, T, I, ai=None, levels=None):
         self.orderbook = orderbook
         self.side = side
         if not levels:
@@ -18,13 +18,14 @@ class ActionSpace(object):
         if not ai:
             ai = QLearn(self.levels)  # levels are our qlearn actions
         self.ai = ai
-        self.V = V
         self.T = T
         self.I = I
-        self.H = H
 
     def createAction(self, level, t, qty, force_execution=False):
         state, index = self.orderbook.getRandomState(t, max(self.T))
+        aiState = (t, qty) #, state.getMarket())
+        if level is None:
+            level = self.ai.chooseAction(aiState)
 
         # Determines whether to run and force execution of given t, or if
         # segmentation of t into multiple runtimes is allowed.
@@ -76,8 +77,7 @@ class ActionSpace(object):
         return bestAction
 
     def getMostRewardingAction(self, t, i, force_execution=False):
-        inventory = i * (self.V / max(self.I))
-        actions = self.createActions(t, inventory, force_execution)
+        actions = self.createActions(t, i, force_execution)
         for action in actions:
             action.run(self.ororderbook)
         return self.determineBestAction(actions)
@@ -101,15 +101,13 @@ class ActionSpace(object):
 
     def determineNextInventory(self, action):
         qty_remaining = action.getQtyNotExecuted()
-        inventory_remaining = qty_remaining / self.V
 
         # TODO: Working with floats requires such an ugly threshold
         if qty_remaining > 0.0000001:
-            inventory_next = inventory_remaining * max(self.I)
             # Approximate next closest inventory given remaining and I
-            i_next = min([0.0] + self.I, key=lambda x: abs(x - inventory_next))
+            i_next = min([0.0] + self.I, key=lambda x: abs(x - qty_remaining))
             logging.info('Qty remain: ' + str(qty_remaining)
-                         + ' -> inventory: ' + str(inventory_remaining)
+                         + ' -> inventory: ' + str(qty_remaining)
                          + ' -> next i: ' + str(i_next))
         else:
             i_next = 0.0
@@ -118,11 +116,9 @@ class ActionSpace(object):
         return i_next
 
     def update(self, aiState, force_execution=False):
-        a = self.ai.chooseAction(aiState)
         t = aiState[0]
         i = aiState[1]
-        inventory = i * (self.V / max(self.I))
-        action = self.createAction(a, t, inventory, force_execution=force_execution)
+        action = self.createAction(None, t, i, force_execution=force_execution)
         action.run(self.orderbook)
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
@@ -150,46 +146,6 @@ class ActionSpace(object):
                             raise Exception("Enforced execution left " + str(i_next) + " unexecuted.")
                         logging.info("Action transition " + str((t, i)) + " -> " + str((t_next, i_next)))
                         (t_next, i_next) = self.update((t_next, i_next), force_execution)
-
-
-    # def train(self, episodes=1, force_execution=False):
-    #     for episode in range(int(episodes)):
-    #         for t in self.T:
-    #             logging.info("\n"+"t=="+str(t))
-    #             for i in self.I:
-    #                 logging.info("     i=="+str(i))
-    #                 aiState = (t, i)
-    #                 (t_next, i_next) = self.update((t, i), force_execution)
-    #                 a = self.ai.chooseAction(aiState)
-    #                 inventory = i * (self.V / max(self.I))
-    #                 action = self.createAction(a, t, inventory, force_execution=force_execution)
-    #                 logging.info("Action run " + str(aiState))
-    #                 action.run(self.orderbook)
-    #                 i_next = self.determineNextInventory(action)
-    #                 t_next = self.determineNextTime(t)
-    #                 reward = action.getValueAvg()
-    #                 self.ai.learn(
-    #                     state1=(t, i),
-    #                     action1=action.getA(),
-    #                     reward=(reward),
-    #                     state2=(t_next, i_next))
-    #                 while i_next != 0:
-    #                     runtime_next = self.determineRuntime(t_next)
-    #                     aiState_next = (t_next, i_next)
-    #                     logging.info("Action transition " + str(aiState) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
-    #                     action.setRuntime(runtime_next)
-    #                     action.getOrder().setCty(action.getQtyNotExecuted())
-    #                     action.run(self.orderbook)
-    #                     reward = action.getValueAvg()
-    #                     self.ai.learn(
-    #                         state1=(t, i),
-    #                         action1=action.getA(),
-    #                         reward=(reward),
-    #                         state2=(t_next, i_next))
-    #                     i = i_next
-    #                     t = t_next
-    #                     i_next = self.determineNextInventory(action)
-    #                     t_next = self.determineNextTime(t_next)
 
 
     def runActionBehaviour(self, episodes=1):
@@ -229,8 +185,7 @@ class ActionSpace(object):
                     logging.info("State " + str(state) + " not in Q-Table.")
                     break
                 actions.append(a)
-                inventory = i * (self.V / max(self.I))
-                action = self.createAction(a, t, inventory, force_execution=False)
+                action = self.createAction(a, t, i, force_execution=False)
                 action.run(self.orderbook)
                 i_next = self.determineNextInventory(action)
                 t_next = self.determineNextTime(t)

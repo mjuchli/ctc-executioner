@@ -30,7 +30,7 @@ def getBestTimeForInventory(M, inventory_observe):
 def train(episodes=100):
     if not orderbook.getStates():
         orderbook.loadFromFile(trainBook)
-    actionSpace = ActionSpace(orderbook, side, V, T, I, H, ai, levels)
+    actionSpace = ActionSpace(orderbook, side, T, I, ai, levels)
 
     for episode in range(episodes):
         # pp.pprint("Episode " + str(episode))
@@ -44,7 +44,7 @@ def test(episodes=100):
     if not orderbook_test.getStates():
         orderbook_test.loadFromFile(testBook)
 
-    actionSpace_test = ActionSpace(orderbook_test, side, V, T_test, I, H, ai, levels)
+    actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
     q = np.load('q.npy').item()
     # M <- [t, i, Price, A, Paid, Diff]
@@ -94,19 +94,18 @@ pp = pprint.PrettyPrinter(indent=4)
 #logging.basicConfig(level=logging.INFO)
 
 side = OrderSide.BUY
-V = 1.0
 # T = [4, 3, 2, 1, 0]
 T = [0, 10, 30, 60] # , 120, 240]
 T_test = [30, 60] # , 120, 240]
 # I = [1.0, 2.0, 3.0, 4.0]
-I = [0.1, 0.3, 0.5, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
+I = [0.1, 0.3, 0.5, 0.7, 1.0]
 H = max(I)
 levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -7, -10, -15, -20, -25, -30, -50]
 ai = QLearn(actions=levels, epsilon=0.3, alpha=0.5, gamma=0.5)
-trainBook = 'query_result_train.tsv'
-testBook = 'query_result_test.tsv'
-orderbook = Orderbook()
-orderbook_test = Orderbook()
+trainBook = 'query_result_small.tsv'
+testBook = 'query_result_small.tsv'
+orderbook = Orderbook(extraFeatures=False)
+orderbook_test = Orderbook(extraFeatures=False)
 
 
 #M = test(10)
