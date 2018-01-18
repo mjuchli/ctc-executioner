@@ -98,7 +98,7 @@ T_test = [0, 10, 30, 60] # , 120, 240]
 # I = [1.0, 2.0, 3.0, 4.0]
 I = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 H = max(I)
-levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -7, -10, -15, -20]
+levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -7, -10]
 ai = QLearn(actions=levels, epsilon=0.3, alpha=0.5, gamma=0.5)
 trainBook = 'query_result_small.tsv'
 testBook = 'query_result_small.tsv'

@@ -125,15 +125,16 @@ class ActionSpace(object):
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
         reward = action.getValueAvg()
-        state_next = action.getState()
+        state_next = ActionState(action.getState().getT(), action.getState().getI(), action.getState().getMarket())
         state_next.setT(t_next)
         state_next.setI(i_next)
         # reward = action.getValueExecuted()
         # reward = action.getTestReward()
+        print("Reward " + str(reward) + ": " + str(action.getState()) + " with " + str(action.getA()) + " -> " + str(state_next))
         self.ai.learn(
             state1=action.getState(),
             action1=action.getA(),
-            reward=(reward),
+            reward=reward,
             state2=state_next
         )
         return (t_next, i_next)
@@ -197,7 +198,7 @@ class ActionSpace(object):
                 i_next = self.determineNextInventory(action)
                 t_next = self.determineNextTime(t)
                 while i_next != 0:
-                    state_next = (t_next, i_next)
+                    state_next = ActionState(t_next, i_next, {})
                     try:
                         a_next = self.ai.getQAction(state_next, 0)
                     except:

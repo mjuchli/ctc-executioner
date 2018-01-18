@@ -125,7 +125,6 @@ class Action(object):
         r = 10.0
         if self.getA() > 0:
             r = -r
-
         return self.getPcFilled() + r * np.log(1.0 + abs(self.getA()))
 
     def update(self, a, runtime):
