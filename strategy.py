@@ -115,5 +115,5 @@ actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
 #M = test(10)
 #pp.pprint(M)
-#animate(run_profit, interval=1000)
-animate(run_q_reward, interval=1000)
+animate(run_profit, interval=1000)
+# animate(run_q_reward, interval=1000)

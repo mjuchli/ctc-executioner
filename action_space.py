@@ -185,7 +185,7 @@ class ActionSpace(object):
                 state = ActionState(t, i, {})
                 #print(state)
                 try:
-                    a = self.ai.getQAction(state)
+                    a = self.ai.getQAction(state, 0)
                     print("Q action for state " + str(state) + ": " + str(a))
                 except:
                     # State might not be in Q-Table yet, more training requried.
@@ -199,7 +199,7 @@ class ActionSpace(object):
                 while i_next != 0:
                     state_next = (t_next, i_next)
                     try:
-                        a_next = self.ai.getQAction(state_next)
+                        a_next = self.ai.getQAction(state_next, 0)
                     except:
                         # State might not be in Q-Table yet, more training requried.
                         logging.info("State " + str(state_next) + " not in Q-Table.")

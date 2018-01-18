@@ -17,7 +17,7 @@ class QLearn:
         """Q-value lookup for state and action,  or else returns default."""
         return self.q.get((state, action), default)
 
-    def getQAction(self, state):
+    def getQAction(self, state, default=None):
         """Best action based on Q-Table for given state."""
         values = []
         for x in list(reversed(self.actions)):
@@ -28,7 +28,7 @@ class QLearn:
             #    raise Exception("Q-Table does not contain: " + str((state, x)))
 
         if len(values) == 0:
-            return None
+            return default
 
         maxQ = max(values)
         a = list(reversed(self.actions))[values.index(maxQ)]
