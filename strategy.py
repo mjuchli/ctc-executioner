@@ -4,6 +4,7 @@ from action_space import ActionSpace
 from qlearn import QLearn
 from order_side import OrderSide
 from orderbook import Orderbook
+from action_state import ActionState
 import pprint
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -30,7 +31,6 @@ def getBestTimeForInventory(M, inventory_observe):
 def train(episodes=100):
     if not orderbook.getStates():
         orderbook.loadFromFile(trainBook)
-    actionSpace = ActionSpace(orderbook, side, T, I, ai, levels)
 
     for episode in range(episodes):
         # pp.pprint("Episode " + str(episode))
@@ -43,8 +43,6 @@ def train(episodes=100):
 def test(episodes=100):
     if not orderbook_test.getStates():
         orderbook_test.loadFromFile(testBook)
-
-    actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
     q = np.load('q.npy').item()
     # M <- [t, i, Price, A, Paid, Diff]
@@ -96,19 +94,26 @@ pp = pprint.PrettyPrinter(indent=4)
 side = OrderSide.BUY
 # T = [4, 3, 2, 1, 0]
 T = [0, 10, 30, 60] # , 120, 240]
-T_test = [30, 60] # , 120, 240]
+T_test = [0, 10, 30, 60] # , 120, 240]
 # I = [1.0, 2.0, 3.0, 4.0]
-I = [0.1, 0.3, 0.5, 0.7, 1.0]
+I = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 H = max(I)
-levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -7, -10, -15, -20, -25, -30, -50]
+levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -7, -10, -15, -20]
 ai = QLearn(actions=levels, epsilon=0.3, alpha=0.5, gamma=0.5)
 trainBook = 'query_result_small.tsv'
 testBook = 'query_result_small.tsv'
 orderbook = Orderbook(extraFeatures=False)
 orderbook_test = Orderbook(extraFeatures=False)
+actionSpace = ActionSpace(orderbook, side, T, I, ai, levels)
+actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
+# train(10)
+# test(1)
+# actionSpace_test.ai.q
+# state = ActionState(60, 0.1, {})
+# print(actionSpace_test.ai.getQAction(state))
 
 #M = test(10)
 #pp.pprint(M)
-animate(run_profit, interval=1000)
-#animate(run_q_reward, interval=1000)
+#animate(run_profit, interval=1000)
+animate(run_q_reward, interval=1000)

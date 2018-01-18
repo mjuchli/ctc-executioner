@@ -1,4 +1,5 @@
 import random
+from action_state import ActionState
 
 
 class QLearn:
@@ -20,13 +21,16 @@ class QLearn:
         """Best action based on Q-Table for given state."""
         values = []
         for x in list(reversed(self.actions)):
-            q_value = self.q.get((state, x))
-            if q_value:
+            q_value = self.q.get((state, x), None)
+            if q_value is not None:
                 values.append(q_value)
             # else:
-                # raise Exception("Q-Table does not contain: " + str((state, x)))
+            #    raise Exception("Q-Table does not contain: " + str((state, x)))
 
-        maxQ = max(list(filter(None, values)))
+        if len(values) == 0:
+            return None
+
+        maxQ = max(values)
         a = list(reversed(self.actions))[values.index(maxQ)]
         return a
 

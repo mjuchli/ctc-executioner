@@ -13,6 +13,7 @@ class Action(object):
         self.trades = []  # filled order
         self.orderbookState = None
         self.orderbookIndex = None
+        self.state = None
 
     def getA(self):
         return self.a
@@ -22,6 +23,12 @@ class Action(object):
 
     def setRuntime(self, runtime):
         self.runtime = runtime
+
+    def getState(self):
+        return self.state
+
+    def setState(self, state):
+        self.state = state
 
     def setOrderbookState(self, state):
         self.orderbookState = state

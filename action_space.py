@@ -5,6 +5,7 @@ from action import Action
 from order import Order
 from order_type import OrderType
 from qlearn import QLearn
+from action_state import ActionState
 
 
 class ActionSpace(object):
@@ -22,10 +23,12 @@ class ActionSpace(object):
         self.I = I
 
     def createAction(self, level, t, qty, force_execution=False):
-        state, index = self.orderbook.getRandomState(t, max(self.T))
-        aiState = (t, qty) #, state.getMarket())
+        orderbookState, index = self.orderbook.getRandomState(t, max(self.T))
+        aiState = ActionState(t, qty, orderbookState.getMarket())
+
         if level is None:
             level = self.ai.chooseAction(aiState)
+            print('Random action: ' + str(level) + ' for state: ' + str(aiState))
 
         # Determines whether to run and force execution of given t, or if
         # segmentation of t into multiple runtimes is allowed.
@@ -46,7 +49,7 @@ class ActionSpace(object):
             price = None
             ot = OrderType.MARKET
         else:
-            price = state.getPriceAtLevel(side, level)
+            price = orderbookState.getPriceAtLevel(side, level)
 
         order = Order(
             orderType=ot,
@@ -55,8 +58,9 @@ class ActionSpace(object):
             price=price
         )
         action = Action(a=level, runtime=runtime)
+        action.setState(aiState)
         action.setOrder(order)
-        action.setOrderbookState(state)
+        action.setOrderbookState(orderbookState)
         action.setOrderbookIndex(index)
         return action
 
@@ -115,21 +119,23 @@ class ActionSpace(object):
         logging.info('Next inventory for action: ' + str(i_next))
         return i_next
 
-    def update(self, aiState, force_execution=False):
-        t = aiState[0]
-        i = aiState[1]
+    def update(self, t, i, force_execution=False):
         action = self.createAction(None, t, i, force_execution=force_execution)
         action.run(self.orderbook)
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
         reward = action.getValueAvg()
+        state_next = action.getState()
+        state_next.setT(t_next)
+        state_next.setI(i_next)
         # reward = action.getValueExecuted()
         # reward = action.getTestReward()
         self.ai.learn(
-            state1=(t, i),
+            state1=action.getState(),
             action1=action.getA(),
             reward=(reward),
-            state2=(t_next, i_next))
+            state2=state_next
+        )
         return (t_next, i_next)
 
 
@@ -140,12 +146,12 @@ class ActionSpace(object):
                 for i in self.I:
                     logging.info("     i=="+str(i))
                     logging.info("Action run " + str((t, i)))
-                    (t_next, i_next) = self.update((t, i), force_execution)
+                    (t_next, i_next) = self.update(t, i, force_execution)
                     while i_next != 0:
                         if force_execution:
                             raise Exception("Enforced execution left " + str(i_next) + " unexecuted.")
                         logging.info("Action transition " + str((t, i)) + " -> " + str((t_next, i_next)))
-                        (t_next, i_next) = self.update((t_next, i_next), force_execution)
+                        (t_next, i_next) = self.update(t_next, i_next, force_execution)
 
 
     def runActionBehaviour(self, episodes=1):
@@ -176,10 +182,11 @@ class ActionSpace(object):
             for i in self.I:
                 logging.info("     i=="+str(i))
                 actions = []
-                state = (t, i)
+                state = ActionState(t, i, {})
                 #print(state)
                 try:
                     a = self.ai.getQAction(state)
+                    print("Q action for state " + str(state) + ": " + str(a))
                 except:
                     # State might not be in Q-Table yet, more training requried.
                     logging.info("State " + str(state) + " not in Q-Table.")
