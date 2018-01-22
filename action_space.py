@@ -4,6 +4,7 @@ import numpy as np
 from action import Action
 from order import Order
 from order_type import OrderType
+from order_side import OrderSide
 from qlearn import QLearn
 from action_state import ActionState
 
@@ -28,7 +29,7 @@ class ActionSpace(object):
 
         if level is None:
             level = self.ai.chooseAction(aiState)
-            print('Random action: ' + str(level) + ' for state: ' + str(aiState))
+            # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
 
         # Determines whether to run and force execution of given t, or if
         # segmentation of t into multiple runtimes is allowed.
@@ -62,6 +63,7 @@ class ActionSpace(object):
         action.setOrder(order)
         action.setOrderbookState(orderbookState)
         action.setOrderbookIndex(index)
+        action.setReferencePrice(orderbookState.getBidAskMid())
         return action
 
     def createActions(self, runtime, qty, force_execution=False):
@@ -124,13 +126,13 @@ class ActionSpace(object):
         action.run(self.orderbook)
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
-        reward = action.getValueAvg()
+        reward = action.getValueAvg(fees=False)
+        # reward = action.getValueExecuted()
+        # reward = action.getTestReward()
         state_next = ActionState(action.getState().getT(), action.getState().getI(), action.getState().getMarket())
         state_next.setT(t_next)
         state_next.setI(i_next)
-        # reward = action.getValueExecuted()
-        # reward = action.getTestReward()
-        print("Reward " + str(reward) + ": " + str(action.getState()) + " with " + str(action.getA()) + " -> " + str(state_next))
+        # print("Reward " + str(reward) + ": " + str(action.getState()) + " with " + str(action.getA()) + " -> " + str(state_next))
         self.ai.learn(
             state1=action.getState(),
             action1=action.getA(),
@@ -178,48 +180,93 @@ class ActionSpace(object):
 
         Ms = []
         #T = self.T[1:len(self.T)]
-        for t in self.T:
+        for t in [self.T[-1]]:
             logging.info("\n"+"t=="+str(t))
-            for i in self.I:
+            for i in [self.I[-1]]:
                 logging.info("     i=="+str(i))
                 actions = []
                 state = ActionState(t, i, {})
                 #print(state)
                 try:
                     a = self.ai.getQAction(state, 0)
-                    print("Q action for state " + str(state) + ": " + str(a))
+                    # print("Q action for state " + str(state) + ": " + str(a))
                 except:
                     # State might not be in Q-Table yet, more training requried.
                     logging.info("State " + str(state) + " not in Q-Table.")
                     break
                 actions.append(a)
                 action = self.createAction(a, t, i, force_execution=False)
+                midPrice = action.getReferencePrice()
+
+                # print("before...")
+                # print("state: " + str(action.getState()))
+                # print("runtime: " + str(action.getRuntime()))
+                # print("order cty: " + str(action.getOrder().getCty()))
+                # print("executed: " + str(action.getQtyExecuted()))
+                # print("not executed: " + str(action.getQtyNotExecuted()))
+                # print("ref price: " + str(action.getReferencePrice()))
+                # print("avg paid: " + str(action.getAvgPrice()))
+                # print("order: " + str(action.getOrder()))
+                # print("trades: " + str(action.getTrades()))
+                # print("reward: " + str(action.getValueAvg()))
+
+
                 action.run(self.orderbook)
+                # print("after...")
+                # print("state: " + str(action.getState()))
+                # print("runtime: " + str(action.getRuntime()))
+                # print("order cty: " + str(action.getOrder().getCty()))
+                # print("executed: " + str(action.getQtyExecuted()))
+                # print("not executed: " + str(action.getQtyNotExecuted()))
+                # print("ref price: " + str(action.getReferencePrice()))
+                # print("avg paid: " + str(action.getAvgPrice()))
+                # print("order: " + str(action.getOrder()))
+                # print("trades: " + str(action.getTrades()))
+                # print("reward: " + str(action.getValueAvg()))
+
                 i_next = self.determineNextInventory(action)
                 t_next = self.determineNextTime(t)
+                # print("i_next: " + str(i_next))
                 while i_next != 0:
                     state_next = ActionState(t_next, i_next, {})
                     try:
                         a_next = self.ai.getQAction(state_next, 0)
+                        # print("Q action for next state " + str(state_next) + ": " + str(a_next))
                     except:
                         # State might not be in Q-Table yet, more training requried.
-                        logging.info("State " + str(state_next) + " not in Q-Table.")
+                        # print("State " + str(state_next) + " not in Q-Table.")
                         break
                     actions.append(a_next)
                     #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
 
                     runtime_next = self.determineRuntime(t_next)
+                    action.setState(state_next)
                     action.update(a_next, runtime_next)
                     action.run(self.orderbook)
+                    # print("after next...")
+                    # print("state: " + str(action.getState()))
+                    # print("runtime: " + str(action.getRuntime()))
+                    # print("order cty: " + str(action.getOrder().getCty()))
+                    # print("executed: " + str(action.getQtyExecuted()))
+                    # print("not executed: " + str(action.getQtyNotExecuted()))
+                    # print("ref price: " + str(action.getReferencePrice()))
+                    # print("avg paid: " + str(action.getAvgPrice()))
+                    # print("order: " + str(action.getOrder()))
+                    # print("trades: " + str(action.getTrades()))
+                    # print("reward: " + str(action.getValueAvg()))
+
                     # i = i_next
                     # t = t_next
                     i_next = self.determineNextInventory(action)
                     t_next = self.determineNextTime(t_next)
 
                 price = action.getAvgPrice()
-                midPrice = action.getOrderbookState().getBidAskMid()
                 # TODO: last column is for for the BUY scenario only
-                Ms.append([state, midPrice, actions, price, midPrice - price])
+                if action.getOrder().getSide() == OrderSide.BUY:
+                    profit = midPrice - price
+                else:
+                    profit = price - midPrice
+                Ms.append([state, midPrice, actions, price, profit])
         if not average:
             return Ms
         return self.averageBacktest(Ms)

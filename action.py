@@ -14,6 +14,7 @@ class Action(object):
         self.orderbookState = None
         self.orderbookIndex = None
         self.state = None
+        self.referencePrice = None
 
     def getA(self):
         return self.a
@@ -41,6 +42,12 @@ class Action(object):
 
     def getOrderbookIndex(self):
         return self.orderbookIndex
+
+    def getReferencePrice(self):
+        return self.referencePrice
+
+    def setReferencePrice(self, referencePrice):
+        self.referencePrice = referencePrice
 
     def getOrder(self):
         return self.order
@@ -85,18 +92,16 @@ class Action(object):
         For BUY: total paid at mid price - total paid
         For SELL: total received - total received at mid price
         """
-        midPrice = self.getOrderbookState().getBidAskMid()
-
         # In case of no executed trade, the value is the negative reference
         if self.getTotalPaidReceived() == 0.0:
-            return -midPrice
+            return -self.getReferencePrice()
 
         if self.getOrder().getSide() == OrderSide.BUY:
-            return midPrice - self.getTotalPaidReceived()
+            return self.getReferencePrice() - self.getTotalPaidReceived()
         else:
-            return self.getTotalPaidReceived() - midPrice
+            return self.getTotalPaidReceived() - self.getReferencePrice()
 
-    def getValueAvg(self):
+    def getValueAvg(self, fees=False):
         """Retuns difference of the average paid price to bid/ask-mid price.
         The higher, the better,
         For BUY: total paid at mid price - total paid
@@ -106,14 +111,18 @@ class Action(object):
         if self.getPcFilled() == 0.0:
             return 0.0 # -2.0 * abs(self.getA())
 
-        midPrice = self.getOrderbookState().getBidAskMid()
         if self.getOrder().getSide() == OrderSide.BUY:
-            return midPrice - self.getAvgPrice()
+            reward = self.getReferencePrice() - self.getAvgPrice()
         else:
-            return self.getAvgPrice() - midPrice
+            reward = self.getAvgPrice() - self.getReferencePrice()
+
+        if fees and (self.getA() > 0 or self.getRuntime() <= 0.0):
+            return reward - 0.0025 * self.getQtyExecuted()
+        else:
+            return reward
 
     def getTestReward(self):
-        if self.getA() == 1:
+        if self.getA() == 0:
             return 100.0
         else:
             return -100.0
@@ -122,7 +131,7 @@ class Action(object):
         return 10 * (self.getQtyExecuted() / self.getOrder().getCty())
 
     def getValueExecuted(self):
-        r = 10.0
+        r = 1.0
         if self.getA() > 0:
             r = -r
         return self.getPcFilled() + r * np.log(1.0 + abs(self.getA()))
@@ -140,6 +149,9 @@ class Action(object):
         self.setRuntime(runtime)
         return self
 
+    def getMatchEngine(self, orderbook):
+        return MatchEngine(orderbook, self.getOrderbookIndex())
+
     def run(self, orderbook):
         """Runs action using match engine.
         The orderbook is provided and being used in the match engine along with
@@ -149,7 +161,7 @@ class Action(object):
         The action gets updated with those values accordingly such that it can
         be evaluated or run over again (e.g. with a new runtime).
         """
-        matchEngine = MatchEngine(orderbook, index=self.getOrderbookIndex())
+        matchEngine = self.getMatchEngine(orderbook)
         counterTrades, qtyRemain, index = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
         self.setTrades(counterTrades)
         self.setOrderbookIndex(index=index)

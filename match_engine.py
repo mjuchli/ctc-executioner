@@ -30,10 +30,10 @@ class MatchEngine(object):
             qty = p.getQty()
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
-                return [Trade(orderSide=order.getSide(), cty=remaining, price=price)]
+                return [Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=remaining, price=price)]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
-                partialTrades.append(Trade(orderSide=order.getSide(), cty=min(qty, remaining), price=price))
+                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price))
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
         return partialTrades
@@ -55,10 +55,10 @@ class MatchEngine(object):
             qty = p.getQty()
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
-                return [Trade(orderSide=order.getSide(), cty=remaining, price=price)]
+                return [Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=remaining, price=price)]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
-                partialTrades.append(Trade(orderSide=order.getSide(), cty=min(qty, remaining), price=price))
+                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=min(qty, remaining), price=price))
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
 
@@ -74,7 +74,7 @@ class MatchEngine(object):
             price = price + derivative_price
             qty = min(average_qty, remaining)
             logging.debug("Partial execution: assume " + str(qty) + " availabile")
-            partialTrades.append(Trade(orderSide=order.getSide(), cty=qty, price=price))
+            partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=qty, price=price))
             remaining = remaining - qty
 
         return partialTrades

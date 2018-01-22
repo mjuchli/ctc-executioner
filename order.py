@@ -30,6 +30,9 @@ class Order:
                 str(self.getCty()) + ',' +
                 str(self.getPrice()))
 
+    def __repr__(self):
+        return str(self)
+
     def getType(self):
         return self.orderType
 
