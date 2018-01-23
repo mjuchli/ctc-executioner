@@ -21,10 +21,16 @@ class MatchEngine(object):
         else:
             bookSide = orderbookState.getBuyers()
 
+        def isMatchingPosition(p):
+            if order.getSide() == OrderSide.BUY:
+                return bookSide[sidePosition].getPrice() <= order.getPrice()
+            else:
+                return bookSide[sidePosition].getPrice() >= order.getPrice()
+
         partialTrades = []
         remaining = order.getCty()
         sidePosition = 0
-        while len(bookSide) > sidePosition and bookSide[sidePosition].getPrice() <= order.getPrice() and remaining > 0.0:
+        while len(bookSide) > sidePosition and isMatchingPosition(sidePosition) and remaining > 0.0:
             p = bookSide[sidePosition]
             price = p.getPrice()
             qty = p.getQty()
@@ -148,16 +154,16 @@ class MatchEngine(object):
         return trades, remaining, i-1
 
 
-# logging.basicConfig(level=logging.debug)
+# logging.basicConfig(level=logging.DEBUG)
 # from orderbook import Orderbook
-# orderbook = Orderbook()
+# orderbook = Orderbook(extraFeatures=False)
 # orderbook.loadFromFile('query_result_small.tsv')
 # engine = MatchEngine(orderbook, index=0)
 #
 # #order = Order(orderType=OrderType.LIMIT, orderSide=OrderSide.BUY, cty=11.0, price=16559.0)
 # #order = Order(orderType=OrderType.MARKET, orderSide=OrderSide.BUY, cty=25.5, price=None)
-# order = Order(orderType=OrderType.LIMIT_T_MARKET, orderSide=OrderSide.BUY, cty=100.0, price=16559.0)
-# trades, remaining = engine.matchOrder(order, seconds=1.0)
+# order = Order(orderType=OrderType.LIMIT_T_MARKET, orderSide=OrderSide.SELL, cty=1.0, price=16559.0)
+# trades, remaining, i = engine.matchOrder(order, seconds=1.0)
 # c = 0.0
 # for trade in trades:
 #     c = c + trade.getCty()
