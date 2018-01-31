@@ -33,10 +33,13 @@ class OrderbookState(object):
         self.market = {}
 
     def __str__(self):
-        s = "DateTime: " + str(self.timestamp) + "\n"
+        s = '----------ORDERBOOK STATE----------\n'
+        s = s + "DateTime: " + str(self.timestamp) + "\n"
         s = s + "Price: " + str(self.tradePrice) + "\n"
         s = s + "Buyers: " + str(self.buyers) + "\n"
-        s = s + "Sellers: " + str(self.sellers)
+        s = s + "Sellers: " + str(self.sellers) + "\n"
+        s = s + "Market Vars: " + str(self.market) + "\n"
+        s = s + '----------ORDERBOOK STATE----------\n'
         return s
 
     def __repr__(self):
@@ -343,6 +346,38 @@ class Orderbook(object):
 
                 self.addState(s)
 
+
+    def loadFromBitfinexFile(self, file):
+        import csv
+        import json
+        with open(file, 'rt') as tsvin:
+            tsvin = csv.reader(tsvin, delimiter='\t')
+            for row in tsvin:
+                priceBid = float(row[1])
+                priceAsk = float(row[2])
+                volumeBid = float(row[3])
+                volumeAsk = float(row[4])
+                volume = float(row[5])
+                bids = json.loads(row[6])
+                asks = json.loads(row[7])
+                timestamp = parser.parse(row[8])
+
+                buyers = [OrderbookEntry(price=float(x['price']), qty=float(x['amount'])) for x in bids]
+                sellers = [OrderbookEntry(price=float(x['price']), qty=float(x['amount'])) for x in asks]
+
+                s = OrderbookState(tradePrice=priceAsk, timestamp=timestamp)
+                s.addBuyers(buyers)
+                s.addSellers(sellers)
+                s.setVolume(volume)
+                s.setMarketVar(key='volumeBid', value=volumeBid)
+                s.setMarketVar(key='volumeAsk', value=volumeAsk)
+                self.addState(s)
+
+# o = Orderbook()
+# o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
+# print(o.getState(0))
+# print(o.getState(1))
+# print(o.getState(2))
 
 #o = Orderbook()
 #o.loadFromFile('query_result_small.tsv')
