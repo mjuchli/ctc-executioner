@@ -42,6 +42,40 @@ class MatchEngine(object):
                 partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price))
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
+
+                if sidePosition == len(bookSide) - 1:
+                    # At this point there is no more liquidity in this state of the order
+                    # book (data) but the order price might actually be still higher than
+                    # what was available. For convenience sake we assume that there would
+                    # be liquidity in the subsequent levels above.
+                    # Therefore we linearly interpolate and place fake orders from
+                    # imaginary traders in the book with an increased price (according to
+                    # derivative) and similar qty.
+                    average_qty = np.mean([x.getCty() for x in partialTrades])
+                    logging.debug("On average executed qty: " + str(average_qty))
+                    if average_qty == 0.0:
+                        average_qty = 0.5
+                        logging.debug("Since no trades were executed (e.g. true average executed qty == 0.0), defaul is choosen: " + str(average_qty))
+                    derivative_price = abs(np.mean(np.gradient([x.getPrice() for x in partialTrades])))
+                    logging.debug("Derivative of price from executed trades: " + str(derivative_price))
+                    if derivative_price == 0.0:
+                        derivative_price = 10.0
+                        logging.debug("Since no trades were executed (e.g. derivative executed price == 0.0), defaul is choosen: " + str(derivative_price))
+                    while remaining > 0.0:
+                        if order.getSide() == OrderSide.BUY:
+                            price = price + derivative_price
+                            if price > order.getPrice():
+                                break
+                        elif order.getSide() == OrderSide.SELL:
+                            price = price - derivative_price
+                            if price < order.getPrice():
+                                break
+
+                        qty = min(average_qty, remaining)
+                        logging.debug("Partial execution: assume " + str(qty) + " available")
+                        partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=qty, price=price))
+                        remaining = remaining - qty
+
         return partialTrades
 
     def matchMarketOrder(self, order, orderbookState):
@@ -68,18 +102,30 @@ class MatchEngine(object):
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
 
-        # Since there there is no more liquidity in this state of the order
-        # book (data). For convenience sake we assume that there would be
-        # liquidity in some levels beyond.
+        # Since there is no more liquidity in this state of the order book
+        # (data). For convenience sake we assume that there would be
+        # liquidity in some levels below.
         # TODO: Simulate in more appropriate way, such as executing multiple
         # trades whereas the trade size increases exponentially and the price
         # increases logarithmically.
         average_qty = np.mean([x.getCty() for x in partialTrades])
-        derivative_price = np.mean(np.gradient([x.getPrice() for x in partialTrades]))
+        logging.debug("On average executed qty: " + str(average_qty))
+        if average_qty == 0.0:
+            average_qty = 0.5
+            logging.debug("Since no trades were executed (e.g. true average executed qty == 0.0), defaul is choosen: " + str(average_qty))
+        derivative_price = abs(np.mean(np.gradient([x.getPrice() for x in partialTrades])))
+        logging.debug("Derivative of price from executed trades: " + str(derivative_price))
+        if derivative_price == 0.0:
+            derivative_price = 5.0
+            logging.debug("Since no trades were executed (e.g. derivative executed price == 0.0), defaul is choosen: " + str(derivative_price))
         while remaining > 0.0:
-            price = price + derivative_price
+            if order.getSide() == OrderSide.BUY:
+                price = price + derivative_price
+            else:
+                price = price - derivative_price
+
             qty = min(average_qty, remaining)
-            logging.debug("Partial execution: assume " + str(qty) + " availabile")
+            logging.debug("Partial execution: assume " + str(qty) + " available")
             partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=qty, price=price))
             remaining = remaining - qty
 
@@ -131,7 +177,7 @@ class MatchEngine(object):
         # Execute remaining qty as market if LIMIT_T_MARKET
         if remaining > 0.0 and (order.getType() == OrderType.LIMIT_T_MARKET or order.getType() == OrderType.MARKET):
             logging.debug('Execute remaining as MARKET order.')
-            #i = i + 1 #TODO: make sure this is not required
+            i = i - 1  # back to previous state
             if not len(self.orderbook.getStates()) > i:
                 raise Exception('Not enough data for following market order.')
 
