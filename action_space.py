@@ -132,7 +132,7 @@ class ActionSpace(object):
         state_next = ActionState(action.getState().getT(), action.getState().getI(), action.getState().getMarket())
         state_next.setT(t_next)
         state_next.setI(i_next)
-        # print("Reward " + str(reward) + ": " + str(action.getState()) + " with " + str(action.getA()) + " -> " + str(state_next))
+        #print("Reward " + str(reward) + ": " + str(action.getState()) + " with " + str(action.getA()) + " -> " + str(state_next))
         self.ai.learn(
             state1=action.getState(),
             action1=action.getA(),
@@ -169,7 +169,7 @@ class ActionSpace(object):
                     M.append([state, action.getA(), action.getAvgPrice()])
         return M
 
-    def backtest(self, q=None, episodes=10, average=False):
+    def backtest(self, q=None, episodes=10, average=False, fixed_a=None):
         if q is None:
             q = self.ai.q
         else:
@@ -187,55 +187,40 @@ class ActionSpace(object):
                 actions = []
                 state = ActionState(t, i, {})
                 #print(state)
-                try:
-                    a = self.ai.getQAction(state, 0)
-                    # print("Q action for state " + str(state) + ": " + str(a))
-                except:
-                    # State might not be in Q-Table yet, more training requried.
-                    logging.info("State " + str(state) + " not in Q-Table.")
-                    break
+                if fixed_a is not None:
+                    a = fixed_a
+                else:
+                    try:
+                        a = self.ai.getQAction(state, 0)
+                        # print("Q action for state " + str(state) + ": " + str(a))
+                    except:
+                        # State might not be in Q-Table yet, more training requried.
+                        logging.info("State " + str(state) + " not in Q-Table.")
+                        break
                 actions.append(a)
                 action = self.createAction(a, t, i, force_execution=False)
                 midPrice = action.getReferencePrice()
 
-                # print("before...")
-                # print("state: " + str(action.getState()))
-                # print("runtime: " + str(action.getRuntime()))
-                # print("order cty: " + str(action.getOrder().getCty()))
-                # print("executed: " + str(action.getQtyExecuted()))
-                # print("not executed: " + str(action.getQtyNotExecuted()))
-                # print("ref price: " + str(action.getReferencePrice()))
-                # print("avg paid: " + str(action.getAvgPrice()))
-                # print("order: " + str(action.getOrder()))
-                # print("trades: " + str(action.getTrades()))
-                # print("reward: " + str(action.getValueAvg()))
-
-
+                #print("before...")
+                #print(action)
                 action.run(self.orderbook)
-                # print("after...")
-                # print("state: " + str(action.getState()))
-                # print("runtime: " + str(action.getRuntime()))
-                # print("order cty: " + str(action.getOrder().getCty()))
-                # print("executed: " + str(action.getQtyExecuted()))
-                # print("not executed: " + str(action.getQtyNotExecuted()))
-                # print("ref price: " + str(action.getReferencePrice()))
-                # print("avg paid: " + str(action.getAvgPrice()))
-                # print("order: " + str(action.getOrder()))
-                # print("trades: " + str(action.getTrades()))
-                # print("reward: " + str(action.getValueAvg()))
-
+                #print("after...")
+                #print(action)
                 i_next = self.determineNextInventory(action)
                 t_next = self.determineNextTime(t)
                 # print("i_next: " + str(i_next))
                 while i_next != 0:
                     state_next = ActionState(t_next, i_next, {})
-                    try:
-                        a_next = self.ai.getQAction(state_next, 0)
-                        # print("Q action for next state " + str(state_next) + ": " + str(a_next))
-                    except:
-                        # State might not be in Q-Table yet, more training requried.
-                        # print("State " + str(state_next) + " not in Q-Table.")
-                        break
+                    if fixed_a is not None:
+                        a_next = fixed_a
+                    else:
+                        try:
+                            a_next = self.ai.getQAction(state_next, 0)
+                            # print("Q action for next state " + str(state_next) + ": " + str(a_next))
+                        except:
+                            # State might not be in Q-Table yet, more training requried.
+                            # print("State " + str(state_next) + " not in Q-Table.")
+                            break
                     actions.append(a_next)
                     #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
 
@@ -243,20 +228,7 @@ class ActionSpace(object):
                     action.setState(state_next)
                     action.update(a_next, runtime_next)
                     action.run(self.orderbook)
-                    # print("after next...")
-                    # print("state: " + str(action.getState()))
-                    # print("runtime: " + str(action.getRuntime()))
-                    # print("order cty: " + str(action.getOrder().getCty()))
-                    # print("executed: " + str(action.getQtyExecuted()))
-                    # print("not executed: " + str(action.getQtyNotExecuted()))
-                    # print("ref price: " + str(action.getReferencePrice()))
-                    # print("avg paid: " + str(action.getAvgPrice()))
-                    # print("order: " + str(action.getOrder()))
-                    # print("trades: " + str(action.getTrades()))
-                    # print("reward: " + str(action.getValueAvg()))
-
-                    # i = i_next
-                    # t = t_next
+                    #print(action)
                     i_next = self.determineNextInventory(action)
                     t_next = self.determineNextTime(t_next)
 
