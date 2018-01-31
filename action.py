@@ -16,6 +16,21 @@ class Action(object):
         self.state = None
         self.referencePrice = None
 
+    def __str__(self):
+        s = '----------ACTION----------\n'
+        s = s + 'Level: ' + str(self.a) + '\n'
+        s = s + 'Runtime: ' + str(self.runtime) + '\n'
+        s = s + 'State: ' + str(self.state) + '\n'
+        s = s + 'Order: ' + str(self.order) + '\n'
+        s = s + 'Reference Price: ' + str(self.referencePrice) + '\n'
+        s = s + 'Book index: ' + str(self.orderbookIndex) + '\n'
+        s = s + 'Book state: \n' + str(self.orderbookState) + '\n'
+        s = s + '----------ACTION----------\n'
+        return s
+
+    def __repr__(self):
+        return self.__str__()
+
     def getA(self):
         return self.a
 
@@ -115,6 +130,9 @@ class Action(object):
             reward = self.getReferencePrice() - self.getAvgPrice()
         else:
             reward = self.getAvgPrice() - self.getReferencePrice()
+            # print("avg received: " + str(self.getAvgPrice()))
+            # print("reference: " + str(self.getReferencePrice()))
+            # print("reward: " + str(reward))
 
         if fees and (self.getA() > 0 or self.getRuntime() <= 0.0):
             return reward - 0.0025 * self.getQtyExecuted()
