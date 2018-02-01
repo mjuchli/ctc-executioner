@@ -94,6 +94,9 @@ class OrderbookState(object):
         firstSell = self.getSellers()[0]
         return (firstBuy.getPrice() + firstSell.getPrice()) / 2.0
 
+    def getBestAsk(self):
+        return self.getSellers()[0].getPrice()
+
     def getSidePositions(self, side):
         if side == OrderSide.BUY:
             return self.getBuyers()
@@ -110,16 +113,24 @@ class OrderbookState(object):
         following levels.
         """
         positions = self.getSidePositions(side)
-        level = abs(level)
-        if level < len(positions):
-            return positions[level].getPrice()
+        delta = 0.0001 * self.getBestAsk()  # 1 basis point
+        if side == OrderSide.BUY:
+            # print("level: " + str(level) + ", price: " + str(self.getBestAsk()) + " -> " + str(level * delta) + " -> " + str(self.getBestAsk() + level * delta))
+            return self.getBestAsk() + level * delta
+        else:
+            # print("level: " + str(level) + ", price: " + str(self.getBestAsk()) + " -> " + str(level * delta) + " -> " + str(self.getBestAsk() - level * delta))
+            return self.getBestAsk() - level * delta
 
-        # Estimate subsequent levels
-        derivative_price = np.mean(np.gradient([x.getPrice() for x in positions]))
-        missingLevels = level - len(positions)
-        priceEnd = positions[-1].getPrice()
-        priceEstimated = priceEnd + missingLevels * derivative_price
-        return priceEstimated
+        # level = abs(level)
+        # if level < len(positions):
+        #     return positions[level].getPrice()
+        #
+        # # Estimate subsequent levels
+        # derivative_price = np.mean(np.gradient([x.getPrice() for x in positions]))
+        # missingLevels = level - len(positions)
+        # priceEnd = positions[-1].getPrice()
+        # priceEstimated = priceEnd + missingLevels * derivative_price
+        # return priceEstimated
 
 class Orderbook(object):
 

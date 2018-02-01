@@ -40,11 +40,12 @@ class ActionSpace(object):
             runtime = self.determineRuntime(t)
             ot = OrderType.LIMIT
 
-        if level <= 0:
-            side = self.side
-        else:
-            level = level - 1  # 1 -> 0, ect., such that array index fits
-            side = self.side.opposite()
+        side = self.side
+        # if level <= 0:
+        #     side = self.side
+        # else:
+        #     level = level - 1  # 1 -> 0, ect., such that array index fits
+        #     side = self.side.opposite()
 
         if runtime <= 0.0:
             price = None
@@ -63,7 +64,7 @@ class ActionSpace(object):
         action.setOrder(order)
         action.setOrderbookState(orderbookState)
         action.setOrderbookIndex(index)
-        action.setReferencePrice(orderbookState.getBidAskMid())
+        action.setReferencePrice(orderbookState.getBestAsk())
         return action
 
     def createActions(self, runtime, qty, force_execution=False):
