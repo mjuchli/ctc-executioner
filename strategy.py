@@ -114,17 +114,17 @@ def run_q_reward():
 
 
 #logging.basicConfig(level=logging.DEBUG)
-trainBook = 'query_result_train_15m.tsv'
-testBook = 'query_result_train_15m.tsv'
 
 side = OrderSide.BUY
 levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -10, -12, -15]
 ai = QLearn(actions=levels, epsilon=0.4, alpha=0.3, gamma=0.8)
 
+#trainBook = 'query_result_train_15m.tsv'
+#testBook = 'query_result_train_15m.tsv'
 orderbook = Orderbook(extraFeatures=True)
-#orderbook.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
+orderbook.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
 orderbook_test = Orderbook(extraFeatures=True)
-#orderbook_test.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
+orderbook_test.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
 
 T = [10, 20, 40, 60, 80, 100] #, 120, 240]
 T_test = [0, 10, 20, 40, 60, 80, 100]# 120, 240]
@@ -133,14 +133,15 @@ I = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 actionSpace = ActionSpace(orderbook, side, T, I, ai, levels)
 actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
-def priceReturnCurve(levels=range(-50, 51), crossval=10, force_execution=True):
-    y = []
-    y2 = []
+
+def evaluateReturns(levels=range(-50, 51), crossval=10, force_execution=True):
+    t = T[-1]
+    i = I[-1]
+    ys = []
+    ys2 = []
     for level in levels:
         profit = []
         profit2 = []
-        t = T[-1]
-        i = I[-1]
         a = level
         for _ in range(crossval):
             action = actionSpace.createAction(a, t, i, force_execution=force_execution)
@@ -148,10 +149,8 @@ def priceReturnCurve(levels=range(-50, 51), crossval=10, force_execution=True):
             action.run(actionSpace.orderbook)
             refAfter = action.getOrderbookState().getTradePrice()
             paid = action.getAvgPrice()
-            # print("ref before: " + str(refBefore))
-            # print("ref after: " + str(refAfter))
-            # print("paid: " + str(paid))
             if paid == 0.0:
+                assert force_execution == False
                 continue
             elif action.getOrder().getSide() == OrderSide.BUY:
                 profit.append(refBefore - paid)
@@ -160,15 +159,39 @@ def priceReturnCurve(levels=range(-50, 51), crossval=10, force_execution=True):
                 profit.append(paid - refBefore)
                 profit2.append(paid - refAfter)
 
-        y.append(np.mean(profit))
-        y2.append(np.mean(profit2))
+        ys.append(profit)
+        ys2.append(profit2)
     x = levels
-    plt.plot(x, y)
-    plt.plot(x, y2)
+    return (x, ys, ys2)
+
+
+def priceReturnCurve(levels=range(-50, 51), crossval=10, force_execution=True):
+    (x, ys, ys2) = evaluateReturns(levels, crossval, force_execution)
+    y = [np.mean(reject_outliers(x)) for x in ys]
+    y2 = [np.mean(reject_outliers(x)) for x in ys2]
+    plt.plot(x, y, 'r-')
+    plt.plot(x, y2, 'g-')
     plt.show()
+
+def reject_outliers(data, m=2):
+    return data[abs(data - np.mean(data)) < m * np.std(data)]
+
+
+T = [0, 240] #, 120, 240
+I = [10.0]
+actionSpace = ActionSpace(orderbook, OrderSide.BUY, T, I)
+#priceReturnCurve(crossval=10, force_execution=True)
+(x, ys, ys2) = evaluateReturns(crossval=20)
+for y in ys:
+    print(y)
+    # print(len(y))
+    yr = reject_outliers(np.array(y), m=1.5)
+    print(set(y) - set(yr.tolist()))
+    print(len(y)-len(yr))
+
 
 
 #train(1)
 #priceReturnCurve(crossval=1)
-animate(run_profit, interval=100)
+#animate(run_profit, interval=100)
 #animate(run_q_reward, interval=1000)
