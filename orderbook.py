@@ -300,6 +300,29 @@ class Orderbook(object):
             raise Exception('Index out of orderbook state.')
         return self.getState(index), index
 
+    def createArtificial(self, config):
+        startPrice = config['startPrice']
+        endPrice = config['endPrice']
+        startTime = config['startTime']
+        duration = config['duration']
+        interval = config['interval']
+        steps = duration / interval
+        gradient = (endPrice - startPrice) / steps
+        steps = int(steps + 1)
+        prices = [startPrice + i*gradient for i in range(steps)]
+        times = [startTime + i*interval for i in range(steps)]
+        for i in range(steps):
+            p = prices[i]
+            t = times[i]
+            bps = 0.0001 * p
+            asks = [OrderbookEntry(price=(p + i * bps), qty=1.0) for i in range(25)]
+            bids = [OrderbookEntry(price=(p - (i+1) * bps), qty=1.0) for i in range(25)]
+            s = OrderbookState(tradePrice=p, timestamp=t)
+            s.addBuyers(bids)
+            s.addSellers(asks)
+            self.addState(s)
+
+
     def loadFromFile(self, file):
         import csv
         with open(file, 'rt') as tsvin:
@@ -384,7 +407,19 @@ class Orderbook(object):
                 s.setMarketVar(key='volumeAsk', value=volumeAsk)
                 self.addState(s)
 
-# o = Orderbook()
+
+    def plot(self, show_bidask=False, max_level=24):
+        import matplotlib.pyplot as plt
+        price = [x.getBestAsk() for x in self.getStates()]
+        times = [x.getTimestamp() for x in self.getStates()]
+        plt.plot(times, price)
+        if show_bidask:
+            buyer = [x.getBuyers()[max_level].getPrice() for x in self.getStates()]
+            seller = [x.getSellers()[max_level].getPrice() for x in self.getStates()]
+            plt.plot(times, buyer)
+            plt.plot(times, seller)
+        plt.show()
+
 # o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
 # print(o.getState(0))
 # print(o.getState(1))
