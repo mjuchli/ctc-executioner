@@ -36,10 +36,10 @@ class MatchEngine(object):
             qty = p.getQty()
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
-                return [Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=remaining, price=price)]
+                return [Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
-                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price))
+                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price, timestamp=orderbookState.getTimestamp()))
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
 
@@ -73,7 +73,7 @@ class MatchEngine(object):
 
                         qty = min(average_qty, remaining)
                         logging.debug("Partial execution: assume " + str(qty) + " available")
-                        partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=qty, price=price))
+                        partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=qty, price=price, timestamp=orderbookState.getTimestamp()))
                         remaining = remaining - qty
 
         return partialTrades
@@ -95,10 +95,10 @@ class MatchEngine(object):
             qty = p.getQty()
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
-                return [Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=remaining, price=price)]
+                return [Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
-                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=min(qty, remaining), price=price))
+                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=min(qty, remaining), price=price, timestamp=orderbookState.getTimestamp()))
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
 
@@ -126,7 +126,7 @@ class MatchEngine(object):
 
             qty = min(average_qty, remaining)
             logging.debug("Partial execution: assume " + str(qty) + " available")
-            partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=qty, price=price))
+            partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=qty, price=price, timestamp=orderbookState.getTimestamp()))
             remaining = remaining - qty
 
         return partialTrades
@@ -137,7 +137,7 @@ class MatchEngine(object):
         remaining = order.getCty()
         trades = []
 
-        while len(self.orderbook.getStates()) > i and remaining > 0:
+        while len(self.orderbook.getStates()) - 1 > i and remaining > 0:
             orderbookState = self.orderbook.getState(i)
             logging.debug("Evaluate state " + str(i) + ":\n" + str(orderbookState))
 
@@ -177,7 +177,7 @@ class MatchEngine(object):
         # Execute remaining qty as market if LIMIT_T_MARKET
         if remaining > 0.0 and (order.getType() == OrderType.LIMIT_T_MARKET or order.getType() == OrderType.MARKET):
             logging.debug('Execute remaining as MARKET order.')
-            i = i - 1  # back to previous state
+            #i = i - 1  # back to previous state
             if not len(self.orderbook.getStates()) > i:
                 raise Exception('Not enough data for following market order.')
 
