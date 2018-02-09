@@ -24,13 +24,6 @@ class ActionSpace(object):
         self.I = I
 
     def createAction(self, level, t, qty, force_execution=False):
-        orderbookState, index = self.orderbook.getRandomState(t, max(self.T))
-        aiState = ActionState(t, qty, orderbookState.getMarket())
-
-        if level is None:
-            level = self.ai.chooseAction(aiState)
-            # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
-
         # Determines whether to run and force execution of given t, or if
         # segmentation of t into multiple runtimes is allowed.
         if force_execution:
@@ -39,6 +32,13 @@ class ActionSpace(object):
         else:
             runtime = self.determineRuntime(t)
             ot = OrderType.LIMIT
+
+        orderbookState, index = self.orderbook.getRandomState(runtime, max(self.T))
+        aiState = ActionState(t, qty, orderbookState.getMarket())
+
+        if level is None:
+            level = self.ai.chooseAction(aiState)
+            # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
 
         side = self.side
         # if level <= 0:
