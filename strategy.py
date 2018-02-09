@@ -6,6 +6,7 @@ from order_side import OrderSide
 from orderbook import Orderbook
 from action_state import ActionState
 import pprint
+import datetime
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import seaborn as sns
@@ -134,7 +135,7 @@ actionSpace = ActionSpace(orderbook, side, T, I, ai, levels)
 actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
 
-def evaluateReturns(levels=range(-50, 51), crossval=10, force_execution=True):
+def evaluateReturns(levels=range(-100, 101), crossval=10, force_execution=True, trade_log=False):
     t = T[-1]
     i = I[-1]
     ys = []
@@ -146,9 +147,17 @@ def evaluateReturns(levels=range(-50, 51), crossval=10, force_execution=True):
         for _ in range(crossval):
             action = actionSpace.createAction(a, t, i, force_execution=force_execution)
             refBefore = action.getReferencePrice()
+            if trade_log:
+                print("\nLEVEL: " + str(level))
+                print("-----------")
+                print("Reference price: " + str(refBefore) + " ("+str(action.getOrderbookState().getTimestamp())+", index="+str(action.getOrderbookIndex())+")")
             action.run(actionSpace.orderbook)
             refAfter = action.getOrderbookState().getTradePrice()
             paid = action.getAvgPrice()
+            if trade_log:
+                print("Order: " + str(action.getOrder()))
+                print("Trades:")
+                print(action.getTrades())
             if paid == 0.0:
                 assert force_execution == False
                 continue
@@ -165,29 +174,41 @@ def evaluateReturns(levels=range(-50, 51), crossval=10, force_execution=True):
     return (x, ys, ys2)
 
 
-def priceReturnCurve(levels=range(-50, 51), crossval=10, force_execution=True):
-    (x, ys, ys2) = evaluateReturns(levels, crossval, force_execution)
-    y = [np.mean(reject_outliers(x)) for x in ys]
-    y2 = [np.mean(reject_outliers(x)) for x in ys2]
-    plt.plot(x, y, 'r-')
-    plt.plot(x, y2, 'g-')
-    plt.show()
-
-def reject_outliers(data, m=2):
+def reject_outliers(data, m=1.5):
     return data[abs(data - np.mean(data)) < m * np.std(data)]
 
 
-T = [0, 240] #, 120, 240
-I = [10.0]
+def priceReturnCurve(enable_after_exec_return=True, levels=range(-100, 101), crossval=10, force_execution=True, filter_outliers=False, trade_log=False):
+    (x, ys, ys2) = evaluateReturns(levels, crossval, force_execution, trade_log)
+    if filter_outliers:
+        y = [np.mean(reject_outliers(np.array(x))) for x in ys]
+        y2 = [np.mean(reject_outliers(np.array(x))) for x in ys2]
+    else:
+        y = [np.mean(np.array(x)) for x in ys]
+        y2 = [np.mean(np.array(x)) for x in ys2]
+
+    plt.plot(x, y, 'r-')
+    if enable_after_exec_return:
+        plt.plot(x, y2, 'g-')
+    plt.grid(linestyle='-', linewidth=2)
+    plt.show()
+
+
+orderbook = Orderbook()
+config = {
+    'startPrice': 10010.0,
+    'endPrice': 10000.0,
+    'startTime': datetime.datetime.now(),
+    'duration': datetime.timedelta(seconds=100),
+    'interval': datetime.timedelta(seconds=10)
+}
+orderbook.createArtificial(config)
+# orderbook.plot(show_bidask=True)
+
+T = [0, 60] #, 120, 240
+I = [1.0]
 actionSpace = ActionSpace(orderbook, OrderSide.BUY, T, I)
-#priceReturnCurve(crossval=10, force_execution=True)
-(x, ys, ys2) = evaluateReturns(crossval=20)
-for y in ys:
-    print(y)
-    # print(len(y))
-    yr = reject_outliers(np.array(y), m=1.5)
-    print(set(y) - set(yr.tolist()))
-    print(len(y)-len(yr))
+priceReturnCurve(crossval=1, levels=range(-50, 25), force_execution=True, enable_after_exec_return=False, trade_log=True)
 
 
 
