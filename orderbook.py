@@ -185,10 +185,10 @@ class Orderbook(object):
         startState = states[0]
         offsetIndex = 0
         consumed = 0.0
-        while(consumed < offset and offsetIndex < len(states)):
+        while(consumed < offset and offsetIndex < len(states)-1):
+            offsetIndex = offsetIndex + 1
             state = states[offsetIndex]
             consumed = (state.getTimestamp() - startState.getTimestamp()).total_seconds()
-            offsetIndex = offsetIndex + 1
 
         if consumed < offset:
             raise Exception('Not enough data for offset. Found states for '
@@ -212,13 +212,13 @@ class Orderbook(object):
         if offset == 0:
             return len(states) - 1
 
-        startState = states[-1]
         offsetIndex = len(states) - 1
+        startState = states[offsetIndex]
         consumed = 0.0
         while(consumed < offset and offsetIndex > 0):
+            offsetIndex = offsetIndex - 1
             state = states[offsetIndex]
             consumed = (startState.getTimestamp() - state.getTimestamp()).total_seconds()
-            offsetIndex = offsetIndex - 1
 
         if consumed < offset:
             raise Exception('Not enough data for offset. Found states for '
@@ -241,17 +241,17 @@ class Orderbook(object):
         (starting at the index position i>) are used in this case and 6 are not
         being used (marked with '_').
         """
-        if not self.getStates:
+        if not self.getStates():
             raise Exception('Order book does not contain states.')
 
         states = self.getStates()
         index = self.getOffsetTail(offset)
         endState = states[index]
         consumed = 0.0
-        while(consumed < seconds and index >= 0):
+        while(consumed < seconds and index > 0):
+            index = index - 1
             state = states[index]
             consumed = (endState.getTimestamp() - state.getTimestamp()).total_seconds()
-            index = index - 1
 
         if consumed < seconds:
             raise Exception('Not enough data available. Found states for '
@@ -275,7 +275,7 @@ class Orderbook(object):
     def getRandomOffset(self, offset_max=120):
         """Random offset for tail based indexing.
         From the beginning of the state list the required seconds will be
-        secured, then the leftover of seconds can be used randomize offsets.
+        secured, then the leftover of seconds can be used to randomize offsets.
 
         For example, if offset_max=3 (market with '_') with a total of 10
         states available, whereas for simplicity every state has 1 second diff,
@@ -286,16 +286,20 @@ class Orderbook(object):
         Therefore, it is always ensured that at least 3 seconds worth of states
         will be availble.
         """
-        indexRequired = self.getOffsetHead(offset=offset_max)
+        offsetHead = self.getOffsetHead(offset=offset_max)
         states = self.getStates()
-        start = states[indexRequired].getTimestamp()
+        start = states[offsetHead].getTimestamp()
         end = states[-1].getTimestamp()
         remaining = int((end - start).total_seconds())
-        return random.choice(range(remaining))
+        if remaining == 0:
+            return 0
+        else:
+            return random.choice(range(remaining))
+
 
     def getRandomState(self, runtime, offset_max):
-        randomOffset = self.getRandomOffset(offset_max)
-        index = self.getIndexWithTimeRemain(runtime, randomOffset)
+        offsetTail = self.getRandomOffset(offset_max)
+        index = self.getIndexWithTimeRemain(runtime, offsetTail)
         if index >= len(self.getStates()):
             raise Exception('Index out of orderbook state.')
         return self.getState(index), index
@@ -425,6 +429,19 @@ class Orderbook(object):
 # print(o.getState(1))
 # print(o.getState(2))
 
+# import datetime
+# orderbook = Orderbook()
+# config = {
+#     'startPrice': 10010.0,
+#     'endPrice': 10000.0,
+#     'startTime': datetime.datetime.now(),
+#     'duration': datetime.timedelta(seconds=100),
+#     'interval': datetime.timedelta(seconds=10)
+# }
+# orderbook.createArtificial(config)
+# print('states: ' + str(len(orderbook.getStates())))
+# st, index = orderbook.getRandomState(runtime=60, offset_max=60)
+# print(index)
 #o = Orderbook()
 #o.loadFromFile('query_result_small.tsv')
 
