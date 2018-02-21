@@ -2,6 +2,8 @@ from dateutil import parser
 from order_side import OrderSide
 import numpy as np
 import random
+from sklearn.preprocessing import MinMaxScaler
+
 
 class OrderbookEntry(object):
 
@@ -307,6 +309,8 @@ class Orderbook(object):
     def createArtificial(self, config):
         startPrice = config['startPrice']
         endPrice = config['endPrice']
+        levels = config['levels']
+        qtyPosition = config['qtyPosition']
         startTime = config['startTime']
         duration = config['duration']
         interval = config['interval']
@@ -319,8 +323,8 @@ class Orderbook(object):
             p = prices[i]
             t = times[i]
             bps = 0.0001 * p
-            asks = [OrderbookEntry(price=(p + i * bps), qty=1.0) for i in range(25)]
-            bids = [OrderbookEntry(price=(p - (i+1) * bps), qty=1.0) for i in range(25)]
+            asks = [OrderbookEntry(price=(p + i * bps), qty=qtyPosition) for i in range(levels)]
+            bids = [OrderbookEntry(price=(p - (i+1) * bps), qty=qtyPosition) for i in range(levels)]
             s = OrderbookState(tradePrice=p, timestamp=t)
             s.addBuyers(bids)
             s.addSellers(asks)
@@ -424,7 +428,28 @@ class Orderbook(object):
             plt.plot(times, seller)
         plt.show()
 
-# o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
+
+    def createFeatures(self):
+        volumes = np.array([x.getVolume() for x in self.getStates()])
+        scaler = MinMaxScaler(feature_range=(0, 5))
+        volumesScaled = scaler.fit_transform(volumes.reshape(-1, 1))
+        volumesScaled = volumesScaled.flatten().tolist()
+        volumesRelative = list(map(round, volumesScaled))
+        i = 0
+        for state in self.getStates():
+            state.setMarketVar('volumeRelativeTotal', volumesRelative[i])
+            i = i + 1
+
+
+#o = Orderbook()
+#o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
+#o.loadFromFile('query_result_train_15m.tsv')
+#o.plot()
+#o.createFeatures()
+#print([x.getMarketVar('volumeRelativeTotal') for x in o.getStates()])
+#print(o.getState(0))
+#print(o.getState(200))
+
 # print(o.getState(0))
 # print(o.getState(1))
 # print(o.getState(2))
@@ -434,11 +459,14 @@ class Orderbook(object):
 # config = {
 #     'startPrice': 10010.0,
 #     'endPrice': 10000.0,
+#     'levels': 25,
+#     'qtyPosition' : 1.0,
 #     'startTime': datetime.datetime.now(),
 #     'duration': datetime.timedelta(seconds=100),
-#     'interval': datetime.timedelta(seconds=10)
+#     'interval': datetime.timedelta(seconds=10),
 # }
 # orderbook.createArtificial(config)
+# orderbook.plot()
 # print('states: ' + str(len(orderbook.getStates())))
 # st, index = orderbook.getRandomState(runtime=60, offset_max=60)
 # print(index)
