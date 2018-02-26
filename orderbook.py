@@ -99,6 +99,9 @@ class OrderbookState(object):
     def getBestAsk(self):
         return self.getSellers()[0].getPrice()
 
+    def getBestBid(self):
+        return self.getBuyers()[0].getPrice()
+
     def getSidePositions(self, side):
         if side == OrderSide.BUY:
             return self.getBuyers()
@@ -415,10 +418,61 @@ class Orderbook(object):
                 s.setMarketVar(key='volumeAsk', value=volumeAsk)
                 self.addState(s)
 
+    @staticmethod
+    def generateDictFromEvents(events_pd):
+        import copy
+        most_recent_orderbook = {"bids": {}, "asks": {}}
+        orderbook = {}
+        for seq, e in events_pd.iterrows():
+            if e.is_trade:
+                continue
 
-    def plot(self, show_bidask=False, max_level=24):
+            if e["size"] == 0.0:
+                try:
+                    del most_recent_orderbook["bids" if e.is_bid else "asks"][e.price]
+                    # print('Cancel ' + str(e.price))
+                except:
+                    # print('Cancel ' + str(e.price) + ' not in recent book')
+                    continue
+            else:
+                current_size = most_recent_orderbook["bids" if e.is_bid else "asks"].get(e.price, 0.0)
+                most_recent_orderbook["bids" if e.is_bid else "asks"][e.price] = current_size + e["size"]
+
+            orderbook[e.ts] = copy.deepcopy(most_recent_orderbook)
+        return orderbook
+
+    def loadFromDict(self, d):
+        import collections
+
+        # skip states until at least 1 bid and 1 ask is available
+        while True:
+            head = d[list(d.keys())[0]]
+            if len(head["bids"]) > 0 and len(head["asks"]) > 0:
+                break
+            del d[list(d.keys())[0]]
+
+        for ts, state in d.items():
+            bids = collections.OrderedDict(sorted(state["bids"].items(), reverse=True))
+            asks = collections.OrderedDict(sorted(state["asks"].items()))
+            buyers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in bids.items()]
+            sellers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in asks.items()]
+            if len(sellers) > 0:
+                s = OrderbookState(tradePrice=max(state["asks"].keys()), timestamp=ts)
+                s.addBuyers(buyers)
+                s.addSellers(sellers)
+                s.setVolume(0.0)
+                self.addState(s)
+
+        #for s in self.getStates():
+        #    assert(s.getBestBid() <= s.getBestAsk())
+
+    def loadFromEvents(self, events_pd):
+        d = Orderbook.generateDictFromEvents(events_pd)
+        self.loadFromDict(d)
+
+    def plot(self, show_bidask=False, max_level=-1):
         import matplotlib.pyplot as plt
-        price = [x.getBestAsk() for x in self.getStates()]
+        price = [x.getBidAskMid() for x in self.getStates()]
         times = [x.getTimestamp() for x in self.getStates()]
         plt.plot(times, price)
         if show_bidask:
@@ -427,7 +481,6 @@ class Orderbook(object):
             plt.plot(times, buyer)
             plt.plot(times, seller)
         plt.show()
-
 
     def createFeatures(self):
         volumes = np.array([x.getVolume() for x in self.getStates()])
@@ -440,6 +493,12 @@ class Orderbook(object):
             state.setMarketVar('volumeRelativeTotal', volumesRelative[i])
             i = i + 1
 
+# import pandas as pd
+# cols = ["ts", "seq", "size", "price", "is_bid", "is_trade"] #, "ttype"]
+# events = pd.read_table('../ctc-orderbook/ob-1.tsv', sep='\t', names=cols, index_col="seq")
+# o = Orderbook()
+# o.loadFromEvents(events)
+# o.plot()
 
 #o = Orderbook()
 #o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
