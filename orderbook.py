@@ -142,6 +142,7 @@ class Orderbook(object):
     def __init__(self, extraFeatures=True):
         self.states = []
         self.extraFeatures = extraFeatures
+        self.tmp = {}
 
     def __str__(self):
         s = ''
@@ -232,81 +233,14 @@ class Orderbook(object):
 
         return offsetIndex
 
-    def getIndexWithTimeRemain(self, seconds, offset=0):
-        """ Returns the state with seconds remaining starting from the end.
-        For example, if seconds=3 and offset=1 with 10 states availble, whereas
-        for simplicity every state has 1 second diff, then the resulting index
-        would be the one marked with 'i' and 'x' indicating the non-usable
-        elements capped by the offset. This function uses tail based
-        offsetting:
+    def getRandomState(self, runtime):
+        offsetTail = self.tmp.get('offset_tail_'+str(runtime), None)
+        if offsetTail is None:
+            offsetTail = self.getOffsetTail(offset=runtime)
+            self.tmp['offset_tail_'+str(runtime)] = offsetTail
+            print('setting index offset_tail_'+str(runtime)+': '+str(offsetTail))
 
-        |_|_|_|_|_|_|i>|>|>|x|
-
-        As a result, the maximum seconds to retrieve would be 8, however only 3
-        (starting at the index position i>) are used in this case and 6 are not
-        being used (marked with '_').
-        """
-        if not self.getStates():
-            raise Exception('Order book does not contain states.')
-
-        states = self.getStates()
-        index = self.getOffsetTail(offset)
-        endState = states[index]
-        consumed = 0.0
-        while(consumed < seconds and index > 0):
-            index = index - 1
-            state = states[index]
-            consumed = (endState.getTimestamp() - state.getTimestamp()).total_seconds()
-
-        if consumed < seconds:
-            raise Exception('Not enough data available. Found states for '
-                            + str(consumed) + ' seconds, required: '
-                            + str(seconds))
-        return index
-
-    def getTotalDuration(self, offset=0):
-        """Time span of data in seconds.
-        The offset fixes the pointer starting from the beginning of the data
-        feed.
-
-        This function uses per default tail based offsetting.
-        """
-        states = self.getStates()
-        offsetIndex = self.getOffsetTail(offset)
-        start = states[0].getTimestamp()
-        end = states[offsetIndex].getTimestamp()
-        return (end - start).total_seconds()
-
-    def getRandomOffset(self, offset_max=120):
-        """Random offset for tail based indexing.
-        From the beginning of the state list the required seconds will be
-        secured, then the leftover of seconds can be used to randomize offsets.
-
-        For example, if offset_max=3 (market with '_') with a total of 10
-        states available, whereas for simplicity every state has 1 second diff,
-        then offset can be either of the indices market with 'o':
-
-        |_|_|_|o|o|o|o|o|o|o|
-
-        Therefore, it is always ensured that at least 3 seconds worth of states
-        will be availble.
-        """
-        offsetHead = self.getOffsetHead(offset=offset_max)
-        states = self.getStates()
-        start = states[offsetHead].getTimestamp()
-        end = states[-1].getTimestamp()
-        remaining = int((end - start).total_seconds())
-        if remaining == 0:
-            return 0
-        else:
-            return random.choice(range(remaining))
-
-
-    def getRandomState(self, runtime, offset_max):
-        offsetTail = self.getRandomOffset(offset_max)
-        index = self.getIndexWithTimeRemain(runtime, offsetTail)
-        if index >= len(self.getStates()):
-            raise Exception('Index out of orderbook state.')
+        index = random.choice(range(offsetTail))
         return self.getState(index), index
 
     def createArtificial(self, config):

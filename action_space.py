@@ -33,25 +33,18 @@ class ActionSpace(object):
             runtime = self.determineRuntime(t)
             ot = OrderType.LIMIT
 
-        orderbookState, index = self.orderbook.getRandomState(runtime, max(self.T))
+        orderbookState, index = self.orderbook.getRandomState(max(self.T))
         aiState = ActionState(t, qty, orderbookState.getMarket())
 
         if level is None:
             level = self.ai.chooseAction(aiState)
             # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
 
-        side = self.side
-        # if level <= 0:
-        #     side = self.side
-        # else:
-        #     level = level - 1  # 1 -> 0, ect., such that array index fits
-        #     side = self.side.opposite()
-
         if runtime <= 0.0:
             price = None
             ot = OrderType.MARKET
         else:
-            price = orderbookState.getPriceAtLevel(side, level)
+            price = orderbookState.getPriceAtLevel(self.side, level)
 
         order = Order(
             orderType=ot,
@@ -193,6 +186,9 @@ class ActionSpace(object):
                 else:
                     try:
                         a = self.ai.getQAction(state, 0)
+                        print("t: " + str(t))
+                        print("i: " + str(i))
+                        print("Action: " + str(a))
                         # print("Q action for state " + str(state) + ": " + str(a))
                     except:
                         # State might not be in Q-Table yet, more training requried.
@@ -217,6 +213,9 @@ class ActionSpace(object):
                     else:
                         try:
                             a_next = self.ai.getQAction(state_next, 0)
+                            print("t: " + str(t_next))
+                            print("i: " + str(i_next))
+                            print("Action: " + str(a_next))
                             # print("Q action for next state " + str(state_next) + ": " + str(a_next))
                         except:
                             # State might not be in Q-Table yet, more training requried.
