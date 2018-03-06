@@ -414,8 +414,9 @@ class Orderbook(object):
                 s.addBuyers(buyers)
                 s.addSellers(sellers)
                 s.setVolume(volume)
-                s.setMarketVar(key='volumeBid', value=volumeBid)
-                s.setMarketVar(key='volumeAsk', value=volumeAsk)
+                if self.extraFeatures:
+                    s.setMarketVar(key='volumeBid', value=volumeBid)
+                    s.setMarketVar(key='volumeAsk', value=volumeAsk)
                 self.addState(s)
 
     @staticmethod
@@ -443,6 +444,7 @@ class Orderbook(object):
 
     def loadFromDict(self, d):
         import collections
+        from datetime import datetime, timezone
 
         # skip states until at least 1 bid and 1 ask is available
         while True:
@@ -457,7 +459,7 @@ class Orderbook(object):
             buyers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in bids.items()]
             sellers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in asks.items()]
             if len(sellers) > 0:
-                s = OrderbookState(tradePrice=max(state["asks"].keys()), timestamp=ts)
+                s = OrderbookState(tradePrice=max(state["asks"].keys()), timestamp=datetime.fromtimestamp(ts, timezone.utc))
                 s.addBuyers(buyers)
                 s.addSellers(sellers)
                 s.setVolume(0.0)
@@ -466,9 +468,14 @@ class Orderbook(object):
         #for s in self.getStates():
         #    assert(s.getBestBid() <= s.getBestAsk())
 
-    def loadFromEvents(self, events_pd):
+    def loadFromEventsFrame(self, events_pd):
         d = Orderbook.generateDictFromEvents(events_pd)
         self.loadFromDict(d)
+
+    def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]):
+        import pandas as pd
+        events = pd.read_table(file, sep='\t', names=cols, index_col="seq")
+        self.loadFromEventsFrame(events.sort_index())
 
     def plot(self, show_bidask=False, max_level=-1):
         import matplotlib.pyplot as plt
@@ -493,11 +500,9 @@ class Orderbook(object):
             state.setMarketVar('volumeRelativeTotal', volumesRelative[i])
             i = i + 1
 
-# import pandas as pd
-# cols = ["ts", "seq", "size", "price", "is_bid", "is_trade"] #, "ttype"]
-# events = pd.read_table('../ctc-orderbook/ob-1.tsv', sep='\t', names=cols, index_col="seq")
+#
 # o = Orderbook()
-# o.loadFromEvents(events)
+# o.loadFromEvents('ob-1.tsv')
 # o.plot()
 
 #o = Orderbook()
