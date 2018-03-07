@@ -9,12 +9,12 @@ from keras.layers import Dense, Activation, Flatten
 from keras import optimizers
 import random
 from experience_replay import ExperienceReplay
-
 from action_state import ActionState
 import pprint
 import datetime
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from collections import deque
 import seaborn as sns
 sns.set(color_codes=True)
 
@@ -25,30 +25,6 @@ T = [10, 20, 40, 60, 80, 100] #, 120, 240]
 T_test = [0, 10, 20, 40, 60, 80, 100]# 120, 240]
 I = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
-
-def baseline_model(num_actions,hidden_size):
-    #seting up the model with keras
-    model = Sequential()
-    model.add(Dense(hidden_size, input_shape=(100,20), activation='relu'))
-    model.add(Dense(hidden_size, activation='relu'))
-    model.add(Flatten())
-    model.add(Dense(num_actions))
-    model.compile(optimizers.SGD(lr=.1), "mse")
-    return model
-
-# parameters
-epsilon = .1  # exploration
-num_actions = len(levels)  # [move_left, stay, move_right]
-max_memory = 500 # Maximum number of experiences we are storing
-hidden_size = 10 # Size of the hidden layers
-batch_size = 10 # Number of experiences we use for training per batch
-
-#Define model
-model = baseline_model(num_actions,hidden_size)
-model.summary()
-
-# Initialize experience replay object
-exp_replay = ExperienceReplay(max_memory=max_memory)
 
 # Load orderbook
 cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]
@@ -65,15 +41,6 @@ orderbook_test = orderbook
 # f
 # f.reshape((100,4))
 
-# x = [10, 0.05]
-# x = np.array(x)
-# x.shape
-# np.array([np.array([10]), np.array([0.05]), f]).shape
-
-# min(events[events['is_bid'] == 1].price)
-# max(events[events['is_bid'] == 0].price)
-# max(events['size'])
-# min(events['size'])
 
 def bidAskFeature(bids, asks, inventory, bestAsk):
     """Creates feature in form of two vectors representing bids and asks.
@@ -160,42 +127,86 @@ def getBidAskFeatures(d, state_index, inventory, lookback):
         i = i + 1
     return features
 
+class DQNAgent:
+    def __init__(self, actions): #, state_size, action_size):
+        # self.state_size = state_size
+        self.actions = actions
+        self.action_size = len(actions)
+        self.memory = deque(maxlen=2000)
+        self.gamma = 0.95    # discount rate
+        self.epsilon = 1.0  # exploration rate
+        self.epsilon_min = 0.01
+        self.epsilon_decay = 0.995
+        self.learning_rate = 0.001
+        self.model = self._build_model()
+
+    def _build_model(self):
+        # Neural Net for Deep-Q learning Model
+        model = Sequential()
+        model.add(Dense(10, input_shape=(100,20), activation='relu'))
+        model.add(Dense(10, activation='relu'))
+        model.add(Flatten())
+        model.add(Dense(self.action_size))
+        model.compile(optimizers.SGD(lr=.1), "mse")
+        model.summary()
+        return model
+
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
+
+    def act(self, state):
+        if np.random.rand() <= self.epsilon:
+            return random.choice(self.actions)
+        act_values = self.model.predict(state)
+        return np.argmax(act_values[0])  # returns action
+
+    def guess(self, state):
+        act_values = self.model.predict(state)
+        return np.argmax(act_values[0])  # returns action
+
+    def replay(self, batch_size):
+        minibatch = random.sample(self.memory, batch_size)
+        for state, action, reward, next_state, done in minibatch:
+            target = reward
+            if not done:
+              target = reward + self.gamma * \
+                       np.amax(self.model.predict(next_state)[0])
+            target_f = self.model.predict(state)
+            target_f[0][action] = target
+            self.model.fit(state, target_f, epochs=1, verbose=0)
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+
 
 class ActionSpaceDQN(ActionSpace):
 
+    def __init__(self, orderbook, side, T, I, levels):
+        ActionSpace.__init__(self, orderbook, side, T, I, None, levels)
+        self.agent = DQNAgent(levels)
+
     def train(self, episodes=1, force_execution=False):
         for episode in range(int(episodes)):
-            loss = 0.
             for t in self.T:
-
                 logging.info("\n"+"t=="+str(t))
                 for i in self.I:
                     logging.info("     i=="+str(i))
                     logging.info("Action run " + str((t, i)))
-                    (t_next, i_next, loss) = self.update(t, i, loss, force_execution)
+                    (t_next, i_next) = self.update(t, i, force_execution)
                     while i_next != 0:
                         if force_execution:
                             raise Exception("Enforced execution left " + str(i_next) + " unexecuted.")
                         logging.info("Action transition " + str((t, i)) + " -> " + str((t_next, i_next)))
-                        (t_next, i_next, loss) = self.update(t_next, i_next, loss, force_execution)
+                        (t_next, i_next) = self.update(t_next, i_next, force_execution)
+            # train the agent with the experience of the episode
+            self.agent.replay(32)
 
-    def update(self, t, i, loss, force_execution=False):
+    def update(self, t, i, force_execution=False):
         action = self.createAction(None, t, i, force_execution=force_execution)
         bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i, lookback)
-        #The learner is acting on the last observed game screen
-        #input_t is a vector containing representing the game screen
         state = ActionState(t, i, {'bidask': bidAskFeature}) #np.array([[t, i]])
-        #state = np.array([t, i]).reshape(2,1)
-        #a = random.choice(levels)
-        if np.random.rand() <= epsilon:
-            #Eat something random from the menu
-            a = random.choice(levels)
-        else:
-            #Choose yourself
-            #q contains the expected rewards for the actions
-            q = model.predict(state.toArray())
-            #We pick the action with the highest expected reward
-            a = np.argmax(q[0])
+
+        # Decide action
+        a = self.agent.act(state.toArray())
 
         action.setA(a)
         action.run(self.orderbook)
@@ -207,15 +218,11 @@ class ActionSpaceDQN(ActionSpace):
         bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i_next, lookback)
         state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
 
-        # store experience
-        exp_replay.remember([state_next.toArray(), a, reward, state.toArray()], t==0)
-        # Load batch of experiences
-        inputs, targets = exp_replay.get_batch(model, batch_size=batch_size)
-        # train model on experiences
-        batch_loss = model.train_on_batch(inputs, targets)
-        loss += batch_loss
+        # Remember the previous state, action, reward, and done
+        done = t==0
+        self.agent.remember(state.toArray(), a, reward, state_next.toArray(), done)
 
-        return (t_next, i_next, loss)
+        return (t_next, i_next)
 
     def backtest(self, q=None, episodes=10, average=False, fixed_a=None):
         Ms = []
@@ -230,9 +237,7 @@ class ActionSpaceDQN(ActionSpace):
                 bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i, lookback)
                 state = ActionState(t, i, {'bidask': bidAskFeature})
                 #print(state)
-                q = model.predict(state.toArray())
-                #We pick the action with the highest expected reward
-                a = np.argmax(q[0])
+                a = self.agent.guess(state.toArray())
                 print("t: " + str(t))
                 print("i: " + str(i))
                 print("Action: " + str(a))
@@ -253,8 +258,7 @@ class ActionSpaceDQN(ActionSpace):
                     bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i_next, lookback)
 
                     state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
-                    q = model.predict(state.toArray())
-                    a_next = np.argmax(q[0])
+                    a_next = self.agent.guess(state_next.toArray())
                     # print("Q action for next state " + str(state_next) + ": " + str(a_next))
                     print("t: " + str(t_next))
                     print("i: " + str(i_next))
@@ -333,6 +337,6 @@ def run_profit(epochs_train=5, epochs_test=10):
     return np.mean(M[0:, 4])
 
 lookback = 5
-actionSpace = ActionSpaceDQN(orderbook, side, T, I, ai, levels)
-actionSpace_test = ActionSpaceDQN(orderbook_test, side, T_test, I, ai, levels)
+actionSpace = ActionSpaceDQN(orderbook, side, T, I, levels)
+actionSpace_test = ActionSpaceDQN(orderbook_test, side, T_test, I, levels)
 animate(run_profit, interval=100)

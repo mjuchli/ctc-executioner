@@ -25,10 +25,12 @@ class ActionState(object):
         return self.__str__()
 
     def toArray(self):
-        arr = [self.getT(), self.getI()]
-        for k, v in self.getMarket().items():
-            arr.append(v)
-        return np.array([arr])
+        # arr = [np.array([self.getT()]), np.array([self.getI()])]
+        # for k, v in self.getMarket().items():
+        #     arr.append(v)
+        # return np.array([arr])
+        ba = self.market['bidask']
+        return ba.reshape((1, ba.shape[1], ba.shape[0]*ba.shape[2]))#.reshape((ba.shape[0], ba.shape[2], ba.shape[1]))
 
     def getT(self):
         return self.t

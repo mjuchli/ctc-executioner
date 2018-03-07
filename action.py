@@ -34,6 +34,9 @@ class Action(object):
     def getA(self):
         return self.a
 
+    def setA(self, a):
+        self.a = a
+
     def getRuntime(self):
         return self.runtime
 
