@@ -22,15 +22,6 @@ side = OrderSide.SELL
 levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -10, -12, -15]
 ai = None
 
-#trainBook = 'query_result_train_15m.tsv'
-#testBook = 'query_result_train_15m.tsv'
-orderbook = Orderbook(extraFeatures=True)
-orderbook.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
-orderbook_test = Orderbook(extraFeatures=True)
-orderbook_test.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
-orderbook.createFeatures()
-orderbook_test.createFeatures()
-# orderbook.plot()
 
 T = [10, 20, 40, 60, 80, 100] #, 120, 240]
 T_test = [0, 10, 20, 40, 60, 80, 100]# 120, 240]
@@ -50,8 +41,8 @@ def baseline_model(num_actions,hidden_size):
 epsilon = .1  # exploration
 num_actions = len(levels)  # [move_left, stay, move_right]
 max_memory = 500 # Maximum number of experiences we are storing
-hidden_size = 100 # Size of the hidden layers
-batch_size = 1 # Number of experiences we use for training per batch
+hidden_size = 10 # Size of the hidden layers
+batch_size = 10 # Number of experiences we use for training per batch
 
 #Define model
 model = baseline_model(num_actions,hidden_size)
@@ -82,9 +73,8 @@ class ActionSpaceDQN(ActionSpace):
     def update(self, t, i, loss, force_execution=False):
         #The learner is acting on the last observed game screen
         #input_t is a vector containing representing the game screen
-        state = np.array([[t, i]])
+        state = ActionState(t, i) #np.array([[t, i]])
         #state = np.array([t, i]).reshape(2,1)
-
         #a = random.choice(levels)
         if np.random.rand() <= epsilon:
             #Eat something random from the menu
@@ -92,7 +82,7 @@ class ActionSpaceDQN(ActionSpace):
         else:
             #Choose yourself
             #q contains the expected rewards for the actions
-            q = model.predict(state)
+            q = model.predict(state.toArray())
             #We pick the action with the highest expected reward
             a = np.argmax(q[0])
 
@@ -108,7 +98,7 @@ class ActionSpaceDQN(ActionSpace):
         state_next.setI(i_next)
 
         # store experience
-        exp_replay.remember([np.array([[t_next, i_next]]), a, reward, state], t==0)
+        exp_replay.remember([state_next.toArray(), a, reward, state.toArray()], t==0)
 
         # Load batch of experiences
         inputs, targets = exp_replay.get_batch(model, batch_size=batch_size)
@@ -136,7 +126,9 @@ class ActionSpaceDQN(ActionSpace):
                 q = model.predict(np.array([[t, i]]))
                 #We pick the action with the highest expected reward
                 a = np.argmax(q[0])
-                print(a)
+                print("t: " + str(t))
+                print("i: " + str(i))
+                print("Action: " + str(a))
 
                 actions.append(a)
                 action = self.createAction(a, t, i, force_execution=False)
@@ -152,9 +144,12 @@ class ActionSpaceDQN(ActionSpace):
                 # print("i_next: " + str(i_next))
                 while i_next != 0:
                     state_next = ActionState(t_next, i_next, {})
-                    q = model.predict(np.array([[t_next, t_next]]))
+                    q = model.predict(np.array([[t_next, i_next]]))
                     a_next = np.argmax(q[0])
                     # print("Q action for next state " + str(state_next) + ": " + str(a_next))
+                    print("t: " + str(t_next))
+                    print("i: " + str(i_next))
+                    print("Action: " + str(a_next))
 
                     actions.append(a_next)
                     #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
@@ -177,8 +172,6 @@ class ActionSpaceDQN(ActionSpace):
         if not average:
             return Ms
         return self.averageBacktest(Ms)
-
-
 
 
 
@@ -222,7 +215,7 @@ def animate(f, interval=5000, axis=[0, 100, -50, 50], frames=None):
     plt.show()
 
 
-def run_profit(epochs_train=10, epochs_test=5):
+def run_profit(epochs_train=5, epochs_test=10):
     if epochs_train > 0:
         train(epochs_train)
     M = test(epochs_test, average=False)
@@ -231,7 +224,112 @@ def run_profit(epochs_train=10, epochs_test=5):
     return np.mean(M[0:, 4])
 
 
-actionSpace = ActionSpaceDQN(orderbook, side, T, I, ai, levels)
-actionSpace_test = ActionSpaceDQN(orderbook_test, side, T_test, I, ai, levels)
+# #trainBook = 'query_result_train_15m.tsv'
+# #testBook = 'query_result_train_15m.tsv'
+# orderbook = Orderbook()
+# orderbook.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
+# orderbook_test = Orderbook()
+# orderbook_test.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
+# # orderbook.plot()
 
-animate(run_profit, interval=100)
+orderbook = Orderbook()
+orderbook.loadFromEvents('ob-1.tsv')
+orderbook_test = orderbook
+#orderbook.plot()
+
+cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]
+import pandas as pd
+events = pd.read_table('ob-1.tsv', sep='\t', names=cols, index_col="seq")
+d = Orderbook.generateDictFromEvents(events)
+d
+
+
+min(events[events['is_bid'] == 1].price)
+max(events[events['is_bid'] == 0].price)
+max(events['size'])
+min(events['size'])
+
+
+
+def bidAskFeature(bids, asks, inventory, bestAsk):
+    """Creates feature in form of two vectors representing bids and asks.
+
+    The prices and sizes of the bids and asks are normalized by the provided
+    (current) bestAsk and inventory respectively.
+    """
+
+    def normalize(d, inventory, bestAsk):
+        s = pd.Series(d, name='size')
+        s.index.name='price'
+        s = s.reset_index()
+        s.price = s.price / bestAsk
+        s['size'] = s['size'] / inventory
+        return np.array(s)
+
+    def combine2(a, b):
+        """ Combines two numpy arrays by enforcing the same size.
+
+        This is necessary since the number of bids and asks may not be equal.
+        """
+
+        gap = abs(b.shape[0] - a.shape[0])
+        if gap > 0:
+            gapfill = np.zeros((gap, 2))
+            if a.shape[0] < b.shape[0]:
+                a = np.vstack((a, gapfill))
+            else:
+                b = np.vstack((b, gapfill))
+
+        return np.array([a, b])
+
+    bids_norm = normalize(bids, inventory, bestAsk)
+    asks_norm = normalize(asks, inventory, bestAsk)
+    return combine2(bids_norm, asks_norm)
+
+def getBidAskFeatures(d, state_index, inventory, lookback):
+    state = d[list(d.keys())[state_index]]
+    asks = state['asks']
+    bids = state['bids']
+    bestAsk = min(asks.keys())
+
+    def combine3(a, b):
+        """ Combines two 3d numpy arrays by enforcing the same size.
+
+        This is necessary since the number of orders may not be equal.
+        """
+        gap = abs(b.shape[1] - a.shape[1])
+        if gap > 0:
+            gapfill = np.zeros((gap, 2))
+            gapfill
+            if a.shape[1] < b.shape[1]:
+                a0 = np.vstack((a[0], gapfill))
+                a1 = np.vstack((a[1], gapfill))
+                a = np.array([a0, a1])
+            else:
+                b0 = np.vstack((b[0], gapfill))
+                b1 = np.vstack((b[1], gapfill))
+                b = np.array([b0, b1])
+        return np.vstack((a, b))
+
+    i = 0
+    while i < lookback:
+        state_index = state_index - 1
+        state = d[list(d.keys())[state_index]]
+        asks = state['asks']
+        bids = state['bids']
+
+        if i == 0:
+            features = bidAskFeature(bids, asks, inventory, bestAsk)
+        else:
+            features_next = bidAskFeature(bids, asks, inventory, bestAsk)
+            features = combine3(features, features_next)
+        i = i + 1
+    return features
+
+f = getBidAskFeatures(d, 100, 0.5, 10)
+f.shape
+
+# actionSpace = ActionSpaceDQN(orderbook, side, T, I, ai, levels)
+# actionSpace_test = ActionSpaceDQN(orderbook_test, side, T_test, I, ai, levels)
+#
+# animate(run_profit, interval=100)
