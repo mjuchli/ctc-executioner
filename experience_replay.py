@@ -25,7 +25,7 @@ class ExperienceReplay(object):
     def remember(self, states, game_over):
         #Save a state to memory
         self.memory.append([states, game_over])
-        
+
         #We don't want to store infinite memories, so if we have too many, we just delete the oldest one
         if len(self.memory) > self.max_memory:
             del self.memory[0]
@@ -42,7 +42,7 @@ class ExperienceReplay(object):
         env_dim = self.memory[0][0][0].shape[1]
 
         #We want to return an input and target vector with inputs from an observed state...
-        inputs = np.zeros((min(len_memory, batch_size), env_dim))
+        inputs = np.zeros((min(len_memory, batch_size), env_dim, 20))
         #...and the target r + gamma * max Q(s’,a’)
         #Note that our target is a matrix, with possible fields not only for the action taken but also
         #for the other possible actions. The actions not take the same value as the prediction to not affect them
