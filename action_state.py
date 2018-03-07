@@ -1,3 +1,5 @@
+import numpy as np
+
 class ActionState(object):
 
     def __init__(self, t, i, market={}):
@@ -21,6 +23,12 @@ class ActionState(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def toArray(self):
+        arr = [self.getT(), self.getI()]
+        for k, v in self.getMarket().items():
+            arr.append(v)
+        return np.array([arr])
 
     def getT(self):
         return self.t
