@@ -27,6 +27,7 @@ class OrderbookEntry(object):
 class OrderbookState(object):
 
     def __init__(self, tradePrice=0.0, timestamp=None):
+        # self.index = None
         self.tradePrice = tradePrice
         self.volume = 0.0
         self.timestamp = timestamp
@@ -36,6 +37,7 @@ class OrderbookState(object):
 
     def __str__(self):
         s = '----------ORDERBOOK STATE----------\n'
+        # s = s + "Index: " + str(self.index) + "\n"
         s = s + "DateTime: " + str(self.timestamp) + "\n"
         s = s + "Price: " + str(self.tradePrice) + "\n"
         s = s + "Buyers: " + str(self.buyers) + "\n"
@@ -139,7 +141,7 @@ class OrderbookState(object):
 
 class Orderbook(object):
 
-    def __init__(self, extraFeatures=True):
+    def __init__(self, extraFeatures=False):
         self.states = []
         self.extraFeatures = extraFeatures
         self.tmp = {}
@@ -358,11 +360,11 @@ class Orderbook(object):
         import copy
         most_recent_orderbook = {"bids": {}, "asks": {}}
         orderbook = {}
-        for seq, e in events_pd.iterrows():
+        for e in events_pd.itertuples():
             if e.is_trade:
                 continue
 
-            if e["size"] == 0.0:
+            if e.size == 0.0:
                 try:
                     del most_recent_orderbook["bids" if e.is_bid else "asks"][e.price]
                     # print('Cancel ' + str(e.price))
@@ -371,7 +373,7 @@ class Orderbook(object):
                     continue
             else:
                 current_size = most_recent_orderbook["bids" if e.is_bid else "asks"].get(e.price, 0.0)
-                most_recent_orderbook["bids" if e.is_bid else "asks"][e.price] = current_size + e["size"]
+                most_recent_orderbook["bids" if e.is_bid else "asks"][e.price] = current_size + e.size
 
             orderbook[e.ts] = copy.deepcopy(most_recent_orderbook)
         return orderbook
@@ -382,12 +384,14 @@ class Orderbook(object):
 
         # skip states until at least 1 bid and 1 ask is available
         while True:
-            head = d[list(d.keys())[0]]
+            head_key = next(iter(d))
+            head = d[head_key]
             if len(head["bids"]) > 0 and len(head["asks"]) > 0:
                 break
-            del d[list(d.keys())[0]]
+            del d[head_key]
 
-        for ts, state in d.items():
+        for ts in iter(d.keys()):
+            state = d[ts]
             bids = collections.OrderedDict(sorted(state["bids"].items(), reverse=True))
             asks = collections.OrderedDict(sorted(state["asks"].items()))
             buyers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in bids.items()]
