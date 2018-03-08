@@ -380,7 +380,7 @@ class Orderbook(object):
 
     def loadFromDict(self, d):
         import collections
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         # skip states until at least 1 bid and 1 ask is available
         while True:
@@ -397,7 +397,7 @@ class Orderbook(object):
             buyers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in bids.items()]
             sellers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in asks.items()]
             if len(sellers) > 0:
-                s = OrderbookState(tradePrice=max(state["asks"].keys()), timestamp=datetime.fromtimestamp(ts, timezone.utc))
+                s = OrderbookState(tradePrice=max(state["asks"].keys()), timestamp=datetime.fromtimestamp(ts))
                 s.addBuyers(buyers)
                 s.addSellers(sellers)
                 s.setVolume(0.0)
