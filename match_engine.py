@@ -98,36 +98,11 @@ class MatchEngine(object):
                 return [Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
-                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=min(qty, remaining), price=price, timestamp=orderbookState.getTimestamp()))
+                qtyExecute = min(qty, remaining)
+                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=qtyExecute, price=price, timestamp=orderbookState.getTimestamp()))
                 sidePosition = sidePosition + 1
-                remaining = remaining - qty
-
-        # Since there is no more liquidity in this state of the order book
-        # (data). For convenience sake we assume that there would be
-        # liquidity in some levels below.
-        # TODO: Simulate in more appropriate way, such as executing multiple
-        # trades whereas the trade size increases exponentially and the price
-        # increases logarithmically.
-        average_qty = np.mean([x.getCty() for x in partialTrades])
-        logging.debug("On average executed qty: " + str(average_qty))
-        if average_qty == 0.0:
-            average_qty = 0.5
-            logging.debug("Since no trades were executed (e.g. true average executed qty == 0.0), defaul is choosen: " + str(average_qty))
-        derivative_price = abs(np.mean(np.gradient([x.getPrice() for x in partialTrades])))
-        logging.debug("Derivative of price from executed trades: " + str(derivative_price))
-        if derivative_price == 0.0:
-            derivative_price = 5.0
-            logging.debug("Since no trades were executed (e.g. derivative executed price == 0.0), defaul is choosen: " + str(derivative_price))
-        while remaining > 0.0:
-            if order.getSide() == OrderSide.BUY:
-                price = price + derivative_price
-            else:
-                price = price - derivative_price
-
-            qty = min(average_qty, remaining)
-            logging.debug("Partial execution: assume " + str(qty) + " available")
-            partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=qty, price=price, timestamp=orderbookState.getTimestamp()))
-            remaining = remaining - qty
+                remaining = remaining - qtyExecute
+                logging.debug("Remaining: " + str(remaining))
 
         return partialTrades
 
