@@ -1,4 +1,4 @@
-import logging
+ximport logging
 import numpy as np
 from action_space import ActionSpace
 from order_side import OrderSide
@@ -8,20 +8,17 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
 from keras import optimizers
 import random
-from experience_replay import ExperienceReplay
 from action_state import ActionState
 import pprint
 import datetime
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from collections import deque
-import seaborn as sns
-sns.set(color_codes=True)
+#logging.basicConfig(level=logging.DEBUG)
+
 
 side = OrderSide.SELL
 levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -10, -12, -15]
 ai = None
-T = [10, 20, 40, 60, 80, 100] #, 120, 240]
+T = [0, 10, 20, 40, 60, 80, 100] #, 120, 240]
 T_test = [0, 10, 20, 40, 60, 80, 100]# 120, 240]
 I = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
@@ -33,16 +30,21 @@ events = pd.read_table('ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
 d = Orderbook.generateDictFromEvents(events)
 orderbook = Orderbook()
 orderbook.loadFromDict(d)
+# clean first n states (due to lack of bids and asks)
+print("#States: " + str(len(orderbook.states)))
+for i in range(100):
+    orderbook.states.pop(0)
+    del d[list(d.keys())[0]]
 orderbook_test = orderbook
 #orderbook.plot()
 
-# f = getBidAskFeatures(d, 100, 0.5, 1)
+# f = getBidAskFeatures(d, 100, 0.5, 1, 10)
 # f.shape
 # f
 # f.reshape((100,4))
 
 
-def bidAskFeature(bids, asks, inventory, bestAsk):
+def bidAskFeature(bids, asks, inventory, bestAsk, size=100):
     """Creates feature in form of two vectors representing bids and asks.
 
     The prices and sizes of the bids and asks are normalized by the provided
@@ -57,23 +59,7 @@ def bidAskFeature(bids, asks, inventory, bestAsk):
         s['size'] = s['size'] / inventory
         return np.array(s)
 
-    def combine2(a, b):
-        """ Combines two numpy arrays by enforcing the same size.
-
-        This is necessary since the number of bids and asks may not be equal.
-        """
-
-        gap = abs(b.shape[0] - a.shape[0])
-        if gap > 0:
-            gapfill = np.zeros((gap, 2))
-            if a.shape[0] < b.shape[0]:
-                a = np.vstack((a, gapfill))
-            else:
-                b = np.vstack((b, gapfill))
-
-        return np.array([a, b])
-
-    def force_size(a, n=100):
+    def force_size(a, n=size):
         gap = (n - a.shape[0])
         if gap > 0:
             gapfill = np.zeros((gap, 2))
@@ -84,34 +70,17 @@ def bidAskFeature(bids, asks, inventory, bestAsk):
 
     bids_norm = normalize(bids, inventory, bestAsk)
     asks_norm = normalize(asks, inventory, bestAsk)
-    #return combine2(bids_norm, asks_norm)
     return np.array([force_size(bids_norm), force_size(asks_norm)])
 
-def getBidAskFeatures(d, state_index, inventory, lookback):
+def getBidAskFeatures(d, state_index, inventory, lookback, size=100):
+    """
+    (2*lookback, size, 2)
+    """
+
     state = d[list(d.keys())[state_index]]
     asks = state['asks']
     bids = state['bids']
     bestAsk = min(asks.keys())
-
-    def combine3(a, b):
-        """ Combines two 3d numpy arrays by enforcing the same size.
-
-        This is necessary since the number of orders may not be equal.
-        """
-        gap = abs(b.shape[1] - a.shape[1])
-        if gap > 0:
-            gapfill = np.zeros((gap, 2))
-            gapfill
-            if a.shape[1] < b.shape[1]:
-                a0 = np.vstack((a[0], gapfill))
-                a1 = np.vstack((a[1], gapfill))
-                a = np.array([a0, a1])
-            else:
-                b0 = np.vstack((b[0], gapfill))
-                b1 = np.vstack((b[1], gapfill))
-                b = np.array([b0, b1])
-        return np.vstack((a, b))
-
     i = 0
     while i < lookback:
         state_index = state_index - 1
@@ -123,7 +92,7 @@ def getBidAskFeatures(d, state_index, inventory, lookback):
             features = bidAskFeature(bids, asks, inventory, bestAsk)
         else:
             features_next = bidAskFeature(bids, asks, inventory, bestAsk)
-            features = combine3(features, features_next)
+            features = np.vstack((features, features_next))
         i = i + 1
     return features
 
@@ -287,51 +256,10 @@ class ActionSpaceDQN(ActionSpace):
         return self.averageBacktest(Ms)
 
 
-
-def train(episodes=100):
-    for episode in range(episodes):
-        # pp.pprint("Episode " + str(episode))
-        actionSpace.train(episodes=1, force_execution=False)
-
-
-def test(episodes=100, average=True):
-    M = actionSpace_test.backtest(episodes, average=average)
-    return M
-
-
-def animate(f, interval=5000, axis=[0, 100, -50, 50], frames=None):
-    fig = plt.figure()
-    ax1 = fig.add_subplot(1,1,1)
-    ax1.axis(axis)
-    ax1.autoscale(True)
-    xs = []
-    ys = []
-
-    def do_animate(i, f, ax1, xs, ys):
-        y = f()
-        if len(xs) == 0:
-            xs.append(0)
-        else:
-            xs.append(xs[-1]+1)
-        ys.append(y)
-        ax1.clear()
-        ax1.plot(xs, ys)
-
-    ani = animation.FuncAnimation(
-        fig,
-        lambda i: do_animate(i, f, ax1, xs, ys),
-        interval=interval,
-        frames=frames
-    )
-    # from IPython.display import HTML
-    # HTML(ani.to_jshtml())
-    plt.show()
-
-
 def run_profit(epochs_train=5, epochs_test=10):
     if epochs_train > 0:
-        train(epochs_train)
-    M = test(epochs_test, average=False)
+        actionSpace.train(epochs_train)
+    M = actionSpace_test.backtest(epochs_test, average=False)
     M = np.array(M)
     # print(M)
     return np.mean(M[0:, 4])
@@ -339,4 +267,6 @@ def run_profit(epochs_train=5, epochs_test=10):
 lookback = 5
 actionSpace = ActionSpaceDQN(orderbook, side, T, I, levels)
 actionSpace_test = ActionSpaceDQN(orderbook_test, side, T_test, I, levels)
-animate(run_profit, interval=100)
+
+from ui import UI
+UI.animate(run_profit, interval=100)
