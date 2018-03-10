@@ -1,7 +1,9 @@
-ximport logging
+import logging
+import copy
 import numpy as np
 from action_space import ActionSpace
 from order_side import OrderSide
+from order_type import OrderType
 from orderbook import Orderbook
 from action_state import ActionState
 from keras.models import Sequential
@@ -97,10 +99,12 @@ def getBidAskFeatures(d, state_index, inventory, lookback, size=100):
     return features
 
 class DQNAgent:
-    def __init__(self, actions): #, state_size, action_size):
+    def __init__(self, env): #, state_size, action_size):
         # self.state_size = state_size
-        self.actions = actions
-        self.action_size = len(actions)
+        self.env = env
+        self.actions = env.levels
+        self.action_size = len(env.levels)
+
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95    # discount rate
         self.epsilon = 1.0  # exploration rate
@@ -112,7 +116,7 @@ class DQNAgent:
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(10, input_shape=(100,20), activation='relu'))
+        model.add(Dense(100, input_shape=(100,20), activation='relu'))
         model.add(Dense(10, activation='relu'))
         model.add(Flatten())
         model.add(Dense(self.action_size))
@@ -146,67 +150,73 @@ class DQNAgent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
-
-class ActionSpaceDQN(ActionSpace):
-
-    def __init__(self, orderbook, side, T, I, levels):
-        ActionSpace.__init__(self, orderbook, side, T, I, None, levels)
-        self.agent = DQNAgent(levels)
-
     def train(self, episodes=1, force_execution=False):
         for episode in range(int(episodes)):
-            for t in self.T:
+            for t in self.env.T:
                 logging.info("\n"+"t=="+str(t))
-                for i in self.I:
+                for i in self.env.I:
                     logging.info("     i=="+str(i))
-                    logging.info("Action run " + str((t, i)))
-                    (t_next, i_next) = self.update(t, i, force_execution)
-                    while i_next != 0:
+                    print("Action run " + str((t, i)))
+                    action, done = self.start(t, i)
+                    while not done:
                         if force_execution:
                             raise Exception("Enforced execution left " + str(i_next) + " unexecuted.")
+                        t = action.getState().getT()
+                        i = action.getState().getI()
+                        print("Action continue " + str((t, i)))
+                        action, done = self.update(action)
+                        t_next = action.getState().getT()
+                        i_next = action.getState().getI()
                         logging.info("Action transition " + str((t, i)) + " -> " + str((t_next, i_next)))
-                        (t_next, i_next) = self.update(t_next, i_next, force_execution)
+
             # train the agent with the experience of the episode
-            self.agent.replay(32)
+            print("\nREPLAY\n")
+            self.replay(32)
 
-    def update(self, t, i, force_execution=False):
-        action = self.createAction(None, t, i, force_execution=force_execution)
-        bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i, lookback)
+    def start(self, t, i):
+        orderbookState, orderbookIndex = self.env.getRandomOrderbookState()
+        bidAskFeature = getBidAskFeatures(d, orderbookIndex, i, lookback)
         state = ActionState(t, i, {'bidask': bidAskFeature}) #np.array([[t, i]])
+        a = self.act(state.toArray())
+        action = self.env.createAction(a, state, orderbookIndex=orderbookIndex)
+        return self.update(action)
 
-        # Decide action
-        a = self.agent.act(state.toArray())
+    def update(self, action):
+        state = copy.deepcopy(action.getState())
 
-        action.setA(a)
-        action.run(self.orderbook)
-        i_next = self.determineNextInventory(action)
-        t_next = self.determineNextTime(t)
+        # Run and evaluate action
+        action.run(self.env.orderbook)
+        i_next = self.env.determineNextInventory(action)
+        t_next = self.env.determineNextTime(action.getState().getT())
         reward = action.getValueAvg(fees=False)
-        # reward = action.getValueExecuted()
-        # reward = action.getTestReward()
         bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i_next, lookback)
         state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
 
         # Remember the previous state, action, reward, and done
-        done = t==0
-        self.agent.remember(state.toArray(), a, reward, state_next.toArray(), done)
+        done = action.isFilled() or state_next.getI() == 0
+        self.remember(state.toArray(), action.getA(), reward, state_next.toArray(), done)
 
-        return (t_next, i_next)
+        # Update action values
+        a = self.act(state_next.toArray())
+        action = self.env.updateAction(action, a, state_next)
+        return action, done
 
-    def backtest(self, q=None, episodes=10, average=False, fixed_a=None):
+    def backtest(self, epochs, average=False, fixed_a=None):
         Ms = []
         #T = self.T[1:len(self.T)]
-        for t in [self.T[-1]]:
+        for t in [self.env.T[-1]]:
             logging.info("\n"+"t=="+str(t))
-            for i in [self.I[-1]]:
+            for i in [self.env.I[-1]]:
                 logging.info("     i=="+str(i))
                 actions = []
 
-                action = self.createAction(None, t, i, force_execution=False)
-                bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i, lookback)
-                state = ActionState(t, i, {'bidask': bidAskFeature})
+                orderbookState, orderbookIndex = self.env.getRandomOrderbookState()
+                bidAskFeature = getBidAskFeatures(d, orderbookIndex, i, lookback)
+                state = ActionState(t, i, {'bidask': bidAskFeature}) #np.array([[t, i]])
+                a = self.guess(state.toArray())
+                action = self.env.createAction(a, state, orderbookIndex=orderbookIndex)
+
                 #print(state)
-                a = self.agent.guess(state.toArray())
                 print("t: " + str(t))
                 print("i: " + str(i))
                 print("Action: " + str(a))
@@ -217,17 +227,17 @@ class ActionSpaceDQN(ActionSpace):
 
                 #print("before...")
                 #print(action)
-                action.run(self.orderbook)
+                action.run(self.env.orderbook)
                 #print("after...")
                 #print(action)
-                i_next = self.determineNextInventory(action)
-                t_next = self.determineNextTime(t)
+                i_next = self.env.determineNextInventory(action)
+                t_next = self.env.determineNextTime(t)
                 # print("i_next: " + str(i_next))
                 while i_next != 0:
                     bidAskFeature = getBidAskFeatures(d, action.getOrderbookIndex(), i_next, lookback)
 
                     state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
-                    a_next = self.agent.guess(state_next.toArray())
+                    a_next = self.guess(state_next.toArray())
                     # print("Q action for next state " + str(state_next) + ": " + str(a_next))
                     print("t: " + str(t_next))
                     print("i: " + str(i_next))
@@ -236,13 +246,13 @@ class ActionSpaceDQN(ActionSpace):
                     actions.append(a_next)
                     #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
 
-                    runtime_next = self.determineRuntime(t_next)
+                    runtime_next = self.env.determineRuntime(t_next)
                     action.setState(state_next)
                     action.update(a_next, runtime_next)
-                    action.run(self.orderbook)
+                    action.run(self.env.orderbook)
                     #print(action)
-                    i_next = self.determineNextInventory(action)
-                    t_next = self.determineNextTime(t_next)
+                    i_next = self.env.determineNextInventory(action)
+                    t_next = self.env.determineNextTime(t_next)
 
                 price = action.getAvgPrice()
                 # TODO: last column is for for the BUY scenario only
@@ -253,20 +263,21 @@ class ActionSpaceDQN(ActionSpace):
                 Ms.append([state, midPrice, actions, price, profit])
         if not average:
             return Ms
-        return self.averageBacktest(Ms)
+        return self.env.averageBacktest(Ms)
 
 
-def run_profit(epochs_train=5, epochs_test=10):
+def run_profit(epochs_train=1, epochs_test=1):
     if epochs_train > 0:
-        actionSpace.train(epochs_train)
-    M = actionSpace_test.backtest(epochs_test, average=False)
+        agent.train(epochs_train)
+    M = agent.backtest(epochs_test, average=False)
     M = np.array(M)
     # print(M)
     return np.mean(M[0:, 4])
 
 lookback = 5
-actionSpace = ActionSpaceDQN(orderbook, side, T, I, levels)
-actionSpace_test = ActionSpaceDQN(orderbook_test, side, T_test, I, levels)
+actionSpace = ActionSpace(orderbook, side, T, I, levels=levels)
+actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, levels=levels)
+agent = DQNAgent(actionSpace)
 
 from ui import UI
 UI.animate(run_profit, interval=100)
