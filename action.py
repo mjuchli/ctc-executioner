@@ -127,7 +127,11 @@ class Action(object):
         """
         # In case of no executed trade, the value is the negative reference
         if self.getPcFilled() == 0.0:
-            return 0.0 # -2.0 * abs(self.getA())
+            # return 0.0
+            if self.getOrder().getSide() == OrderSide.BUY:
+                return self.getReferencePrice() - self.getOrderbookState().getBidAskMid()
+            else:
+                return self.getOrderbookState().getBidAskMid() - self.getReferencePrice()
 
         if self.getOrder().getSide() == OrderSide.BUY:
             reward = self.getReferencePrice() - self.getAvgPrice()
@@ -187,4 +191,5 @@ class Action(object):
         self.setTrades(counterTrades)
         self.setOrderbookIndex(index=index)
         self.setOrderbookState(orderbook.getState(index))
+        self.setReferencePrice(orderbook.getState(index).getBestAsk())
         return self, qtyRemain
