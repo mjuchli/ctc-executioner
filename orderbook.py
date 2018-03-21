@@ -240,7 +240,6 @@ class Orderbook(object):
         if offsetTail is None:
             offsetTail = self.getOffsetTail(offset=runtime)
             self.tmp['offset_tail_'+str(runtime)] = offsetTail
-            print('setting index offset_tail_'+str(runtime)+': '+str(offsetTail))
 
         index = random.choice(range(offsetTail))
         return self.getState(index), index

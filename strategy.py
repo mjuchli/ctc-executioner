@@ -7,8 +7,6 @@ from orderbook import Orderbook
 from action_state import ActionState
 import pprint
 import datetime
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import seaborn as sns
 sns.set(color_codes=True)
 
@@ -53,41 +51,12 @@ def test(episodes=100, average=True, fixed_a=None):
     return M
 
 
-def animate(f, interval=5000, axis=[0, 100, -50, 50], frames=None):
-    fig = plt.figure()
-    ax1 = fig.add_subplot(1,1,1)
-    ax1.axis(axis)
-    ax1.autoscale(True)
-    xs = []
-    ys = []
-
-    def do_animate(i, f, ax1, xs, ys):
-        y = f()
-        if len(xs) == 0:
-            xs.append(0)
-        else:
-            xs.append(xs[-1]+1)
-        ys.append(y)
-        ax1.clear()
-        ax1.plot(xs, ys)
-
-    ani = animation.FuncAnimation(
-        fig,
-        lambda i: do_animate(i, f, ax1, xs, ys),
-        interval=interval,
-        frames=frames
-    )
-    # from IPython.display import HTML
-    # HTML(ani.to_jshtml())
-    plt.show()
-
-
-def run_profit(epochs_train=0, epochs_test=5, fixed_a=None):
+def run_profit(epochs_train=10, epochs_test=5, fixed_a=None):
     if epochs_train > 0:
         q = train(epochs_train)
     M = test(epochs_test, average=False, fixed_a=fixed_a)
     M = np.array(M)
-    print(M)
+    # print(M)
     return np.mean(M[0:, 4])
 
 
@@ -112,27 +81,6 @@ def run_q_reward():
     reward = np.mean(list(q.values()))
     print("Cummultive reward: " + str(reward))
     return reward
-
-
-#logging.basicConfig(level=logging.DEBUG)
-
-side = OrderSide.BUY
-levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -10, -12, -15]
-ai = QLearn(actions=levels, epsilon=0.4, alpha=0.3, gamma=0.8)
-
-#trainBook = 'query_result_train_15m.tsv'
-#testBook = 'query_result_train_15m.tsv'
-orderbook = Orderbook(extraFeatures=True)
-orderbook.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
-orderbook_test = Orderbook(extraFeatures=True)
-orderbook_test.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
-
-T = [10, 20, 40, 60, 80, 100] #, 120, 240]
-T_test = [0, 10, 20, 40, 60, 80, 100]# 120, 240]
-
-I = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-actionSpace = ActionSpace(orderbook, side, T, I, ai, levels)
-actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
 
 def evaluateReturns(levels=range(-100, 101), crossval=10, force_execution=True, trade_log=False):
@@ -193,26 +141,45 @@ def priceReturnCurve(enable_after_exec_return=True, levels=range(-100, 101), cro
     plt.grid(linestyle='-', linewidth=2)
     plt.show()
 
+#logging.basicConfig(level=logging.DEBUG)
 
+side = OrderSide.BUY
+levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -10, -12, -15]
+ai = QLearn(actions=levels, epsilon=0.4, alpha=0.3, gamma=0.8)
+
+#trainBook = 'query_result_train_15m.tsv'
+#testBook = 'query_result_train_15m.tsv'
+
+# orderbook = Orderbook(extraFeatures=False)
+# orderbook.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
+# orderbook_test = Orderbook(extraFeatures=False)
+# orderbook_test.loadFromBitfinexFile('orderbook_bitfinex_btcusd_view.tsv')
+
+# Load orderbook
+cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]
+import pandas as pd
+events = pd.read_table('ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
+d = Orderbook.generateDictFromEvents(events)
 orderbook = Orderbook()
-config = {
-    'startPrice': 10010.0,
-    'endPrice': 10000.0,
-    'startTime': datetime.datetime.now(),
-    'duration': datetime.timedelta(seconds=100),
-    'interval': datetime.timedelta(seconds=10)
-}
-orderbook.createArtificial(config)
-# orderbook.plot(show_bidask=True)
-
-T = [0, 60] #, 120, 240
-I = [1.0]
-actionSpace = ActionSpace(orderbook, OrderSide.BUY, T, I)
-priceReturnCurve(crossval=1, levels=range(-50, 25), force_execution=True, enable_after_exec_return=False, trade_log=True)
+orderbook.loadFromDict(d)
+# clean first n states (due to lack of bids and asks)
+print("#States: " + str(len(orderbook.states)))
+for i in range(100):
+    orderbook.states.pop(0)
+    del d[list(d.keys())[0]]
+orderbook_test = orderbook
+#orderbook.plot()
 
 
+T = [0, 10, 20, 40, 60, 80, 100] #, 120, 240]
+T_test = [0, 10, 20, 40, 60, 80, 100]# 120, 240]
 
-#train(1)
+I = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+actionSpace = ActionSpace(orderbook, side, T, I, ai, levels)
+actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
+
 #priceReturnCurve(crossval=1)
-#animate(run_profit, interval=100)
-#animate(run_q_reward, interval=1000)
+
+from ui import UI
+UI.animate(run_profit, interval=100)
+# UI.animate(run_q_reward, interval=1000)
