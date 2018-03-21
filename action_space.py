@@ -14,8 +14,6 @@ class ActionSpace(object):
     def __init__(self, orderbook, side, T, I, ai=None, levels=None):
         self.orderbook = orderbook
         self.side = side
-        if not levels:
-            levels = [-2, -1, 0, 1, 2, 3]
         self.levels = levels
         if not ai:
             ai = QLearn(self.levels)  # levels are our qlearn actions
@@ -23,24 +21,25 @@ class ActionSpace(object):
         self.T = T
         self.I = I
 
-    def createAction(self, level, t, qty, force_execution=False):
+    def getRandomOrderbookState(self):
+        return self.orderbook.getRandomState(max(self.T))
+
+    def createAction(self, level, state, orderbookIndex=None, force_execution=False):
         # Determines whether to run and force execution of given t, or if
         # segmentation of t into multiple runtimes is allowed.
         if force_execution:
-            runtime = t
+            runtime = state.getT()
             ot = OrderType.LIMIT_T_MARKET
         else:
-            runtime = self.determineRuntime(t)
+            runtime = self.determineRuntime(state.getT())
             ot = OrderType.LIMIT
 
-        orderbookState, index = self.orderbook.getRandomState(max(self.T))
-        aiState = ActionState(t, qty, orderbookState.getMarket())
+        if orderbookIndex is None:
+            orderbookState, orderbookIndex = self.getRandomOrderbookState()
+        else:
+            orderbookState = self.orderbook.getState(orderbookIndex)
 
-        if level is None:
-            level = self.ai.chooseAction(aiState)
-            # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
-
-        if runtime <= 0.0:
+        if runtime <= 0.0 or level is None:
             price = None
             ot = OrderType.MARKET
         else:
@@ -49,15 +48,44 @@ class ActionSpace(object):
         order = Order(
             orderType=ot,
             orderSide=self.side,
-            cty=qty,
+            cty=state.getI(),
             price=price
         )
         action = Action(a=level, runtime=runtime)
-        action.setState(aiState)
+        action.setState(state)
         action.setOrder(order)
         action.setOrderbookState(orderbookState)
-        action.setOrderbookIndex(index)
+        action.setOrderbookIndex(orderbookIndex)
         action.setReferencePrice(orderbookState.getBestAsk())
+        return action
+
+    def updateAction(self, action, level, state, orderbookIndex=None, force_execution=False):
+        if force_execution:
+            runtime = state.getT()
+            ot = OrderType.LIMIT_T_MARKET
+        else:
+            runtime = self.determineRuntime(state.getT())
+            ot = OrderType.LIMIT
+
+        if orderbookIndex is not None:
+            orderbookState = self.orderbook.getState(orderbookIndex)
+            action.setOrderbookState(orderbookState)
+            action.setOrderbookIndex(orderbookIndex)
+
+        if runtime <= 0.0 or level is None:
+            price = None
+            ot = OrderType.MARKET
+        else:
+            price = action.getOrderbookState().getPriceAtLevel(self.side, level)
+
+        order = Order(
+            orderType=ot,
+            orderSide=self.side,
+            cty=state.getI(),
+            price=price
+        )
+        action.setState(state)
+        action.setOrder(order)
         return action
 
     def createActions(self, runtime, qty, force_execution=False):
@@ -75,12 +103,6 @@ class ActionSpace(object):
             if action.getValueAvg() < bestAction.getValueAvg():
                 bestAction = action
         return bestAction
-
-    def getMostRewardingAction(self, t, i, force_execution=False):
-        actions = self.createActions(t, i, force_execution)
-        for action in actions:
-            action.run(self.ororderbook)
-        return self.determineBestAction(actions)
 
     def determineRuntime(self, t):
         if t != 0:
@@ -116,7 +138,10 @@ class ActionSpace(object):
         return i_next
 
     def update(self, t, i, force_execution=False):
-        action = self.createAction(None, t, i, force_execution=force_execution)
+        aiState = ActionState(t, i)
+        a = self.ai.chooseAction(aiState)
+        # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
+        action = self.createAction(level=a, state=aiState, force_execution=force_execution)
         action.run(self.orderbook)
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
@@ -151,18 +176,6 @@ class ActionSpace(object):
                         (t_next, i_next) = self.update(t_next, i_next, force_execution)
 
 
-    def runActionBehaviour(self, episodes=1):
-        for episode in range(int(episodes)):
-            M = []
-            for t in self.T:
-                logging.info("\n"+"t=="+str(t))
-                for i in self.I:
-                    logging.info("     i=="+str(i))
-                    action = self.getMostRewardingAction(t, i, True)
-                    state = (t, i)
-                    M.append([state, action.getA(), action.getAvgPrice()])
-        return M
-
     def backtest(self, q=None, episodes=10, average=False, fixed_a=None):
         if q is None:
             q = self.ai.q
@@ -195,7 +208,7 @@ class ActionSpace(object):
                         logging.info("State " + str(state) + " not in Q-Table.")
                         break
                 actions.append(a)
-                action = self.createAction(a, t, i, force_execution=False)
+                action = self.createAction(level=a, state=state, force_execution=False)
                 midPrice = action.getReferencePrice()
 
                 #print("before...")
