@@ -1,5 +1,4 @@
 import logging
-import threading
 import numpy as np
 from action import Action
 from order import Order
@@ -10,6 +9,10 @@ from action_state import ActionState
 
 
 class ActionSpace(object):
+    """DEPRECATED: use action_space_env instead.
+
+    This class still contains some logic which was moved to the agent.
+    """
 
     def __init__(self, orderbook, side, T, I, ai=None, levels=None):
         self.orderbook = orderbook
