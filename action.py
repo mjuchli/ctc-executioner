@@ -153,7 +153,7 @@ class Action(object):
             return -100.0
 
     def getPcFilled(self):
-        return 10 * (self.getQtyExecuted() / self.getOrder().getCty())
+        return 100 * (self.getQtyExecuted() / self.getOrder().getCty())
 
     def getValueExecuted(self):
         r = 1.0
