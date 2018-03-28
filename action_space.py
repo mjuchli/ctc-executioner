@@ -202,9 +202,6 @@ class ActionSpace(object):
                 else:
                     try:
                         a = self.ai.getQAction(state, 0)
-                        print("t: " + str(t))
-                        print("i: " + str(i))
-                        print("Action: " + str(a))
                         # print("Q action for state " + str(state) + ": " + str(a))
                     except:
                         # State might not be in Q-Table yet, more training requried.
