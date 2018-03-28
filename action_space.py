@@ -9,7 +9,7 @@ from action_state import ActionState
 
 
 class ActionSpace(object):
-    """DEPRECATED: use action_space_env instead.
+    """DEPRECATED: use ctc-executioner-v0 instead.
 
     This class still contains some logic which was moved to the agent.
     """
