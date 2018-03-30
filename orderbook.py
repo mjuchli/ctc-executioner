@@ -3,7 +3,8 @@ from order_side import OrderSide
 import numpy as np
 import random
 from sklearn.preprocessing import MinMaxScaler
-
+from collections import OrderedDict
+import pandas as pd
 
 class OrderbookEntry(object):
 
@@ -142,6 +143,7 @@ class OrderbookState(object):
 class Orderbook(object):
 
     def __init__(self, extraFeatures=False):
+        self.dictBook = None
         self.states = []
         self.extraFeatures = extraFeatures
         self.tmp = {}
@@ -174,6 +176,11 @@ class Orderbook(object):
         if len(self.states) <= index:
             raise Exception('Index out of orderbook state.')
         return self.states[index]
+
+    def getDictState(self, index):
+        if len(self.dictBook) <= index:
+            raise Exception('Index out of orderbook state.')
+        return self.dictBook[list(self.dictBook.keys())[index]]
 
     def getOffsetHead(self, offset):
         """The index (from the beginning of the list) of the first state past
@@ -406,13 +413,17 @@ class Orderbook(object):
         #    assert(s.getBestBid() <= s.getBestAsk())
 
     def loadFromEventsFrame(self, events_pd):
-        d = Orderbook.generateDictFromEvents(events_pd)
-        self.loadFromDict(d)
+        self.dictBook = Orderbook.generateDictFromEvents(events_pd)
+        self.loadFromDict(self.dictBook)
 
-    def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]):
+    def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"], clean=20):
         import pandas as pd
         events = pd.read_table(file, sep='\t', names=cols, index_col="seq")
         self.loadFromEventsFrame(events.sort_index())
+        # We remove the first few states as they are lacking bids and asks
+        for i in range(clean):
+            self.states.pop(0)
+            del self.dictBook[list(self.dictBook.keys())[0]]
 
     def plot(self, show_bidask=False, max_level=-1):
         import matplotlib.pyplot as plt
@@ -437,6 +448,92 @@ class Orderbook(object):
             state.setMarketVar('volumeRelativeTotal', volumesRelative[i])
             i = i + 1
 
+    def getBidAskFeature(self, bids, asks, qty=None, price=True, size=True, normalize=False, levels=20):
+        """Creates feature to represent bids and asks.
+
+        The prices and sizes of the bids and asks are normalized by the provided
+        (naturally current) bestAsk and the provided quantity respectively.
+
+        Shape: (2, levels, count(features)), whereas features can be [price, size]
+        [
+            [
+                [bid_price  bid_size]
+                [...        ...     ]
+            ]
+            [
+                [ask_price  ask_size]
+                [...        ...     ]
+            ]
+        ]
+
+        """
+        assert(price is True or size is True)
+
+        def toArray(d):
+            s = pd.Series(d, name='size')
+            s.index.name='price'
+            s = s.reset_index()
+            return np.array(s)
+
+        def force_levels(a, n=levels):
+            """Shrinks or expands array to n number of records."""
+            gap = (n - a.shape[0])
+            if gap > 0:
+                gapfill = np.zeros((gap, 2))
+                a = np.vstack((a, gapfill))
+                return a
+            elif gap < 0:
+                return a[:n]
+
+        bids = OrderedDict(sorted(bids.items(), reverse=True))
+        asks = OrderedDict(sorted(asks.items()))
+        bids = toArray(bids)
+        asks = toArray(asks)
+        if normalize is True:
+            assert(qty is not None)
+            bestAsk = np.min(asks[:,0])
+            bids = np.column_stack((bids[:,0] / bestAsk, bids[:,1] / qty))
+            asks = np.column_stack((asks[:,0] / bestAsk, asks[:,1] / qty))
+
+        bidsAsks = np.array([force_levels(bids), force_levels(asks)])
+        if price is True and size is True:
+            return bidsAsks
+        if price is True:
+            return bidsAsks[:,:,0]
+        if size is True:
+            return bidsAsks[:,:,1]
+
+
+    def getBidAskFeatures(self, state_index, lookback, qty=None, price=True, size=True, normalize=False, levels=20):
+        """ Creates feature to represent bids and asks with a lookback of previous states.
+
+        Shape: (2*lookback, levels, count(features))
+        """
+        state = self.dictBook[list(self.dictBook.keys())[state_index]]
+        asks = state['asks']
+        bids = state['bids']
+        i = 0
+        while i < lookback:
+            state_index = state_index - 1
+            state = self.dictBook[list(self.dictBook.keys())[state_index]]
+            asks = state['asks']
+            bids = state['bids']
+            features_next = self.getBidAskFeature(
+                                bids,
+                                asks,
+                                qty=qty,
+                                price=price,
+                                size=size,
+                                normalize=normalize,
+                                levels=levels
+                            )
+            if i == 0:
+                features = features_next
+            else:
+
+                features = np.vstack((features, features_next))
+            i = i + 1
+        return features
 #
 # o = Orderbook()
 # o.loadFromEvents('ob-1.tsv')

@@ -29,8 +29,11 @@ class ActionState(object):
         # for k, v in self.getMarket().items():
         #     arr.append(v)
         # return np.array([arr])
-        ba = self.market['bidask']
-        return ba.reshape((1, ba.shape[1], ba.shape[0]*ba.shape[2]))#.reshape((ba.shape[0], ba.shape[2], ba.shape[1]))
+        features = self.market['bidask']
+        return features # (2*lookback, levels, count(features))
+        # (lookback, 2*levels, count(features))
+        #features.reshape((int(features.shape[0]/2), features.shape[1]*2, features.shape[2]))
+        #return ba.reshape((1, ba.shape[1], ba.shape[0]*ba.shape[2]))#.reshape((ba.shape[0], ba.shape[2], ba.shape[1]))
 
     def getT(self):
         return self.t

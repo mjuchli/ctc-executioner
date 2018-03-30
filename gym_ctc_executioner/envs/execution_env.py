@@ -25,7 +25,7 @@ class ExecutionEnv(gym.Env):
         self.actionState = None
         self.execution = None
         self.action_space = spaces.Discrete(len(self.levels))
-        self.observation_space = spaces.Box(low=0.0, high=50.0, shape=(1,self.bookSize,4*self.lookback))
+        self.observation_space = spaces.Box(low=0.0, high=50.0, shape=(2*self.lookback, self.bookSize, 2))
 
     def _generate_Sequence(self, min, max, step):
         """ Generate sequence (that unlike xrange supports float)
@@ -40,10 +40,8 @@ class ExecutionEnv(gym.Env):
             i = i + step
         return I
 
-    def _configure(self, orderbook, orderbookDict):
+    def _configure(self, orderbook):
         self.orderbook = orderbook
-        self.orderbookDict = orderbookDict
-
 
     def _determine_next_inventory(self, execution):
         qty_remaining = execution.getQtyNotExecuted()
@@ -140,7 +138,15 @@ class ExecutionEnv(gym.Env):
         i_next = self._determine_next_inventory(self.execution)
         t_next = self._determine_next_time(self.execution.getState().getT())
         reward = self.execution.getValueAvg(fees=False)
-        bidAskFeature = self.orderbook.getBidAskFeatures(self.orderbookDict, self.execution.getOrderbookIndex(), self.I[-1], self.lookback, self.bookSize)
+        bidAskFeature = self.orderbook.getBidAskFeatures(
+            self.execution.getOrderbookIndex(),
+            lookback=self.lookback,
+            qty=self.I[-1],
+            normalize=True,
+            price=True,
+            size=True,
+            levels = self.bookSize
+        )
         state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
         done = self.execution.isFilled() or state_next.getI() == 0
         # print(str((execution.getState().getT(), execution.getState().getI())) + " -> " + str((t_next, i_next)))
@@ -156,7 +162,15 @@ class ExecutionEnv(gym.Env):
 
     def _reset(self, t, i):
         orderbookState, orderbookIndex = self._get_random_orderbook_state()
-        bidAskFeature = self.orderbook.getBidAskFeatures(self.orderbookDict, orderbookIndex, self.I[-1], self.lookback, self.bookSize)
+        bidAskFeature = self.orderbook.getBidAskFeatures(
+            orderbookIndex,
+            lookback=self.lookback,
+            qty=self.I[-1],
+            normalize=True,
+            price=True,
+            size=True,
+            levels = self.bookSize
+        )
         state = ActionState(t, i, {'bidask': bidAskFeature}) #np.array([[t, i]])
         self.execution = None
         self.orderbookIndex = orderbookIndex

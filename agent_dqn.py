@@ -22,13 +22,12 @@ class AgentDQN:
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
-        self.dim = 4 * self.env.lookback
         self.model = self._build_model()
 
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(2*self.env.bookSize, input_shape=(self.env.bookSize, self.dim), activation='relu'))
+        model.add(Dense(2*self.env.bookSize, input_shape=(2*self.env.lookback, self.env.bookSize, 2), activation='relu'))
         #model.add(Dense(10, activation='relu'))
         model.add(Flatten())
         model.add(Dense(self.action_size))
@@ -134,23 +133,14 @@ class AgentDQN:
 
 
 # Load orderbook
-cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]
-import pandas as pd
-events = pd.read_table('ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
-d = Orderbook.generateDictFromEvents(events)
 orderbook = Orderbook()
-orderbook.loadFromDict(d)
-# clean first n states (due to lack of bids and asks)
-print("#States: " + str(len(orderbook.states)))
-for i in range(100):
-    orderbook.states.pop(0)
-    del d[list(d.keys())[0]]
+orderbook.loadFromEvents('ob-1-small.tsv')
 orderbook_test = orderbook
 #orderbook.plot()
 
 import gym_ctc_executioner
 env = gym.make("ctc-executioner-v0")
-env.configure(orderbook, d)
+env.configure(orderbook)
 
 agent = AgentDQN(env=env)
 agent.simulate()
