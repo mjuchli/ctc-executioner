@@ -248,7 +248,7 @@ class Orderbook(object):
             offsetTail = self.getOffsetTail(offset=runtime)
             self.tmp['offset_tail_'+str(runtime)] = offsetTail
 
-        index = random.choice(range(offsetTail))
+        index = random.choice(range(min_head, offsetTail))
         return self.getState(index), index
 
     def createArtificial(self, config):
@@ -521,14 +521,14 @@ class Orderbook(object):
             asks = state['asks']
             bids = state['bids']
             features_next = self.getBidAskFeature(
-                                bids,
-                                asks,
-                                qty=qty,
-                                price=price,
-                                size=size,
-                                normalize=normalize,
-                                levels=levels
-                            )
+                bids=bids,
+                asks=asks,
+                qty=qty,
+                price=price,
+                size=size,
+                normalize=normalize,
+                levels=levels
+            )
 
             if i == 0:
                 features = np.array(features_next)

@@ -77,7 +77,7 @@ class ExecutionEnv(gym.Env):
         return runtime
 
     def _get_random_orderbook_state(self):
-        return self.orderbook.getRandomState(max(self.T))
+        return self.orderbook.getRandomState(runtime=max(self.T), min_head=self.lookback)
 
     def _create_execution(self, a):
         runtime = self._determine_runtime(self.actionState.getT())
@@ -139,7 +139,7 @@ class ExecutionEnv(gym.Env):
         t_next = self._determine_next_time(self.execution.getState().getT())
         reward = self.execution.getValueAvg(fees=False)
         bidAskFeature = self.orderbook.getBidAskFeatures(
-            self.execution.getOrderbookIndex(),
+            state_index=self.execution.getOrderbookIndex(),
             lookback=self.lookback,
             qty=self.I[-1],
             normalize=True,
@@ -163,10 +163,10 @@ class ExecutionEnv(gym.Env):
     def _reset(self, t, i):
         orderbookState, orderbookIndex = self._get_random_orderbook_state()
         bidAskFeature = self.orderbook.getBidAskFeatures(
-            orderbookIndex,
+            state_index=orderbookIndex,
             lookback=self.lookback,
             qty=self.I[-1],
-            normalize=True,
+            normalize=False,
             price=True,
             size=True,
             levels = self.bookSize
