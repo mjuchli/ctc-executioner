@@ -242,7 +242,7 @@ class Orderbook(object):
 
         return offsetIndex
 
-    def getRandomState(self, runtime):
+    def getRandomState(self, runtime, min_head = 10):
         offsetTail = self.tmp.get('offset_tail_'+str(runtime), None)
         if offsetTail is None:
             offsetTail = self.getOffsetTail(offset=runtime)
@@ -482,7 +482,7 @@ class Orderbook(object):
                 gapfill = np.zeros((gap, 2))
                 a = np.vstack((a, gapfill))
                 return a
-            elif gap < 0:
+            elif gap <= 0:
                 return a[:n]
 
         bids = OrderedDict(sorted(bids.items(), reverse=True))
@@ -504,18 +504,20 @@ class Orderbook(object):
             return bidsAsks[:,:,1]
 
 
-    def getBidAskFeatures(self, state_index, lookback, qty=None, price=True, size=True, normalize=False, levels=20):
+    def getBidAskFeatures(self, state_index, lookback, qty=None, price=True, size=True, normalize=True, levels=20):
         """ Creates feature to represent bids and asks with a lookback of previous states.
 
         Shape: (2*lookback, levels, count(features))
         """
-        state = self.dictBook[list(self.dictBook.keys())[state_index]]
+        assert(state_index >= lookback)
+
+        state = self.getDictState(state_index)
         asks = state['asks']
         bids = state['bids']
         i = 0
         while i < lookback:
             state_index = state_index - 1
-            state = self.dictBook[list(self.dictBook.keys())[state_index]]
+            state = self.getDictState(state_index)
             asks = state['asks']
             bids = state['bids']
             features_next = self.getBidAskFeature(
@@ -527,10 +529,10 @@ class Orderbook(object):
                                 normalize=normalize,
                                 levels=levels
                             )
-            if i == 0:
-                features = features_next
-            else:
 
+            if i == 0:
+                features = np.array(features_next)
+            else:
                 features = np.vstack((features, features_next))
             i = i + 1
         return features
