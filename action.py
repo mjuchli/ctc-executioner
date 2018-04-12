@@ -119,7 +119,7 @@ class Action(object):
         else:
             return self.getTotalPaidReceived() - self.getReferencePrice()
 
-    def getValueAvg(self, fees=False):
+    def getValueAvg(self):
         """Retuns difference of the average paid price to bid/ask-mid price.
         The higher, the better,
         For BUY: total paid at mid price - total paid
@@ -141,10 +141,8 @@ class Action(object):
             # print("reference: " + str(self.getReferencePrice()))
             # print("reward: " + str(reward))
 
-        if fees and (self.getA() > 0 or self.getRuntime() <= 0.0):
-            return reward - 0.0025 * self.getQtyExecuted()
-        else:
-            return reward
+        reward_bps = reward / 10000
+        return reward_bps
 
     def getTestReward(self):
         if self.getA() == 0:
