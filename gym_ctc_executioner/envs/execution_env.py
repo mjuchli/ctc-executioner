@@ -17,9 +17,9 @@ class ExecutionEnv(gym.Env):
     def __init__(self):
         self.side = OrderSide.SELL
         self.levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -9]
-        self.T = self._generate_Sequence(min=0, max=500, step=20)
+        self.T = self._generate_Sequence(min=0, max=100, step=10)
         self.I = self._generate_Sequence(min=0, max=1.0, step=0.1)
-        self.lookback = 5 # results in (bid|size, ask|size) -> 4*5
+        self.lookback = 25 # results in (bid|size, ask|size) -> 4*5
         self.bookSize = 10
         self.orderbookIndex = None
         self.actionState = None
@@ -137,7 +137,7 @@ class ExecutionEnv(gym.Env):
 
         i_next = self._determine_next_inventory(self.execution)
         t_next = self._determine_next_time(self.execution.getState().getT())
-        reward = self.execution.getValueAvg(fees=False)
+        reward = self.execution.getValueAvg()
         bidAskFeature = self.orderbook.getBidAskFeatures(
             state_index=self.execution.getOrderbookIndex(),
             lookback=self.lookback,
