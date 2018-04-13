@@ -12,20 +12,19 @@ from order_type import OrderType
 from order_side import OrderSide
 
 class ExecutionEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
 
     def __init__(self):
         self.side = OrderSide.SELL
-        self.levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -9]
+        self.levels = self._generate_Sequence(min=-20, max=20, step=1)
         self.T = self._generate_Sequence(min=0, max=100, step=10)
         self.I = self._generate_Sequence(min=0, max=1.0, step=0.1)
-        self.lookback = 25 # results in (bid|size, ask|size) -> 4*5
+        self.lookback = 20 # results in (bid|size, ask|size) -> 4*5
         self.bookSize = 10
         self.orderbookIndex = None
         self.actionState = None
         self.execution = None
         self.action_space = spaces.Discrete(len(self.levels))
-        self.observation_space = spaces.Box(low=0.0, high=50.0, shape=(2*self.lookback, self.bookSize, 2))
+        self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback, self.bookSize, 2))
 
     def _generate_Sequence(self, min, max, step):
         """ Generate sequence (that unlike xrange supports float)
@@ -35,7 +34,7 @@ class ExecutionEnv(gym.Env):
         """
         i = min
         I = []
-        while i < max:
+        while i <= max:
             I.append(i)
             i = i + step
         return I
@@ -45,7 +44,6 @@ class ExecutionEnv(gym.Env):
 
     def _determine_next_inventory(self, execution):
         qty_remaining = execution.getQtyNotExecuted()
-
         # TODO: Working with floats requires such an ugly threshold
         if qty_remaining > 0.0000001:
             # Approximate next closest inventory given remaining and I
@@ -127,6 +125,17 @@ class ExecutionEnv(gym.Env):
         execution.setOrderbookIndex(self.orderbookIndex)
         return execution
 
+    def _makeFeature(self, orderbookIndex):
+        return self.orderbook.getBidAskFeatures(
+            state_index=orderbookIndex,
+            lookback=self.lookback,
+            qty=self.I[-1],#i_next+0.0001,
+            normalize=True,
+            price=True,
+            size=True,
+            levels = self.bookSize
+        )
+
     def step(self, action):
         action = self.levels[action]
         if self.execution is None:
@@ -138,15 +147,7 @@ class ExecutionEnv(gym.Env):
         i_next = self._determine_next_inventory(self.execution)
         t_next = self._determine_next_time(self.execution.getState().getT())
         reward = self.execution.getValueAvg()
-        bidAskFeature = self.orderbook.getBidAskFeatures(
-            state_index=self.execution.getOrderbookIndex(),
-            lookback=self.lookback,
-            qty=self.I[-1],
-            normalize=True,
-            price=True,
-            size=True,
-            levels = self.bookSize
-        )
+        bidAskFeature = self._makeFeature(orderbookIndex=self.execution.getOrderbookIndex())
         state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
         done = self.execution.isFilled() or state_next.getI() == 0
         # print(str((execution.getState().getT(), execution.getState().getI())) + " -> " + str((t_next, i_next)))
@@ -162,15 +163,7 @@ class ExecutionEnv(gym.Env):
 
     def _reset(self, t, i):
         orderbookState, orderbookIndex = self._get_random_orderbook_state()
-        bidAskFeature = self.orderbook.getBidAskFeatures(
-            state_index=orderbookIndex,
-            lookback=self.lookback,
-            qty=self.I[-1],
-            normalize=False,
-            price=True,
-            size=True,
-            levels = self.bookSize
-        )
+        bidAskFeature = self._makeFeature(orderbookIndex=orderbookIndex)
         state = ActionState(t, i, {'bidask': bidAskFeature}) #np.array([[t, i]])
         self.execution = None
         self.orderbookIndex = orderbookIndex
