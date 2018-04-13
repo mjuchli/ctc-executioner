@@ -127,11 +127,11 @@ class Action(object):
         """
         # In case of no executed trade, the value is the negative reference
         if self.getPcFilled() == 0.0:
-            # return 0.0
-            if self.getOrder().getSide() == OrderSide.BUY:
-                return self.getReferencePrice() - self.getOrderbookState().getBidAskMid()
-            else:
-                return self.getOrderbookState().getBidAskMid() - self.getReferencePrice()
+            return 0.0
+            # if self.getOrder().getSide() == OrderSide.BUY:
+            #     return self.getReferencePrice() - self.getOrderbookState().getBidAskMid()
+            # else:
+            #     return self.getOrderbookState().getBidAskMid() - self.getReferencePrice()
 
         if self.getOrder().getSide() == OrderSide.BUY:
             reward = self.getReferencePrice() - self.getAvgPrice()
@@ -140,9 +140,7 @@ class Action(object):
             # print("avg received: " + str(self.getAvgPrice()))
             # print("reference: " + str(self.getReferencePrice()))
             # print("reward: " + str(reward))
-
-        reward_bps = reward / 10000
-        return reward_bps
+        return reward
 
     def getTestReward(self):
         if self.getA() == 0:
