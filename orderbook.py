@@ -121,7 +121,8 @@ class OrderbookState(object):
         following levels.
         """
         positions = self.getSidePositions(side)
-        delta = 0.0001 * self.getBestAsk()  # 1 basis point
+        delta = 0.1 # 10 cents
+        #delta = 0.0001 * self.getBestAsk()  # 1 basis point
         if side == OrderSide.BUY:
             # print("level: " + str(level) + ", price: " + str(self.getBestAsk()) + " -> " + str(level * delta) + " -> " + str(self.getBestAsk() + level * delta))
             return self.getBestAsk() + level * delta
@@ -181,6 +182,30 @@ class Orderbook(object):
         if len(self.dictBook) <= index:
             raise Exception('Index out of orderbook state.')
         return self.dictBook[list(self.dictBook.keys())[index]]
+
+    def summary(self):
+        """Prints a summary of the characteristics of the order book"""
+        nrStates = len(self.getStates())
+        duration = (self.getState(-1).getTimestamp() - self.getState(0).getTimestamp()).total_seconds()
+        statesPerSecond = nrStates / duration
+
+        i = 0
+        s = self.getState(0)
+        priceChanges = []
+        while i < nrStates-1:
+            i = i + 1
+            s_next = self.getState(i)
+            if (s_next.getTimestamp() - s.getTimestamp()).total_seconds() < 1.0:
+                continue
+            else:
+                priceChanges.append((s.getTradePrice(), s_next.getTradePrice()))
+                s = s_next
+        rateOfPriceChange = np.mean([abs(x[0] - x[1]) for x in priceChanges])
+
+        print('Number of states: ' + str(nrStates))
+        print('Duration: ' + str(duration))
+        print('States per second: ' + str(statesPerSecond))
+        print('Change of price per second: ' + str(rateOfPriceChange))
 
     def getOffsetHead(self, offset):
         """The index (from the beginning of the list) of the first state past
@@ -416,7 +441,7 @@ class Orderbook(object):
         self.dictBook = Orderbook.generateDictFromEvents(events_pd)
         self.loadFromDict(self.dictBook)
 
-    def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"], clean=20):
+    def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"], clean=50):
         import pandas as pd
         events = pd.read_table(file, sep='\t', names=cols, index_col="seq")
         self.loadFromEventsFrame(events.sort_index())
@@ -425,7 +450,7 @@ class Orderbook(object):
             self.states.pop(0)
             del self.dictBook[list(self.dictBook.keys())[0]]
 
-    def plot(self, show_bidask=False, max_level=-1):
+    def plot(self, show_bidask=False, max_level=-1, show=True):
         import matplotlib.pyplot as plt
         price = [x.getBidAskMid() for x in self.getStates()]
         times = [x.getTimestamp() for x in self.getStates()]
@@ -435,7 +460,10 @@ class Orderbook(object):
             seller = [x.getSellers()[max_level].getPrice() for x in self.getStates()]
             plt.plot(times, buyer)
             plt.plot(times, seller)
-        plt.show()
+        if show == True:
+            plt.show()
+        else:
+            return plt
 
     def createFeatures(self):
         volumes = np.array([x.getVolume() for x in self.getStates()])
