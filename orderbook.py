@@ -5,6 +5,7 @@ import random
 from sklearn.preprocessing import MinMaxScaler
 from collections import OrderedDict
 import pandas as pd
+from diskcache import Cache
 
 class OrderbookEntry(object):
 
@@ -144,6 +145,7 @@ class OrderbookState(object):
 class Orderbook(object):
 
     def __init__(self, extraFeatures=False):
+        self.cache = Cache('/tmp/ctc-executioner')
         self.dictBook = None
         self.states = []
         self.extraFeatures = extraFeatures
@@ -442,13 +444,24 @@ class Orderbook(object):
         self.loadFromDict(self.dictBook)
 
     def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"], clean=50):
-        import pandas as pd
-        events = pd.read_table(file, sep='\t', names=cols, index_col="seq")
-        self.loadFromEventsFrame(events.sort_index())
-        # We remove the first few states as they are lacking bids and asks
-        for i in range(clean):
-            self.states.pop(0)
-            del self.dictBook[list(self.dictBook.keys())[0]]
+        print('Attempt to load from cache.')
+        o = self.cache.get(file + '.class')
+        if o is not None:
+            print('Order book in cach. Load...')
+            self.states = o.states
+            self.dictBook = o.dictBook
+        else:
+            print('Order book not in cache. Read from file...')
+            import pandas as pd
+            events = pd.read_table(file, sep='\t', names=cols, index_col="seq")
+            self.loadFromEventsFrame(events.sort_index())
+            # We remove the first few states as they are lacking bids and asks
+            for i in range(clean):
+                self.states.pop(0)
+                del self.dictBook[list(self.dictBook.keys())[0]]
+            # Store in cache
+            print('Cache order book')
+            self.cache.add(file + '.class', self)
 
     def plot(self, show_bidask=False, max_level=-1, show=True):
         import matplotlib.pyplot as plt
