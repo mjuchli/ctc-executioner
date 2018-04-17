@@ -30,7 +30,7 @@ class ActionState(object):
         #     arr.append(v)
         # return np.array([arr])
         features = self.market['bidask']
-        #return features.reshape((1, features.shape[0], features.shape[1], features.shape[2])) # required for custom DQN
+        return features.reshape((1, features.shape[0], features.shape[1], features.shape[2])) # required for custom DQN
         return features # (2*lookback, levels, count(features))
 
 
