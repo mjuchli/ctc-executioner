@@ -80,18 +80,24 @@ class Action(object):
         self.trades = trades
 
     def getAvgPrice(self):
+        return self.calculateAvgPrice(self.getTrades())
+
+    def calculateAvgPrice(self, trades):
         """Returns the average price paid for the executed order."""
-        if self.getQtyExecuted() == 0:
+        if self.calculateQtyExecuted(trades) == 0:
             return 0.0
 
         price = 0.0
-        for trade in self.getTrades():
+        for trade in trades:
             price = price + trade.getCty() * trade.getPrice()
-        return price / self.getQtyExecuted()
+        return price / self.calculateQtyExecuted(trades)
 
     def getQtyExecuted(self):
+        return self.calculateQtyExecuted(self.getTrades())
+
+    def calculateQtyExecuted(self, trades):
         qty = 0.0
-        for trade in self.getTrades():
+        for trade in trades:
             qty = qty + trade.getCty()
         return qty
 
@@ -104,58 +110,42 @@ class Action(object):
     def getTotalPaidReceived(self):
         return self.getAvgPrice() * self.getQtyExecuted()
 
-    def getValueAbs(self):
-        """Retuns difference of the paid amount to the total bid/ask-mid amount.
-        The higher, the better,
-        For BUY: total paid at mid price - total paid
-        For SELL: total received - total received at mid price
-        """
-        # In case of no executed trade, the value is the negative reference
-        if self.getTotalPaidReceived() == 0.0:
-            return -self.getReferencePrice()
+    def getReward(self):
+        return self.calculateReward(self.getTrades())
 
-        if self.getOrder().getSide() == OrderSide.BUY:
-            return self.getReferencePrice() - self.getTotalPaidReceived()
-        else:
-            return self.getTotalPaidReceived() - self.getReferencePrice()
-
+    @DeprecationWarning
     def getValueAvg(self):
+        return self.getReward()
+
+    def calculateReward(self, trades):
         """Retuns difference of the average paid price to bid/ask-mid price.
         The higher, the better,
         For BUY: total paid at mid price - total paid
         For SELL: total received - total received at mid price
         """
         # In case of no executed trade, the value is the negative reference
-        if self.getPcFilled() == 0.0:
+        if self.calculateQtyExecuted(trades) == 0.0:
             return 0.0
-            # if self.getOrder().getSide() == OrderSide.BUY:
-            #     return self.getReferencePrice() - self.getOrderbookState().getBidAskMid()
-            # else:
-            #     return self.getOrderbookState().getBidAskMid() - self.getReferencePrice()
 
         if self.getOrder().getSide() == OrderSide.BUY:
-            reward = self.getReferencePrice() - self.getAvgPrice()
+            reward = self.getReferencePrice() - self.calculateAvgPrice(trades)
         else:
-            reward = self.getAvgPrice() - self.getReferencePrice()
-            # print("avg received: " + str(self.getAvgPrice()))
-            # print("reference: " + str(self.getReferencePrice()))
-            # print("reward: " + str(reward))
+            reward = self.calculateAvgPrice(trades) - self.getReferencePrice()
+
         return reward
 
-    def getTestReward(self):
-        if self.getA() == 0:
-            return 100.0
-        else:
-            return -100.0
+    def calculateRewardWeighted(self, trades, inventory):
+        reward = self.calculateReward(trades)
+        if reward == 0.0:
+            return reward, 0.0
+
+        volumeExecuted = self.calculateQtyExecuted(trades)
+        volumeRatio = volumeExecuted / inventory
+        rewardWeighted = reward * volumeRatio
+        return rewardWeighted, volumeRatio
 
     def getPcFilled(self):
         return 100 * (self.getQtyExecuted() / self.getOrder().getCty())
-
-    def getValueExecuted(self):
-        r = 1.0
-        if self.getA() > 0:
-            r = -r
-        return self.getPcFilled() + r * np.log(1.0 + abs(self.getA()))
 
     def update(self, a, runtime):
         """Updates an action to be ready for the next run."""
@@ -184,8 +174,7 @@ class Action(object):
         """
         matchEngine = self.getMatchEngine(orderbook)
         counterTrades, qtyRemain, index = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
-        self.setTrades(counterTrades)
+        self.setTrades(self.getTrades() + counterTrades)
         self.setOrderbookIndex(index=index)
         self.setOrderbookState(orderbook.getState(index))
-        self.setReferencePrice(orderbook.getState(index).getBestAsk())
-        return self, qtyRemain
+        return self, counterTrades
