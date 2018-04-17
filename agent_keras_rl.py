@@ -11,8 +11,8 @@ from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import Adam, SGD
 from keras import regularizers
 
-from action_plot_callback import ActionPlotCallback
-from live_plot_callback import LivePlotCallback
+from agent_utils.action_plot_callback import ActionPlotCallback
+from agent_utils.live_plot_callback import LivePlotCallback
 
 from keras import optimizers
 from collections import deque
