@@ -11,14 +11,16 @@ from order import Order
 from order_type import OrderType
 from order_side import OrderSide
 
+#logging.basicConfig(level=logging.INFO)
+
 class ExecutionEnv(gym.Env):
 
     def __init__(self):
         self.side = OrderSide.SELL
-        self.levels = self._generate_Sequence(min=-20, max=20, step=1)
+        self.levels = self._generate_Sequence(min=-50, max=50, step=1)
         self.T = self._generate_Sequence(min=0, max=100, step=10)
         self.I = self._generate_Sequence(min=0, max=1.0, step=0.1)
-        self.lookback = 20 # results in (bid|size, ask|size) -> 4*5
+        self.lookback = 25 # results in (bid|size, ask|size) -> 4*5
         self.bookSize = 10
         self.orderbookIndex = None
         self.actionState = None
@@ -119,6 +121,7 @@ class ExecutionEnv(gym.Env):
             cty=self.actionState.getI(),
             price=price
         )
+        execution.setRuntime(runtime)
         execution.setState(self.actionState)
         execution.setOrder(order)
         execution.setOrderbookState(orderbookState)
@@ -142,18 +145,34 @@ class ExecutionEnv(gym.Env):
             self.execution = self._create_execution(action)
         else:
             self.execution = self._update_execution(self.execution, action)
-        self.execution.run(self.orderbook)
+
+        logging.info(
+            'Created/Updated execution.' +
+            '\nAction: ' + str(action) + ' (' + str(self.execution.getOrder().getType()) + ')' +
+            '\nt: ' + str(self.actionState.getT()) +
+            '\nruntime: ' + str(self.execution.getRuntime()) +
+            '\ni: ' + str(self.actionState.getI())
+        )
+        self.execution, counterTrades = self.execution.run(self.orderbook)
 
         i_next = self._determine_next_inventory(self.execution)
         t_next = self._determine_next_time(self.execution.getState().getT())
-        reward = self.execution.getValueAvg()
+
         bidAskFeature = self._makeFeature(orderbookIndex=self.execution.getOrderbookIndex())
         state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
         done = self.execution.isFilled() or state_next.getI() == 0
-        # print(str((execution.getState().getT(), execution.getState().getI())) + " -> " + str((t_next, i_next)))
-        # print(execution.getOrder().getCty())
-        # print(execution.getQtyExecuted())
-        # print(execution.getPcFilled())
+        # if done == True:
+        #     #reward = self.execution.getReward()
+        #     #volumeRatio = 1.0
+        # else:
+        reward, volumeRatio = self.execution.calculateRewardWeighted(counterTrades, self.I[-1])
+
+        logging.info(
+            'Run execution.' +
+            '\nTrades: ' + str(len(counterTrades)) +
+            '\nReward: ' + str(reward) + ' (Ratio: ' + str(volumeRatio) + ')' +
+            '\nDone: ' + str(done)
+        )
         self.orderbookIndex = self.execution.getOrderbookIndex()
         self.actionState = state_next
         return state_next.toArray(), reward, done, {}
