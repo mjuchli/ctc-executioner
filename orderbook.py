@@ -6,6 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from collections import OrderedDict
 import pandas as pd
 from diskcache import Cache
+from datetime import datetime
 
 class OrderbookEntry(object):
 
@@ -301,7 +302,30 @@ class Orderbook(object):
             s.addBuyers(bids)
             s.addSellers(asks)
             self.addState(s)
+        self.generateDict()
 
+    def generateDict(self):
+        """ (Re)Generates dictBook.
+
+        This is particularly required for artifically created books or books
+        loaded other than from the events source.
+        """
+
+        d = {}
+        for state in self.getStates():
+            bids = {}
+            asks = {}
+            for x in state.getBuyers():
+                bids[x.getPrice()] = x.getQty()
+
+            for x in state.getSellers():
+                asks[x.getPrice()] = x.getQty()
+
+            ts = state.getTimestamp().timestamp()
+            d[ts] = {'bids': bids, 'asks': asks}
+
+        assert(len(d) == len(self.getStates()))
+        self.dictBook = d
 
     def loadFromFile(self, file):
         import csv
@@ -360,7 +384,6 @@ class Orderbook(object):
 
                 self.addState(s)
 
-
     def loadFromBitfinexFile(self, file):
         import csv
         import json
@@ -390,6 +413,11 @@ class Orderbook(object):
 
     @staticmethod
     def generateDictFromEvents(events_pd):
+        """ Generates dictionary based order book.
+
+        dict :: {timestamp: state}
+        state :: {'bids': {price: size}, 'asks': {price, size}}
+        """
         import copy
         most_recent_orderbook = {"bids": {}, "asks": {}}
         orderbook = {}
@@ -447,7 +475,7 @@ class Orderbook(object):
         print('Attempt to load from cache.')
         o = self.cache.get(file + '.class')
         if o is not None:
-            print('Order book in cach. Load...')
+            print('Order book in cache. Load...')
             self.states = o.states
             self.dictBook = o.dictBook
         else:
@@ -578,9 +606,13 @@ class Orderbook(object):
             i = i + 1
         return features
 #
-# o = Orderbook()
-# o.loadFromEvents('ob-1.tsv')
-# o.plot()
+
+#o = Orderbook()
+#o.loadFromEvents('ob-1-small.tsv')
+#o.generateDict()
+#print(o.dictBook[list(o.dictBook.keys())[0]])
+
+#o.plot()
 
 #o = Orderbook()
 #o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
