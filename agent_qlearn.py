@@ -6,7 +6,7 @@ from order_side import OrderSide
 from qlearn import QLearn
 from orderbook import Orderbook
 
-class QAgent:
+class AgentQlearn:
     def __init__(self, env):
         self.env = env
         self.levels = levels
@@ -20,9 +20,7 @@ class QAgent:
         action.run(self.env.orderbook)
         i_next = self.env.determineNextInventory(action)
         t_next = self.env.determineNextTime(t)
-        reward = action.getValueAvg(fees=False)
-        # reward = action.getValueExecuted()
-        # reward = action.getTestReward()
+        reward = action.getReward()
         state_next = ActionState(action.getState().getT(), action.getState().getI(), action.getState().getMarket())
         state_next.setT(t_next)
         state_next.setI(i_next)
@@ -157,7 +155,7 @@ class QAgent:
         return np.mean(M[0:, 4])
 
     def simulate(self, epochs_train=1, epochs_test=10, interval=100):
-        from ui import UI
+        from agent_utils.ui import UI
         UI.animate(lambda : self.run(epochs_train, epochs_test), interval=interval)
 
 
@@ -185,5 +183,5 @@ orderbook_test = orderbook
 
 actionSpace = ActionSpace(orderbook, side, T, I, levels=levels)
 actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, levels=levels)
-agent = QAgent(actionSpace)
+agent = AgentQlearn(actionSpace)
 agent.simulate()

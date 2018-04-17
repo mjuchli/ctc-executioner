@@ -180,6 +180,6 @@ actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
 #priceReturnCurve(crossval=1)
 
-from ui import UI
+from agent_utils.ui import UI
 UI.animate(run_profit, interval=100)
 # UI.animate(run_q_reward, interval=1000)

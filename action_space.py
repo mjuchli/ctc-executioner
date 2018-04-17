@@ -103,7 +103,7 @@ class ActionSpace(object):
             if not bestAction:
                 bestAction = action
                 continue
-            if action.getValueAvg() < bestAction.getValueAvg():
+            if action.getReward() < bestAction.getReward():
                 bestAction = action
         return bestAction
 
@@ -148,7 +148,7 @@ class ActionSpace(object):
         action.run(self.orderbook)
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
-        reward = action.getValueAvg(fees=False)
+        reward = action.getReward()
         # reward = action.getValueExecuted()
         # reward = action.getTestReward()
         state_next = ActionState(action.getState().getT(), action.getState().getI(), action.getState().getMarket())

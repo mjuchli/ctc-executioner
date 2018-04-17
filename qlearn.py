@@ -1,7 +1,6 @@
 import random
 from action_state import ActionState
 
-
 class QLearn:
     """Qlearner."""
 
