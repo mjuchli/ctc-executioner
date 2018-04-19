@@ -190,7 +190,7 @@ class ExecutionEnv(gym.Env):
             '\nruntime: ' + str(self.execution.getRuntime()) +
             '\ni: ' + str(self.actionState.getI())
         )
-        self.execution, counterTrades = self.execution.run(self.orderbook)
+        self.execution, counterTrades = self.execution.run(copy.deepcopy(self.orderbook)) # TODO: Slow but currently required due to change of order book states during matching
 
         i_next = self._determine_next_inventory(self.execution)
         t_next = self._determine_next_time(self.execution.getState().getT())

@@ -8,9 +8,25 @@ import numpy as np
 
 class MatchEngine(object):
 
-    def __init__(self, orderbook, index=0):
+    def __init__(self, orderbook, index=0, maxRuntime=100):
         self.orderbook = orderbook
         self.index = index
+        self.maxRuntime = maxRuntime
+
+    def _removePosition(self, price, qty):
+        """Removes consumed positions from current index forward. """
+        beginState = self.orderbook.getState(self.index)
+        i = self.index
+        nextState = self.orderbook.getState(i)
+        diff = 0.0
+        while i < len(self.orderbook.getStates())-1 and diff <= self.maxRuntime:
+            filteredBuyers = [x for x in nextState.getBuyers() if not (x.getPrice() == price and x.getQty() == qty)]
+            filteredSellers = [x for x in nextState.getSellers() if not (x.getPrice() == price and x.getQty() == qty)]
+            nextState.buyers = filteredBuyers
+            nextState.sellers = filteredSellers
+            i = i + 1
+            nextState = self.orderbook.getState(i)
+            diff = (nextState.getTimestamp() - beginState.getTimestamp()).total_seconds()
 
     def setIndex(self, index):
         self.index = index
@@ -36,10 +52,14 @@ class MatchEngine(object):
             qty = p.getQty()
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
-                return [Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())]
+                t = Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())
+                self._removePosition(price=price, qty=qty)
+                return [t]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
-                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price, timestamp=orderbookState.getTimestamp()))
+                t = Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price, timestamp=orderbookState.getTimestamp())
+                partialTrades.append(t)
+                self._removePosition(price=price, qty=qty)
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
 
