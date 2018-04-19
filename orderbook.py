@@ -295,7 +295,8 @@ class Orderbook(object):
         for i in range(steps):
             p = prices[i]
             t = times[i]
-            bps = 0.0001 * p
+            #bps = 0.0001 * p
+            bps = 0.1 # 10 cents
             asks = [OrderbookEntry(price=(p + i * bps), qty=qtyPosition) for i in range(levels)]
             bids = [OrderbookEntry(price=(p - (i+1) * bps), qty=qtyPosition) for i in range(levels)]
             s = OrderbookState(tradePrice=p, timestamp=t)
