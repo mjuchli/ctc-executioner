@@ -16,17 +16,10 @@ from order_side import OrderSide
 class ExecutionEnv(gym.Env):
 
     def __init__(self):
-        self.side = OrderSide.SELL
-        self.levels = self._generate_Sequence(min=-50, max=50, step=1)
-        self.T = self._generate_Sequence(min=0, max=100, step=10)
-        self.I = self._generate_Sequence(min=0, max=1.0, step=0.1)
-        self.lookback = 25 # results in (bid|size, ask|size) -> 4*5
-        self.bookSize = 10
         self.orderbookIndex = None
         self.actionState = None
         self.execution = None
-        self.action_space = spaces.Discrete(len(self.levels))
-        self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback, self.bookSize, 2))
+        self._configure()
 
     def _generate_Sequence(self, min, max, step):
         """ Generate sequence (that unlike xrange supports float)
@@ -41,8 +34,52 @@ class ExecutionEnv(gym.Env):
             i = i + step
         return I
 
-    def _configure(self, orderbook):
+    def _configure(self,
+                   orderbook=None,
+                   side=OrderSide.SELL,
+                   levels=(-50, 50, 1),
+                   T=(0, 100, 10),
+                   I=(0, 1, 0.1),
+                   lookback=25,
+                   bookSize=10
+                   ):
         self.orderbook = orderbook
+        self.side = OrderSide.SELL
+        self.levels = self._generate_Sequence(min=levels[0], max=levels[1], step=levels[2])
+        self.T = self._generate_Sequence(min=T[0], max=T[1], step=T[2])
+        self.I = self._generate_Sequence(min=I[0], max=I[1], step=I[2])
+        self.lookback = lookback # results in (bid|size, ask|size) -> 4*5
+        self.bookSize = bookSize
+        self.action_space = spaces.Discrete(len(self.levels))
+        self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback, self.bookSize, 2))
+
+    def setOrderbook(self, orderbook):
+        self.orderbook = orderbook
+
+    def setSide(self, side):
+        self.side = side
+
+    def setLevels(self, min, max, step):
+        self.levels = self._generate_Sequence(min=min, max=max, step=step)
+        self.action_space = spaces.Discrete(len(self.levels))
+
+    def setT(self, min, max, step):
+        self.T = self._generate_Sequence(min=min, max=max, step=step)
+
+    def setI(self, min, max, step):
+        self.I = self._generate_Sequence(min=min, max=max, step=step)
+
+    def setLookback(self, lookback):
+        self.lookback = lookback
+        if self.bookSize is not None:
+            self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback, self.bookSize, 2))
+
+    def setBookSize(self, bookSize):
+        self.bookSize = bookSize
+        if self.lookback is not None:
+            self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback, self.bookSize, 2))
+
+
 
     def _determine_next_inventory(self, execution):
         qty_remaining = execution.getQtyNotExecuted()
