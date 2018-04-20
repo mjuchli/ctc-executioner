@@ -32,6 +32,21 @@ class MatchEngine(object):
         self.index = index
 
     def matchLimitOrder(self, order, orderbookState):
+        """
+        Attempts to match a limit Order in an order book state.
+
+        Parameters
+        ----------
+        order : Order
+            Order defines the will to buy or sell under certain conditions.
+        orderbookState : OrderbookState
+            The state of the order book to attempt matching the provided order
+
+        Returns
+        -------
+        [Trades]
+            A list of the resulted trades resulted during the matching process.
+        """
         if order.getSide() == OrderSide.BUY:
             bookSide = orderbookState.getSellers()
         else:
@@ -99,6 +114,21 @@ class MatchEngine(object):
         return partialTrades
 
     def matchMarketOrder(self, order, orderbookState):
+        """
+        Matches an within an order book state.
+
+        Parameters
+        ----------
+        order : Order
+            Order defines the will to buy or sell under certain conditions.
+        orderbookState : OrderbookState
+            The state of the order book to attempt matching the provided order
+
+        Returns
+        -------
+        [Trades]
+            A list of the resulted trades resulted during the matching process.
+        """
         if order.getSide() == OrderSide.BUY:
             bookSide = orderbookState.getSellers()
         else:
@@ -127,6 +157,34 @@ class MatchEngine(object):
         return partialTrades
 
     def matchOrder(self, order, seconds=None):
+        """
+        Matches an Order according to its type.
+
+        This function serves as the main interface for Order matching.
+        Orders are being matched differently according to their OrderType.
+        In addition, an optional time interval can be defines from how long the
+        matching process should run and therefore simulates what is generally
+        known as *Good Till Time (GTT)*.
+        After the time is consumed, the order is either removed (e.g. neglected)
+        in case of a standard OrderType.LIMIT or a matching on market follows in
+        case OrderType.LIMIT_T_MARKET was defined.
+
+        Parameters
+        ----------
+        order : Order
+            Order defines the will to buy or sell under certain conditions.
+        seconds : int
+            Good Till Time (GTT)
+
+        Returns
+        -------
+        [Trades]
+            A list of the resulted trades resulted during the matching process.
+        float
+            Quantity of unexecuted assets.
+        int
+            Index of order book where matching stopped.
+        """
         order = copy.deepcopy(order)  # Do not modify original order!
         i = self.index
         remaining = order.getCty()
