@@ -23,15 +23,15 @@ class AgentDQN:
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
+        self.batch_size = 32 #len(self.env.T) * (len(self.env.I) - 1)
 
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(2*self.env.bookSize, input_shape=(2*self.env.lookback, self.env.bookSize, 2), activation='relu'))
-        #model.add(Dense(10, activation='relu'))
-        model.add(Flatten())
+        model.add(Flatten(input_shape=self.env.observation_space.shape))
+        model.add(Dense(self.env.bookSize))
         model.add(Dense(self.action_size))
-        model.compile(optimizers.SGD(lr=.1), "mse")
+        model.compile(optimizers.SGD(lr=.1), "mae")
         model.summary()
         return model
 
@@ -40,26 +40,32 @@ class AgentDQN:
 
     def act(self, state):
         if np.random.rand() <= self.epsilon:
-            return random.choice(self.actions)
+            return random.choice(range(self.action_size))
         return self.guess(state)
 
     def guess(self, state):
         act_values = self.model.predict(state)
-        action =  np.argmax(act_values[0])
+        # print(act_values)
+        action = np.argmax(act_values[0])
         return action
 
     def replay(self):
-        batch_size = len(self.env.T) * (len(self.env.I) - 1)
-        minibatch = random.sample(self.memory, batch_size)
+        minibatch = random.sample(self.memory, self.batch_size)
         for state, action, reward, next_state, done in minibatch:
             target = reward
+            #print("reward: " + str(reward))
             if not done:
+               #print("not done")
+               #rewards_next = self.model.predict(next_state)
+               #print("state_next: " + str(next_state))
+               #print('rewards_next ' + str(rewards_next))
+               #print('reward_next ' + str(np.amax(self.model.predict(next_state)[0])))
                target = reward + self.gamma * \
                        np.amax(self.model.predict(next_state)[0])
 
             target_f = self.model.predict(state)
-            action_index = self.actions.index(action)
-            target_f[0][action_index] = target
+            #action_index = self.actions[action]
+            target_f[0][action] = target
             history = self.model.fit(state, target_f, epochs=1, verbose=0)
             print('loss: ' + str(history.history['loss']))
         if self.epsilon > self.epsilon_min:
@@ -128,13 +134,13 @@ class AgentDQN:
         return np.mean(M[0:, 4])
 
     def simulate(self, epochs_train=1, epochs_test=10, interval=100):
-        from ui import UI
+        from agent_utils.ui import UI
         UI.animate(lambda : self.run(epochs_train, epochs_test), interval=interval)
 
 
 # Load orderbook
 orderbook = Orderbook()
-orderbook.loadFromEvents('ob-1-small.tsv')
+orderbook.loadFromEvents('ob-1.tsv')
 orderbook_test = orderbook
 #orderbook.plot()
 
@@ -144,3 +150,4 @@ env.configure(orderbook)
 
 agent = AgentDQN(env=env)
 agent.simulate()
+#agent.train(10)
