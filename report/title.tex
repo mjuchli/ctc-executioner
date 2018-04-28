@@ -1,0 +1,83 @@
+\begin{titlepage}
+
+
+\begin{center}
+
+%% Insert the TU Delft logo at the bottom of the page.
+
+%% Print the title in cyan.
+{\makeatletter
+\largetitlestyle\fontsize{64}{94}\selectfont\@title
+%\largetitlestyle\color{tudelft-cyan}\Huge\@title
+\makeatother}
+
+%% Print the optional subtitle in black.
+{\makeatletter
+\ifx\@subtitle\undefined\else
+    \bigskip
+   {\tudsffamily\fontsize{22}{32}\selectfont\@subtitle}    
+    %\titlefont\titleshape\LARGE\@subtitle
+\fi
+\makeatother}
+
+\bigskip
+\bigskip
+
+by
+%door
+
+\bigskip
+\bigskip
+
+%% Print the name of the author.
+{\makeatletter
+%\largetitlefont\Large\bfseries\@author
+\largetitlestyle\fontsize{26}{26}\selectfont\@author
+\makeatother}
+
+\bigskip
+\bigskip
+
+to obtain the degree of Master of Science
+%ter verkrijging van de graad van Master of Science
+
+at the Delft University of Technology,
+%aan de Technische Universiteit Delft,
+
+to be defended publicly on Tuesday January 1, 2013 at 10:00 AM.
+%in het openbaar de verdedigen op dinsdag 1 januari om 10:00 uur.
+
+\vfill
+
+\begin{tabular}{lll}
+    Student number: & 1234567 \\
+    Project duration: & \multicolumn{2}{l}{March 1, 2012 -- January 1, 2013} \\
+    Thesis committee: & Prof.\ dr.\ ir.\ J.\ Doe, & TU Delft, supervisor \\
+        & Dr.\ E.\ L.\ Brown, & TU Delft \\
+        & Ir.\ A.\ Aaronson, & Acme Corporation
+\end{tabular}
+%% Only include the following lines if confidentiality is applicable.
+
+\bigskip
+\bigskip
+\emph{This thesis is confidential and cannot be made public until December 31, 2013.}
+%\emph{Op dit verslag is geheimhouding van toepassing tot en met 31 december 2013.}
+
+\bigskip
+\bigskip
+An electronic version of this thesis is available at \url{http://repository.tudelft.nl/}.
+%\\[1cm]
+
+%\centering{\includegraphics{cover/logo_black}}
+
+
+\end{center}
+
+\begin{tikzpicture}[remember picture, overlay]
+    \node at (current page.south)[anchor=south,inner sep=0pt]{
+        \includegraphics{cover/logo_black}
+    };
+\end{tikzpicture}
+
+\end{titlepage}
+

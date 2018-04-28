@@ -1,0 +1,198 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{roboto}
+    [2015/04/16 (Bob Tennent)  Supports Roboto fonts for all LaTeX engines.]
+
+\RequirePackage{ifxetex,ifluatex,xkeyval,textcomp}
+
+\newif\ifroboto@otf 
+\ifxetex
+  \roboto@otftrue
+\else\ifluatex
+  \roboto@otftrue
+\else  % [pdf]LaTeX
+  \roboto@otffalse
+\fi\fi
+
+\newif\ifroboto@lining \roboto@liningfalse
+\newif\ifroboto@tabular \roboto@tabularfalse
+\newif\ifroboto@default \roboto@defaultfalse
+
+\newcommand*{\Roboto@scale}{1}
+\newcommand*{\RobotoCondensed@scale}{1}
+\DeclareOptionX{scaled}{\renewcommand*{\Roboto@scale}{#1}\renewcommand*{\RobotoCondensed@scale}{#1}}
+\DeclareOptionX{scale}{\renewcommand*{\Roboto@scale}{#1}\renewcommand*{\RobotoCondensed@scale}{#1}}
+
+\newif\ifroboto@light \roboto@lightfalse
+\newif\ifroboto@thin \roboto@thinfalse
+\newif\ifroboto@medium \roboto@mediumfalse
+\newif\ifroboto@black \roboto@blackfalse
+\newif\ifroboto@condensed \roboto@condensedfalse
+\newif\ifroboto@slab  \roboto@slabfalse
+
+\DeclareOptionX{default}{\roboto@defaulttrue}
+\DeclareOptionX{sfdefault}{\roboto@defaulttrue}
+\DeclareOptionX{type1}{\roboto@otffalse}
+\DeclareOptionX{medium}{\roboto@mediumtrue\roboto@blackfalse}
+\DeclareOptionX{bold}{\roboto@blackfalse\roboto@mediumfalse}
+\DeclareOptionX{black}{\roboto@blacktrue\roboto@mediumfalse}
+\DeclareOptionX{thin}{\roboto@thintrue\roboto@lightfalse}
+\DeclareOptionX{light}{\roboto@lighttrue\roboto@thinfalse}
+\DeclareOptionX{regular}{\roboto@lightfalse\roboto@thinfalse}
+\DeclareOptionX{condensed}{\roboto@condensedtrue\roboto@thinfalse}
+\DeclareOptionX{rm}{\roboto@slabtrue}
+\DeclareOptionX{lining}{\roboto@liningtrue}
+\DeclareOptionX{nf}{\roboto@liningtrue}
+\DeclareOptionX{lf}{\roboto@liningtrue}
+\DeclareOptionX{oldstyle}{\roboto@liningfalse}
+\DeclareOptionX{osf}{\roboto@liningfalse}
+\DeclareOptionX{tabular}{\roboto@tabulartrue}
+\DeclareOptionX{t}{\roboto@tabulartrue}
+\DeclareOptionX{proportional}{\roboto@tabularfalse}
+\DeclareOptionX{p}{\roboto@tabularfalse}
+
+
+\ExecuteOptionsX{bold,regular,lining,proportional}
+\ProcessOptionsX\relax
+
+\ifroboto@otf
+  \def\roboto@boldstyle{Bold}
+  \ifroboto@medium\def\roboto@boldstyle{Medium}\fi
+  \ifroboto@black\def\roboto@boldstyle{Black}\fi
+  \def\roboto@regstyle{Regular}
+  \ifroboto@light\def\roboto@regstyle{Light}\fi
+  \ifroboto@thin\def\roboto@regstyle{Thin}\fi
+
+\else % type1
+
+  \def\bfseries@sf{b}
+  \ifroboto@medium\def\bfseries@sf{mb}\fi
+  \ifroboto@black\def\bfseries@sf{k}\fi
+  \def\mdseries@sf{m}
+  \ifroboto@thin\def\mdseries@sf{t}
+     \ifroboto@slab\def\mdseries@rm{t}\fi\fi
+  \ifroboto@light\def\mdseries@sf{l}
+     \ifroboto@slab\def\mdseries@rm{l}\fi\fi
+
+\fi
+
+\ifroboto@otf
+  \ifroboto@lining
+    \def\roboto@figurestyle{Lining}
+  \else
+    \def\roboto@figurestyle{OldStyle} 
+  \fi
+  \ifroboto@tabular
+    \def\roboto@figurealign{Monospaced} 
+  \else
+    \def\roboto@figurealign{Proportional} 
+  \fi
+\else % type1
+  \ifroboto@lining
+    \def\roboto@figurestyle{LF}
+  \else
+    \def\roboto@figurestyle{OsF}
+  \fi
+  \ifroboto@tabular
+    \def\roboto@figurealign{T}
+  \else
+    \def\roboto@figurealign{}
+  \fi
+\fi
+
+
+\ifroboto@otf
+  \RequirePackage{fontspec}
+\else
+  \RequirePackage{fontenc,fontaxes,mweights}
+\fi
+
+\ifroboto@otf
+  \ifxetex\XeTeXtracingfonts=1\fi
+  \defaultfontfeatures{
+        Ligatures = TeX ,
+        Scale     = \Roboto@scale ,
+        Extension = .ttf }
+  \ifroboto@condensed
+    \setsansfont
+        [ Numbers = {\roboto@figurealign,\roboto@figurestyle},
+          UprightFont    = *-\roboto@regstyle ,
+          ItalicFont     = *-\roboto@regstyle Italic ,
+          BoldFont       = *-Bold , 
+          BoldItalicFont = *-BoldItalic ]
+        {RobotoCondensed}
+  \else
+    \setsansfont
+        [ Numbers = {\roboto@figurealign,\roboto@figurestyle},
+          UprightFont    = *-\roboto@regstyle ,
+          ItalicFont     = *-\roboto@regstyle Italic ,
+          BoldFont       = *-\roboto@boldstyle , 
+          BoldItalicFont = *-\roboto@boldstyle Italic ]
+        {Roboto}
+  \fi
+  % grab current family in case of subsequent change:
+  \let\robotofamily\sfdefault  
+  \ifroboto@slab
+    \setmainfont
+        [ UprightFont    = *-\roboto@regstyle ,
+          BoldFont       = *-Bold ]
+        {RobotoSlab}
+  \fi
+  \ifroboto@default\renewcommand*\familydefault{\robotofamily}\fi
+  \newfontfamily\roboto
+        [ Numbers = {\roboto@figurealign,\roboto@figurestyle},
+          UprightFont    = *-\roboto@regstyle ,
+          ItalicFont     = *-\roboto@regstyle Italic ,
+          BoldFont       = *-\roboto@boldstyle , 
+          BoldItalicFont = *-\roboto@boldstyle Italic ]
+        {Roboto}
+  \newfontfamily\robotocondensed
+        [ Numbers = {\roboto@figurealign,\roboto@figurestyle},
+          UprightFont    = *-\roboto@regstyle ,
+          ItalicFont     = *-\roboto@regstyle Italic ,
+          BoldFont       = *-Bold , 
+          BoldItalicFont = *-BoldItalic ]
+        {RobotoCondensed}
+  \newfontfamily\robotoslab
+        [ UprightFont    = *-\roboto@regstyle ,
+          BoldFont       = *-Bold ]
+        {RobotoSlab}
+  \newfontfamily\robotoOsF
+      [ Numbers = {\roboto@figurealign,OldStyle},
+        UprightFont    = *-\roboto@regstyle ,
+        ItalicFont     = *-\roboto@regstyle Italic ,
+        BoldFont       = *-\roboto@boldstyle , 
+        BoldItalicFont = *-\roboto@boldstyle Italic ]
+      {Roboto}
+  \newfontfamily\robotoLF
+      [ Numbers = {\roboto@figurealign,Lining},
+        UprightFont    = *-\roboto@regstyle ,
+        ItalicFont     = *-\roboto@regstyle Italic ,
+        BoldFont       = *-\roboto@boldstyle , 
+        BoldItalicFont = *-\roboto@boldstyle Italic ]
+      {Roboto}
+  \DeclareTextFontCommand{\oldstylenums}{\robotoOsF}
+  \DeclareTextFontCommand{\liningnums}{\robotoLF}
+
+\else % type1
+  \def\robotofamily{Roboto-\roboto@figurealign\roboto@figurestyle}
+  \def\robotocondensedfamily{RobotoCondensed-\roboto@figurealign\roboto@figurestyle}
+  \def\robotoslabfamily{RobotoSlab-LF}
+  \newcommand*\roboto{\fontfamily{\robotofamily}\selectfont}
+  \newcommand*\robotocondensed{\fontfamily{\robotocondensedfamily}\selectfont}
+  \newcommand*\robotoslab{\fontfamily{\robotoslabfamily}\selectfont}
+  \def\sfdefault{\robotofamily}
+  \ifroboto@condensed\def\sfdefault{\robotocondensedfamily}\fi  
+  \ifroboto@default\edef\familydefault{\sfdefault}\edef\seriesdefault{\mdseries@sf}\fi
+  \ifroboto@slab\edef\rmdefault{\robotoslabfamily}\fi
+
+  \DeclareTextFontCommand{\oldstylenums}{\fontfamily{Roboto-\roboto@figurealign OsF}\selectfont}
+  \DeclareTextFontCommand{\liningnums}{\fontfamily{Roboto-\roboto@figurealign LF}\selectfont}
+
+\fi
+
+\ifroboto@otf
+  % turn off defaults in case other fonts are selected:
+  \defaultfontfeatures{}
+\fi
+
+\endinput

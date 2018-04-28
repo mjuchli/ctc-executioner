@@ -1,0 +1,28 @@
+\documentclass{tudelft-report}
+
+%% We need to increase the paper size to slightly larger than twice A4 to make
+%% room for a front and back cover, including the spine.
+\geometry{papersize={1226bp,851bp}}
+
+\begin{document}
+
+\title{Title}
+\subtitle{Optional subtitle}
+\author{J.\ Random Author}
+\affiliation{Technische Universiteit Delft}
+\coverimage{cover.jpg}
+\covertext{
+    \textbf{Cover Text} \\
+    possibly \\
+    spanning \\
+    multiple \\
+    lines
+    \vfill
+    ISBN 000-00-0000-000-0
+}
+
+%% The 'back' option enables the generation of the back cover.
+\makecover[back,whitelogo]
+
+\end{document}
+
