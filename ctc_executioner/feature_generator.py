@@ -1,9 +1,9 @@
-from orderbook import Orderbook
+from ctc_executioner.orderbook import Orderbook
 import numpy as np
 import pandas as pd
 import os
 
-book = 'query_result_test.tsv'
+book = 'data/trades/query_result_test.tsv'
 tmp='feature.tsv'
 orderbook = Orderbook()
 orderbook.loadFromFile(book)
