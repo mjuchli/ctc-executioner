@@ -1,10 +1,11 @@
 import logging
 import numpy as np
-from action_space_env import ActionSpace
-from action_state import ActionState
-from order_side import OrderSide
-from qlearn import QLearn
-from orderbook import Orderbook
+from ctc_executioner.action_space_env import ActionSpace
+from ctc_executioner.action_state import ActionState
+from ctc_executioner.order_side import OrderSide
+from ctc_executioner.qlearn import QLearn
+from ctc_executioner.orderbook import Orderbook
+from ctc_executioner.agent_utils.ui import UI
 
 class AgentQlearn:
     def __init__(self, env):
@@ -155,7 +156,6 @@ class AgentQlearn:
         return np.mean(M[0:, 4])
 
     def simulate(self, epochs_train=1, epochs_test=10, interval=100):
-        from agent_utils.ui import UI
         UI.animate(lambda : self.run(epochs_train, epochs_test), interval=interval)
 
 
@@ -169,7 +169,7 @@ I = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 # Load orderbook
 cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]
 import pandas as pd
-events = pd.read_table('ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
+events = pd.read_table('data/events/ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
 d = Orderbook.generateDictFromEvents(events)
 orderbook = Orderbook()
 orderbook.loadFromDict(d)

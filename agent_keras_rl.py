@@ -1,19 +1,19 @@
+import logging
+import numpy as np
+
 from rl.agents.dqn import DQNAgent
 from rl.policy import EpsGreedyQPolicy
 from rl.memory import SequentialMemory
 
-import logging
-import numpy as np
-from order_side import OrderSide
-from orderbook import Orderbook
+from ctc_executioner.order_side import OrderSide
+from ctc_executioner.orderbook import Orderbook
+from ctc_executioner.agent_utils.action_plot_callback import ActionPlotCallback
+from ctc_executioner.agent_utils.live_plot_callback import LivePlotCallback
+
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import Adam, SGD
 from keras import regularizers
-
-from agent_utils.action_plot_callback import ActionPlotCallback
-from agent_utils.live_plot_callback import LivePlotCallback
-
 from keras import optimizers
 from collections import deque
 import gym
@@ -65,9 +65,9 @@ def saveModel(model, name):
 
 
 
-# Load orderbook
+# # Load orderbook
 orderbook = Orderbook()
-orderbook.loadFromEvents('ob-1.tsv')
+orderbook.loadFromEvents('data/events/ob-train.tsv')
 orderbook_test = orderbook
 orderbook.summary()
 
@@ -89,12 +89,14 @@ orderbook.summary()
 
 import gym_ctc_executioner
 env = gym.make("ctc-executioner-v0")
+# import gym_ctc_marketmaker
+# env = gym.make("ctc-marketmaker-v0")
 env.configure(orderbook)
 
 #model = loadModel(name='model-sell-artificial-2')
-model = loadModel(name='model-sell-imitate-artificial-2')
-#model = createModel()
-nrTrain = 0
+#model = loadModel(name='model-sell-imitate-artificial-2')
+model = createModel()
+nrTrain = 20000
 nrTest = 10
 
 policy = EpsGreedyQPolicy()
@@ -105,9 +107,9 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 # # Okay, now it's time to learn something! We visualize the training here for show, but this slows down training quite a lot.
 cbs_train = []
-cbs_train = [LivePlotCallback(nb_episodes=50000, avgwindow=20)]
+cbs_train = [LivePlotCallback(nb_episodes=4000, avgwindow=20)]
 dqn.fit(env, nb_steps=nrTrain, visualize=True, verbose=2, callbacks=cbs_train)
-saveModel(model=model, name='model-sell-imitate-artificial-2')
+#saveModel(model=model, name='model-sell-artificial-down-up')
 
 cbs_test = []
 cbs_test = [ActionPlotCallback(nb_episodes=nrTest)]

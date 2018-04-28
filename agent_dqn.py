@@ -1,7 +1,8 @@
 import logging
 import numpy as np
-from order_side import OrderSide
-from orderbook import Orderbook
+from ctc_executioner.order_side import OrderSide
+from ctc_executioner.orderbook import Orderbook
+from ctc_executioner.agent_utils.ui import UI
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
 from keras import optimizers
@@ -134,13 +135,12 @@ class AgentDQN:
         return np.mean(M[0:, 4])
 
     def simulate(self, epochs_train=1, epochs_test=10, interval=100):
-        from agent_utils.ui import UI
         UI.animate(lambda : self.run(epochs_train, epochs_test), interval=interval)
 
 
 # Load orderbook
 orderbook = Orderbook()
-orderbook.loadFromEvents('ob-1.tsv')
+orderbook.loadFromEvents('data/events/ob-1.tsv')
 orderbook_test = orderbook
 #orderbook.plot()
 

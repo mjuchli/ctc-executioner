@@ -1,10 +1,11 @@
 import logging
 import numpy as np
-from action_space import ActionSpace
-from qlearn import QLearn
-from order_side import OrderSide
-from orderbook import Orderbook
-from action_state import ActionState
+from ctc_executioner.action_space import ActionSpace
+from ctc_executioner.qlearn import QLearn
+from ctc_executioner.order_side import OrderSide
+from ctc_executioner.orderbook import Orderbook
+from ctc_executioner.action_state import ActionState
+from ctc_executioner.agent_utils.ui import UI
 import pprint
 import datetime
 import seaborn as sns
@@ -158,7 +159,7 @@ ai = QLearn(actions=levels, epsilon=0.4, alpha=0.3, gamma=0.8)
 # Load orderbook
 cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]
 import pandas as pd
-events = pd.read_table('ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
+events = pd.read_table('data/events/ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
 d = Orderbook.generateDictFromEvents(events)
 orderbook = Orderbook()
 orderbook.loadFromDict(d)
@@ -180,6 +181,6 @@ actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, ai, levels)
 
 #priceReturnCurve(crossval=1)
 
-from agent_utils.ui import UI
+
 UI.animate(run_profit, interval=100)
 # UI.animate(run_q_reward, interval=1000)
