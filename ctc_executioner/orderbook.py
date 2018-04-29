@@ -280,23 +280,50 @@ class Orderbook(object):
         return self.getState(index), index
 
     def createArtificial(self, config):
+        """Creates an artificial order book
+
+        Args:
+            config (dict): configuration variables
+
+        Example:
+            config = {
+                'startPrice': 10010.0,
+                'endPrice': 10000.0, # Optional
+                'priceFunction': lambda p0, s, samples: p0 + 10 * np.sin(2*np.pi*10 * (s/samples)), # Optional
+                'levels': 25,
+                'qtyPosition' : 1.0,
+                'startTime': datetime.datetime.now(),
+                'duration': datetime.timedelta(seconds=100),
+                'interval': datetime.timedelta(seconds=10),
+            }
+
+        """
         startPrice = config['startPrice']
-        endPrice = config['endPrice']
+        endPrice = config.get('endPrice')
+        priceFunction = config.get('priceFunction')
         levels = config['levels']
         qtyPosition = config['qtyPosition']
         startTime = config['startTime']
         duration = config['duration']
         interval = config['interval']
         steps = duration / interval
-        gradient = (endPrice - startPrice) / steps
+
         steps = int(steps + 1)
-        prices = [startPrice + i*gradient for i in range(steps)]
+        if endPrice is not None:
+            gradient = (endPrice - startPrice) / (steps-1)
+            prices = [startPrice + i*gradient for i in range(steps)]
+        elif priceFunction is not None:
+            prices = [priceFunction(startPrice, i, steps) for i in np.arange(steps)]
+        else:
+            raise Exception('Define \"endPrice\" or \"priceFunction\"')
+
+
         times = [startTime + i*interval for i in range(steps)]
         for i in range(steps):
             p = prices[i]
             t = times[i]
             #bps = 0.0001 * p
-            bps = 0.1 # 10 cents
+            bps = 0.1 # 10 cents
             asks = [OrderbookEntry(price=(p + i * bps), qty=qtyPosition) for i in range(levels)]
             bids = [OrderbookEntry(price=(p - (i+1) * bps), qty=qtyPosition) for i in range(levels)]
             s = OrderbookState(tradePrice=p, timestamp=t)
@@ -632,11 +659,12 @@ class Orderbook(object):
 # orderbook = Orderbook()
 # config = {
 #     'startPrice': 10010.0,
-#     'endPrice': 10000.0,
+#     #'endPrice': 10000.0,
+#     'priceFunction': lambda p0, s, samples: p0 + 10 * np.sin(2*np.pi*5 * (s/samples)), # 10*sine with interval=5
 #     'levels': 25,
 #     'qtyPosition' : 1.0,
 #     'startTime': datetime.datetime.now(),
-#     'duration': datetime.timedelta(seconds=100),
+#     'duration': datetime.timedelta(minutes=10),
 #     'interval': datetime.timedelta(seconds=10),
 # }
 # orderbook.createArtificial(config)
