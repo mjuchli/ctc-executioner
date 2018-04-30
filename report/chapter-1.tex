@@ -14,11 +14,11 @@ Regarding stock exchanges there is little consensus as to when corporate stock w
 Modern financial markets such as the London Stock exchange (LSE), the New York Stock Exchange (NYSE) but also the numerous cryptocurrency exchanges which appeared suddenly in the last few year, all rely on the same very same principles as back then.
 Every participant is either willing to buy or sell a given amount of an asset to, respectively for, a certain price.
 
-When in the late '90s the regulatories started to let traders reach into the market using electronic communications networks (ECNs), a new era arose \cite{dark-pools}.
+When in the late '90s the regulatories started to let traders reach into the market using electronic communications networks (ECNs), a new era arose \cite{patterson2012dark}.
 High frequency traders (HFT) and algorithmic traders suddenly gained advantage over the traders who placed their orders manually.
-As of today up to 95\% of the institutional investors trade trough electronic channels\cite{ecn}.
+Nowadays anything else than trading trough electronic channels would be unthinkable.
 This certainly reduced the advantages some parties have over others, however, a certain gap still remains.
-The average investor without fibre access to the exchange and supporting algorithms will likely take a small initial loss into account when buying or selling assets -- and might not even be aware of it.
+Investors without fibre access to the exchange and supporting algorithms will likely take a small initial loss into account when buying or selling assets -- and might not even be aware of it.
 
 \begin{figure}[H]
     \centering
@@ -63,27 +63,31 @@ Nevertheless, the prices for some financial products, including cryptocurrencies
 Thus, placing orders \textit{deeper} in the book and wait could be beneficial.
 According to Guo et. al. \cite{guo2013optimal} algorithmic trading is based on two different time scales: \textit{order execution} concerns about optimally slicing big orders into smaller ones in order to minimize the \textit{price impact}, that is, on a daily or weekly basis.
 \textit{Order placement} on the other hand concerns about optimally placing orders within ten to hundred seconds. 
-In this thesis we are concerned about the latter, which conforms the context of the problem: at which price level $p$ should one attempt to buy or sell $i$ shares of an asset and what are the factors that might interfere with our intention to do so, within a time horizon $H$ of 100 seconds.
+In this thesis we are concerned about the latter, which conforms the context of the problem: at which price $p$ should one attempt to buy or sell $i$ shares of an asset and what are the factors that might interfere with our intention to do so, within a time horizon $H$ of 100 seconds.
+The fact that reinforcement learning does not require any supervision and instead learns by maximizing rewards, makes this technique unarguably suitable to work within this context.
 
 \section{Research objectives}
 
-We study the data from a cryptocurrency exchange of our choice and build a framework that allows to simulate and understand the outcome of order placement in this market.
-With this knowledge we then try to overcome the exploitation of other participants in the market by building an intelligent trader that follows a placement strategy which aims to execute orders to a favourable price.
+This work should extend on the findings of Kearns et. al. \cite{nevmyvaka2006reinforcement} with the aim to understand and learn from the outcome of limit order placement in a given market.
+With this knowledge we should build a reinforcement learner that can act as an intelligent trader and places limit orders such that the outcome is the buy or sell of an asset to a favourable price.
+Therefore we shall build a framework that let us simulate and understand the outcome of order placement and more importantly allows to build reinforcement learning tools on top.
+We further have to reason about what features can be derived from an order book and if there are any patterns that can be detected, such that this information could contribute to the learning process.
+Lastly, we shall lay a focus on deep reinforcement learning techniques as this has had great success on learning to play video games \cite{mnih2013playing} based on a history of pixel inputs, but has never been applied to the optimal order placement problem.
 
-The main objective of this research is to develop a machine learning based model of limit-order placements in an order driven crypto currency market that can be utilised to optimize buying and selling of crypto currencies. To achieve this, we firstly conduct several experiments to analyse the behaviour of previously proposed models in a controlled environment by utilising historical order book data with the aim to identify the limitation of these models. We then propose a reinforcement learning implementation and study the results with respect to the aforementioned limitations. Questions to be answered include:
-
-How does trading time horizon and inventory affect execution?
-How does market liquidity provided by bid and ask orders affect execution?
-Is the performance of reinforcement learning limited to the findings of an empirical model that models the execution probability?
-Another focus of this research is the aim to derive patterns from order book data. Particularly, order book events are observed and an attempt is made to detect behavioural patterns of traders participating in the market. Hence the objective is:
-
-How can data, which is derived from a limit order book, be used as features in a reinforcement learning environment in order to contribute to the optimization of order execution?
-Lastly, we make an attempt to improve the execution strategy by incorporating the found patterns. Therefore the aim is to answer:
-
-Does pattern recognition of order book data allow to overcome the limitations of order execution proposed by statistical models and other machine learning approaches?
-
+Hence, the main objective of this research can be formulated in one sentence: \begin{quote}
+    How should one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement, and what are the limitations thereof?".
+\end{quote}
 
 \section{Contributions}
+
+This thesis makes use of concepts from various research communities in order to work on the above mentioned objectives.
+The particular contributions made throughout the project are:
+\begin{itemize}
+    \item \textit{Information retrieval} techniques are provided in order to collect and process financial data sets.
+    \item \textit{Software engineering} contributions to a simulation of a rudimentary stock exchange and a set of tools that can be used for data science purposes.
+    \item \textit{Reinforcement learning} is the main contribution. Various approaches are developed and investigated related to \textit{order placement} and \textit{market making}.
+\end{itemize}
+
 
 \section{Document structure}
 
