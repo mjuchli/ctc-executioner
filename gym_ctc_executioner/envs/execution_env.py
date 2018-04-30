@@ -54,8 +54,6 @@ class ExecutionEnv(gym.Env):
         self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback, self.bookSize, 2))
 
     def setOrderbook(self, orderbook):
-        #self.orderbookOriginal = orderbook
-        #self.orderbook = copy.deepcopy(self.orderbookOriginal)
         self.orderbook = orderbook
 
     def setSide(self, side):
@@ -220,7 +218,6 @@ class ExecutionEnv(gym.Env):
         return self._reset(t=self.T[-1], i=self.I[-1])
 
     def _reset(self, t, i):
-        #self.orderbook = copy.deepcopy(self.orderbookOriginal) # TODO: Slow but currently required to reset after every episode due to change of order book states during matching
         orderbookState, orderbookIndex = self._get_random_orderbook_state()
         bidAskFeature = self._makeFeature(orderbookIndex=orderbookIndex)
         state = ActionState(t, i, {'bidask': bidAskFeature}) #np.array([[t, i]])
