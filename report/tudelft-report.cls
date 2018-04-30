@@ -641,8 +641,8 @@
 %% Subsubsections have the same font and color as sections and subsections, but
 %% are not preceded by a number.
 \titleformat{\subsubsection}
-    {\headerstyle}
-    {}
+    {\large\headerstyle}
+    {\bfseries\thesubsubsection.\ }
     {0pt}
     {\color{title}}
 %% Subsubsections are preceded by an empty line and do not appear in the table

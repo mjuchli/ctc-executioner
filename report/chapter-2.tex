@@ -9,4 +9,318 @@
 
 \section{Time series}
 
+According to the efficient market hypothesis\cite{malkiel1989efficient}, a stock market reflects all the information available to the market participants at any give time. 
+Given the vast information flow, the natural consequence is that financial markets are best described over time. 
+More precisely, the definition of a time series is an ordered sequence of values of a variable at equally spaced time intervals\cite{intro-timeseries}.
+
+The nature of time series data originated the applications generally known as Time Series Analysis and Time Series Forecasting. 
+Both of which play an important role throughout this project.
+
+\subsection{Time series analysis}
+
+The analysis of data observed at different points in time leads to problems in statistical modelling and inference. 
+More specifically, the correlation of adjacent points in time can restrict the applicability of conventional statistical methods which traditionally depend on the assumption that these adjacent observations are independent and identically distributed. 
+A systematic approach by which one attempts to answer the mathematical and statistical questions posed by these time correlations is commonly referred to as time series analysis. 
+Therefore, mathematical models are developed with the primary objective to provide plausible descriptions for sample data. \cite{shumway2000time}
+
+\subsubsection{Random variables}
+
+A collection of random variables indexed according to the order they are obtained in time serves as a representation of the time series. For example, a time series with three data points ($x_1$, $x_2$, $x_3$) can be considered as a sequence of the random variables $x_1$, $x_2$ and $x_3$, where the random variable $x_1$ denotes the value of the first time period, the variable $x_2$ denotes the value for the second time period and $x_3$ denotes the value for the third time period. While graphically plotting the values of random variables, it is conventional to display the random variables on the vertical axis with the time scale as abscissa. \cite{shumway2000time}
+\\
+\\
+One such example of a time series analysis, that is often times seen in the context of financial data, is the moving average. 
+
+\begin{equation}
+    v_t=\frac{1}{3}(x_{t-1}+x_t+x_{t+1})
+\end{equation}
+
+Moving average allows to smoothen the series by averaging the current value and its immediate neighbors in the past and future.
+
+
+\subsubsection{Stationarity}
+
+Some of the time series behaviours, which will be presented within this body of work, may hint that a sort of regularity exist over time.
+We refer the notion of regularity using a concept called stationarity, as introduced in \cite{shumway2000time}.
+\\
+\\
+A \textbf{strictly stationary} time series is one for which the probabilistic behavior of every collection of values
+${x_{t_1}, x_{t_2}, ..., x_{t_k}}$
+is identical to that of the time shifted set
+${x_{t_1+h}, x_{t_2+h}, ..., x_{t_k+h}}$
+for all time shifts $h=0,\pm1,\pm2,...$
+\\
+\\
+A \textbf{weakly stationary} time series, $x_t$, is a finite variance process such that
+
+\begin{itemize}
+    \item the mean value function $\mu_t$ is constant and does not depend on time $t$, and
+    \item the autocovariance function $\gamma(s, t)$, depends on $s$ and $t$ only through their difference $|s-t|$.
+\end{itemize}
+
+Whereas $\mu_t$ is defined as
+
+\begin{equation}
+    \mu_{t}=\mathbb{E}(x_t)=\int_{-\infty}^{\infty} x f_t(x) dx
+\end{equation}
+
+with $f_t$ being the \textit{marginal density function} \cite{shumway2000time}.
+$\gamma(s, t)$ is defined as
+\begin{equation}
+    \gamma(s, t)=cov(x_s, x_t)=\mathbb{E}[(x_s-\mu_s)(x_t-\mu_t)]
+\end{equation}
+
+for all time points $s$ and $t$.
+\\
+\\
+\textit{Henceforth, we will use the term stationary to mean weakly stationary; if a process is stationary in the strict sense, we will use the term strictly stationary.}
+
+\subsubsection{Time series forecasting}
+
+In statistics, prediction is a part of statistical inference. 
+Providing a means of the transfer of knowledge about a sample of a population to the whole population, and to other related populations is one description of statistics. 
+However, this is not necessarily equivalent to the process of predicting over time. 
+This process, instead, is known as forecasting and describes the transfer of information across, often to very specific point in, time \cite{wiki-timeseries}. \\
+\\
+Hence the problem is defined in \cite{ito1993encyclopedic} as: \textit{forecasting future values $X_(t+h)$ where $h > 0$ of a weakly stationary process ${X_t}$ from the known values $X_s$ where $s \leq t$}. 
+The integer $h$ is called lead time or forecasting horizon, whereas $h$ stands for horizon.
+\\
+\\
+Forecasting methods can be classified, according to \cite{chatfield2000time}, into three types:
+\begin{description}
+    \item[Judgemental forecasts:] produce projections based on intuition, inside knowledge, and any other relevant information.
+    \item[Univariate methods:] forecast depends on present or past values of the time series on which the forecast is projected. Augmentation by a function of time is possible.
+    \item[Multivariate methods:] forecast depends on one or more additional time series variables or multivariate models.
+\end{description}
+\hfill
+\\
+\textit{Over the course of this work, we make use of univariate- and multivariate methods.}
+
 \section{Reinforcement Learning}
+
+This section first aims to describe what Reinforcement Learning is and highlights its differences to other machine learning paradigms. 
+We briefly reason why this particular technique might be an appropriate choice for the task of optimising order placement. 
+Then, a basic understanding about Markov Decision Processes is provided, after which we explain the interaction between the Reinforcement Learning components, followed by a description of their properties.
+
+\subsection{End-to-end learning}
+
+Reinforcement Learning is a specific learning approach in the Machine Learning field and aims to solve problems which involve \textit{sequential decision making}.
+Therefore, when a decision made in a system affects the future decisions and eventually its outcome, the aim is to learn the optimal sequence of decisions with reinforcement learning.
+
+```
+                      Machine Learning
+                             |
+        ---------------------|---------------------
+       |                     |                     |
+   Supervised           Unsupervised           Reinforcement
+   (Task driven,        (Data driven,          (Learning to act
+   Regression or        Clustering)            in environment)
+   Classification)
+```
+
+In reinforcement learning there is no supervision and instead an agent learns by maximizing rewards.
+The feedback retrieved while proceeding a task with a sequence of actions might be delayed over several time steps and hence the agent might spend some time exploring until it finally reaches the goal and can updates its strategy accordingly.
+\\
+\\
+This process can be regarded as \textit{end-to-end learning}, and is unlike other machine learning paradigms.
+In supervised learning techniques, for example, the algorithm learns by presenting a specific situation provided with the right action to do. From there, the algorithm tries to generalize the model.
+In addition, in reinforcement learning problems, the data is not independent and identically distributed (I.I.D). The agent might in fact, while exploring, miss out on some important parts to learn the optimal behaviour. Hence, time is crucial as the agent must explore as many parts of the environment to be able to take the appropriate actions. \cite{rl-demystified}
+\\
+\\
+For optimizing order placement in limit order books, statistical approaches have long been the preferred choice.
+While statistics emphasizes inference of a process, machine learning on the other hand emphasizes the prediction of the future with respect to some variable.
+Although the capabilities of influencing a non-trivial procedure using predictions might be tempting, supervised learning machine learning approaches demand to facilitate complex intermediate steps in order to let the learner interact within the process of buying and selling assets.
+Reinforcement learning, as mentioned before, provides the capabilities to model the execution process pipeline whereas the learner improves upon the outcome of the submitted orders. \cite{deeprlcourse}
+\\
+\\
+A generic end-to-end training pipeline is as follows:
+
+$Observation \rightarrow State estimation \rightarrow Modelling & Prediction \rightarrow Action$
+
+Since we are working with financial systems, let us assume we want to buy and sell stocks on a stock exchange. 
+In reinforcement learning terms, the trader is represented as an \textit{agent} and the exchange is the \textit{environment}.
+The details of the environment do not have to be known as it is rather regarded as a black-box.
+The agents purpose is to observe the state of the environment: say for example the current price of a stock.
+The agent then makes estimates about the situation of the observed state and decides which action to take next – buy or sell. 
+The action is then send to the environment which determines whether this was a good or bad choice, for example whether we made a profit or a loss.
+
+\subsection{Markov Decision Process (MDP)}
+\label{rl-mdp}
+
+A process such as the one sketched above, can be formalized as a Markov Decision Process.
+An MDP is a 5-tuple $<S, A, P, R, \gamma >$ where:
+\begin{enumerate}
+    \item $S$ is the finite set of possible states $s_t \in S$ at some time step.
+    \item $A(s_t)$ is the set of actions available in the state at time step $t$, that is $a_t \in A(s_t)$, whereas $A=\bigcup_{s_t \in S} A(s_t)$
+    \item $p(s_{t+1} | s_t, a_t)$ is the state transition model that describes how the environment state changes, depending on the action $a$ and the current state $s_t$.
+    \item $p(r_{t+1} | s_t, a_t)$ is the reward model that describes the immediate reward value that the agent receives from the environment after performing an action in the current state $s_t$.
+    \item $\gamma \in [0,1]$ is the discount factor which determines the importance of the future rewards.
+\end{enumerate}
+
+\subsection{Interaction}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=\linewidth]{rl-overview.png}
+    }
+    \caption{Figure taken from \cite{rl-demystified}: interaction between a reinforcement learning agent and environment. Illustrating the action taken by the client being in some state which results in some reward and a new state.}
+    \label{fit:rl-overview}
+\end{figure}
+\\
+\\
+A reinforcement learning problem is commonly defined with the help of two main components: \textit{Environment} and \textit{Agent}.
+\\
+\\
+With the interfaces provided above \ref{rl-mdp}, we can define an interaction process between an agent and environment by assuming discrete time steps: $t=0, 1, 2, ...$
+
+\begin{enumerate}
+    \item The agent observes a state $s_t \in S$
+    \item and produces an action at time step $t$: $a_t \in A(s_t)$
+    \item which leads to a reward $r_{t+1} \in R$ and the next state $s_{t+1}$
+\end{enumerate}
+\\
+\\
+During this process, and as the agent aims to maximize its future reward, the agent consults a \textit{policy}, which dictates which action to take given a particular state.
+
+\subsubsection{Policy}
+
+A policy is a function that can be either deterministic or stochastic. 
+The distribution $\pi(a|s)$ is used for a stochastic policy and a mapping function $\pi(s) : S \rightarrow A$ is used for a deterministic policy, whereas $S$ is the set of possible states and $A$ is the set of possible actions.
+\\
+\\
+The stochastic \textit{policy} at time step $t$: $\pi_t$ is a mapping from state to action probabilities as a result of the agents experience, and therefore, $\pi_t(s, a)$ is the probability that $a_t=a$ when $s_t=s$.
+
+\subsubsection{Reward}
+
+The goal is that the agent learns how to select actions such that it maximizes its future reward when submitting them to the environment.
+We rely on the standard assumption that future rewards are discounted by a factor of $\gamma$ per time-step in the sense that the total discounted reward accounts to $r_1 + \gamma*r_2 + \gamma^2*r_3 + \gamma^3*r_4 + ...)$
+\\
+\\
+Hence we define the future discounted \textit{return} at time $t$ as 
+
+\begin{equation}
+R_t=\sum_{i=t}^{T}{\gamma^{i-t}{*}r_{i}}
+\end{equation}
+, where $T$ is the length of the episode (which can be infinity if there is no maximum length for the episode).
+\\
+\\
+The discounting factor has two obligations: it prevents the total reward from going to infinity (since $0 \leq \gamma \leq 1$), and it allows to control the preference of the agent between immediate rewards and potentially received reward in the future. \cite{rl-demysitifed2}
+
+\subsubsection{Value Functions}
+
+The value of a state $s$ indicates how good or bad a state is for the agent to be in, measured by the expected total reward for an agent starting from this state. Hence we introduce the \textbf{value function}, which depends on the policy the agent chooses its actions from:
+
+\begin{equation}\label{eq:value-function}
+V^{\pi}(s)=\mathbb{E}[R_t]=\mathbb{E}[\sum_{i=1}^{T}{\gamma^{i-1}{*}r_{i}}]\forall{s}\in{S}
+\end{equation}
+
+Among all value functions there is an \textbf{optimal value function} which has higher values for all states
+
+\begin{equation}\label{eq:optimal-value-function}
+V^{*}(s)=\max_{\pi}V^{\pi}(s)\forall{s}\in{S}
+\end{equation}
+
+Furthermore, the optimal policy $\pi^*$ can be derived as
+
+\begin{equation}\label{eq:value-function-policy}
+\pi^{*}=\arg\max_{\pi}V^{\pi}(s)\forall{s}\in{S}
+\end{equation}
+
+In addition to the value of a state with respect to the expected total reward to be achieved, we might also be interested in a value which determines the value of being an a certain state $s$ and taking a certain action $a$. 
+To get there we first introduce the \textbf{Q function}, which takes a state-action pair and returns a real value:
+
+\begin{equation}\label{eq:q-function}
+Q:S\times{A}\rightarrow{\mathbb{R}}
+\end{equation}
+
+Finally, the \textbf{optimal action-value function} (or \textbf{optimal Q function}) $Q*(s,a)$ as the maximum expected return achievable after seeing some state $s$ and then taking some action $a$. That is, 
+
+\begin{equation}\label{eq:optimal-action-value-function}
+Q^*(s,a)=\max_{\pi}\mathbb{E} [R_t\|s_t=s,a_t=a,\pi]
+\end{equation}
+
+with the policy $\pi$ mapping the states to either actions or distributions over actions. 
+
+The relationship between the \textit{optimal value function} and the \textit{optimal action-value function} is, as already hinted by their names, easily obtained as
+
+\begin{equation}
+V^*(s)=\max_{a}Q^*(s,a)\forall{s}\in{S}
+\end{equation}
+
+and thus the optimal policy for state $s$ can be derived by choosing the action $a$ that gives maximum value
+
+\begin{equation}
+\pi^*(s)=\arg\max_{a}Q^*(s,a)\forall{s}\in{S}
+\end{equation}
+
+\subsection{Environment}
+
+There are two types of environments:
+\begin{description}
+    \item[Deterministic environment:] implies that both the sate transition model and reward model are deterministic functions. 
+    In this setup, if the agent in a given state $s_t$ repeats a given action $a$, the result will always be the same next state $s_{t+1}$ and reward $r_t$.
+
+    \item[Stochastic environment:] implies that there is an uncertainty about the outcome of taking an action $a$ in state $s_t$ as the next state $s_{t+1}$ and received reward $r_t$ might not be the same for each time.
+\end{description}
+\\
+\\
+Deterministic environments are, in general, easier to solve as the agent learns to improve the policy without uncertainties in the MDP. 
+
+\subsection{Agent}
+
+The goal of the agent is to solve the MDP by finding the optimal policy, which means finding the sequence of action that lead to maximize the total received reward.
+However, there are various approaches to so, which are commonly categorized (see \cite{rl-demysitifed2}) as follows:
+\begin{description}
+    \item[Value Based Agent:] the agent starts off with a random value function and then finds a new (improved) value function in an iterative process, until reaching the optimal value function. 
+    As stated in Eq. \ref{eq:value-function} one can easily derive the optimal policy from the optimal value function. 
+
+    \item[Policy Based Agent:] the agent starts off with a random policy, then finds the value function of that policy and derives a new (improved) policy based on the previous value function, and so on. Each policy is guaranteed to be a strict improvement over the previous one (unless it is already optimal). As stated in Eq. \ref{eq:value-function-policy}, given a policy, one can derive the value function.
+
+    \item[Actor-Critic Agent:] the agent is a combination of a value-based and policy-based agent. Both, the policy and the reward from each state will be stored.
+
+    \item[Model-Based Agent:] the agent attempts to approximate the environment using a model. It then suggests the best possible behaviour.
+
+    \item[Model-Free Agent:] the agent builds a policy just from experience from which it will derive how to behave optimally to get the most possible rewards.
+\end{description}
+
+\subsubsection{Value iteration}
+
+This work makes use of the \textit{value based agent} approach which relies on the \textit{action-value function} (Eq. \ref{eq:optimal-action-value-function}) that obeys an important identity known as the \textbf{Bellman equation}. 
+\\
+\\
+The intuition is that: if the optimal value action-value $Q^*(s',a')$ of the state $s'$ at the next time step $t+1$ was known for all possible actions $a'$, the optimal strategy is to select the action $a'$ which maximizes the expected value of $r+\gamma*Q^*(s',a')$,
+
+\begin{equation}\label{eq:bellman}
+Q^*(s,a)=\mathbb{E}[r+\gamma \max_{a'} Q^*(s',a')] \forall{s}\in{s}, a\in{A}
+\end{equation}
+
+The idea behind the many reinforcement learning algorithms which follow the iterative value approach is to estimate the action-value function by using the Bellman equation as an iterative update,
+
+\begin{equation}
+Q_{i+1}(s,a)=\mathbb{E}[r+\gamma \max_{a'}Q_{i}(s',a')]
+\end{equation}
+
+Value iteration algorithms converge to the \textit{optimal action-value} function $Q_{i} \rightarrow Q^*$ as $i \rightarrow \infty$. \cite{sutton1998reinforcement}
+
+\subsubsection{Q-Learning}
+
+One of the reinforcement learning algorithms used in this work is known as Q-Learning. 
+The name derives from the application of the previously presented Q-function (Eq. \ref{eq:q-function}), more specifically its use within the Bellman equation (\ref{eq:bellman}) which is iteratively updated.
+\\
+\\
+The general idea is ... 
+
+\subsection{Deep Reinforcement Learning}
+
+From \cite{deeprlcourse} goes that: \textit{"Reinforcement learning can be naturally integrated with artificial neural networks to obtain high-quality generalization"}.
+The term \textit{generalization} refers to the action-value function (Eq. \ref{eq:optimal-action-value-function}) and the fact that this value is estimated for each state separately, which becomes totally impractical in for large state spaces that oftentimes occur in real world scenarios.
+A function approximator is therefore a common choice to to estimate the action-value function instead. Typically a linear function approximator is being used but in deep reinforcement learning, one uses a non-linear function approximator; particularly a neural network with weights $\theta$. The \textit{action value function} therefore becomes
+
+\begin{equation}
+Q(s, a; \theta) \approx Q^*(s,a)
+\end{equation}.
+
+In terms of the previously described reinforcement pipeline, the use of a function approximator simplifies this process by replacing state estimation and modelling components by a perception:
+\\
+\\
+$Observation \rightarrow Perception \rightarrow Action$
