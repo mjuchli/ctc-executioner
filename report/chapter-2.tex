@@ -3,15 +3,75 @@
 
 \section{Order Book}
 
-\section{Match Engine}
+High frequency trading and sophisticated algorithmic trading makes up a substantial part of the participants of the electronic markets. 
+Their servers are oftentimes co-located with the exchanges and specialized computer networks have been constructed to provide millisecond advantage for arbitraging trades between the exchanges. 
+Large institutional traders feel that they are at a disadvantage in such an environment. \cite{patterson2012dark}
 
-\section{Execution}
+However, without those participants, order execution would become much less stable as there would not be enough liquidity in the market at the time when an investor attempts to buy or sell a significant amount of assets.
+
+This section explains the characteristics of an order book data structure and how participants list themselves in this book.
+
+...
+
+\section{Match Engine}
+\label{sec:match-engine}
+
+Matching engines match buy and sell orders that are submitted to electronic trading networks, like \textit{NASDAQ} or \textit{NYSE} as examples of traditional stock exchanges; or \textit{Bitfinex}, \textit{Bittrex}, \textit{Coinbase} as examples of crypto-currency exchanges.
+
+Without a local match engine, one would be forced to consult such an exchange and either trade on the live market or get access to a test environment, which can be, if existent, still costly. 
+
+This section, describes the mechanics of a match engine, which acts as one of the key components of this project as it enables to simulate and evaluate order placement.
+
+...
+
+The behaviour of the mentioned participants are taken into account by feeding historical data.
+
+
+\section{Order execution and placement}
+
+A trader has a variety of options on how to approach a market and fulfill his duties to buy (respectively sell) shares.
+The process to be proceeded in order to do so involves the steps \textit{order execution} and \textit{order placement} for which we give a definition below.
+In addition to other definitions regarding this process, this section shows an example of the empirical behavior of order execution and provides insight into a previously proceed order placement step using a Support Vector Machine (SVM).
+
+\subsection{Definitions}
+
+Many useful definitions which highlight the difficulties related to the order execution domain were stated by Lim et al. \cite{lim2005optimal} and Guo et al. \cite{guo2013optimal}:
+\begin{description}
+    \item[Order execution:] concerns about optimally slicing big orders into smaller ones in order to minimize the price impact, that is, on a daily or weekly basis.
+    \item[Order placement: ] concerns about optimally placing orders within ten to hundred seconds.
+    \item[Impact cost:] moving the price up by executing large buy orders (respectively down for sell orders) at once. 
+    By splitting up a big order (e.g. V shares) into smaller pieces and spreading the execution over a time horizon $H$, the impact cost can be lessened.
+    \item[Opportunity cost:] arises when the price moves against our favour while splitting a big order into pieces and delaying execution. 
+    Therefore the opportunity to execute at a better price.
+    \item[Execution strategy:] optimizes trade-off between impact cost and opportunity cost and therefore trying to find best execution.
+    \item[Placement strategy:] optimizes the trade-off between opportunity cost and paying a premium while proceeding an execution strategy.
+\end{description}
+
+\subsection{Empirical behavior}
+
+Kearns et. al. \cite{nevmyvaka2005electronic} determine which limit order price results in the most advantageous execution price.
+An approach is presented on how to measure the \textit{return} of an execution.
+
+fig 
+
+Risk is being defined as the standard deviation the returns. 
+
+fig
+
+Lastly, they combine the two techniques and derive the efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}) which shows the trade-off between the risk and return.
+
+fig
+
+\subsection{Order placement approach}
+
+...
+
 
 \section{Time series}
 
 According to the efficient market hypothesis\cite{malkiel1989efficient}, a stock market reflects all the information available to the market participants at any give time. 
 Given the vast information flow, the natural consequence is that financial markets are best described over time. 
-More precisely, the definition of a time series is an ordered sequence of values of a variable at equally spaced time intervals\cite{intro-timeseries}.
+More precisely, the definition of a time series is an ordered sequence of values of a variable at equally spaced time intervals \cite{intro-timeseries}.
 
 The nature of time series data originated the applications generally known as Time Series Analysis and Time Series Forecasting. 
 Both of which play an important role throughout this project.
@@ -64,7 +124,7 @@ Whereas $\mu_t$ is defined as
 \end{equation}
 
 with $f_t$ being the \textit{marginal density function} \cite{shumway2000time}.
-$\gamma(s, t)$ is defined as
+And $\gamma(s, t)$ is defined as
 \begin{equation}
     \gamma(s, t)=cov(x_s, x_t)=\mathbb{E}[(x_s-\mu_s)(x_t-\mu_t)]
 \end{equation}
@@ -103,24 +163,22 @@ Then, a basic understanding about Markov Decision Processes is provided, after w
 
 \subsection{End-to-end learning}
 
-Reinforcement Learning is a specific learning approach in the Machine Learning field and aims to solve problems which involve \textit{sequential decision making}.
+Reinforcement Learning is a specific learning approach in the Machine Learning (see Figure \ref{fig:ml-rl}) field and aims to solve problems which involve \textit{sequential decision making}.
 Therefore, when a decision made in a system affects the future decisions and eventually its outcome, the aim is to learn the optimal sequence of decisions with reinforcement learning.
 
-```
-                      Machine Learning
-                             |
-        ---------------------|---------------------
-       |                     |                     |
-   Supervised           Unsupervised           Reinforcement
-   (Task driven,        (Data driven,          (Learning to act
-   Regression or        Clustering)            in environment)
-   Classification)
-```
-
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{ml-rl.png}
+    }
+    \caption{Categorization of machine learning techniques}
+    \label{fig:ml-rl}
+\end{figure}
+\hfill
+\\
 In reinforcement learning there is no supervision and instead an agent learns by maximizing rewards.
 The feedback retrieved while proceeding a task with a sequence of actions might be delayed over several time steps and hence the agent might spend some time exploring until it finally reaches the goal and can updates its strategy accordingly.
-\\
-\\
+
 This process can be regarded as \textit{end-to-end learning}, and is unlike other machine learning paradigms.
 In supervised learning techniques, for example, the algorithm learns by presenting a specific situation provided with the right action to do. From there, the algorithm tries to generalize the model.
 In addition, in reinforcement learning problems, the data is not independent and identically distributed (I.I.D). The agent might in fact, while exploring, miss out on some important parts to learn the optimal behaviour. Hence, time is crucial as the agent must explore as many parts of the environment to be able to take the appropriate actions. \cite{rl-demystified}
@@ -132,10 +190,11 @@ Although the capabilities of influencing a non-trivial procedure using predictio
 Reinforcement learning, as mentioned before, provides the capabilities to model the execution process pipeline whereas the learner improves upon the outcome of the submitted orders. \cite{deeprlcourse}
 \\
 \\
-A generic end-to-end training pipeline is as follows:
+A generic end-to-end learning pipeline is as follows:
 
 $Observation \rightarrow State estimation \rightarrow Modelling & Prediction \rightarrow Action$
-
+\\
+\\
 Since we are working with financial systems, let us assume we want to buy and sell stocks on a stock exchange. 
 In reinforcement learning terms, the trader is represented as an \textit{agent} and the exchange is the \textit{environment}.
 The details of the environment do not have to be known as it is rather regarded as a black-box.
@@ -161,7 +220,7 @@ An MDP is a 5-tuple $<S, A, P, R, \gamma >$ where:
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
-        \includegraphics[width=\linewidth]{rl-overview.png}
+        \includegraphics[width=10cm]{rl-overview.png}
     }
     \caption{Figure taken from \cite{rl-demystified}: interaction between a reinforcement learning agent and environment. Illustrating the action taken by the client being in some state which results in some reward and a new state.}
     \label{fit:rl-overview}
@@ -171,7 +230,7 @@ An MDP is a 5-tuple $<S, A, P, R, \gamma >$ where:
 A reinforcement learning problem is commonly defined with the help of two main components: \textit{Environment} and \textit{Agent}.
 \\
 \\
-With the interfaces provided above \ref{rl-mdp}, we can define an interaction process between an agent and environment by assuming discrete time steps: $t=0, 1, 2, ...$
+With the interfaces provided above (Section \ref{rl-mdp}), we can define an interaction process between an agent and environment by assuming discrete time steps: $t=0, 1, 2, ...$
 
 \begin{enumerate}
     \item The agent observes a state $s_t \in S$
@@ -195,14 +254,12 @@ The stochastic \textit{policy} at time step $t$: $\pi_t$ is a mapping from state
 The goal is that the agent learns how to select actions such that it maximizes its future reward when submitting them to the environment.
 We rely on the standard assumption that future rewards are discounted by a factor of $\gamma$ per time-step in the sense that the total discounted reward accounts to $r_1 + \gamma*r_2 + \gamma^2*r_3 + \gamma^3*r_4 + ...)$
 \\
-\\
 Hence we define the future discounted \textit{return} at time $t$ as 
 
 \begin{equation}
 R_t=\sum_{i=t}^{T}{\gamma^{i-t}{*}r_{i}}
 \end{equation}
 , where $T$ is the length of the episode (which can be infinity if there is no maximum length for the episode).
-\\
 \\
 The discounting factor has two obligations: it prevents the total reward from going to infinity (since $0 \leq \gamma \leq 1$), and it allows to control the preference of the agent between immediate rewards and potentially received reward in the future. \cite{rl-demysitifed2}
 
@@ -211,46 +268,47 @@ The discounting factor has two obligations: it prevents the total reward from go
 The value of a state $s$ indicates how good or bad a state is for the agent to be in, measured by the expected total reward for an agent starting from this state. Hence we introduce the \textbf{value function}, which depends on the policy the agent chooses its actions from:
 
 \begin{equation}\label{eq:value-function}
-V^{\pi}(s)=\mathbb{E}[R_t]=\mathbb{E}[\sum_{i=1}^{T}{\gamma^{i-1}{*}r_{i}}]\forall{s}\in{S}
+V^{\pi}(s)=\mathbb{E}[R_t]=\mathbb{E}[\sum_{i=1}^{T}{\gamma^{i-1}{*}r_{i}}]\ \forall s \in S
 \end{equation}
-
+\\
 Among all value functions there is an \textbf{optimal value function} which has higher values for all states
 
 \begin{equation}\label{eq:optimal-value-function}
-V^{*}(s)=\max_{\pi}V^{\pi}(s)\forall{s}\in{S}
+V^{*}(s)=\max_{\pi}V^{\pi}(s)\ \forall s \in S
 \end{equation}
-
-Furthermore, the optimal policy $\pi^*$ can be derived as
+\\
+Furthermore, the \textbf{optimal policy} $\pi^*$ can be derived as
 
 \begin{equation}\label{eq:value-function-policy}
-\pi^{*}=\arg\max_{\pi}V^{\pi}(s)\forall{s}\in{S}
+\pi^{*}=\arg\max_{\pi}V^{\pi}(s)\ \forall{s}\in{S}
 \end{equation}
-
+\\
 In addition to the value of a state with respect to the expected total reward to be achieved, we might also be interested in a value which determines the value of being an a certain state $s$ and taking a certain action $a$. 
 To get there we first introduce the \textbf{Q function}, which takes a state-action pair and returns a real value:
 
 \begin{equation}\label{eq:q-function}
 Q:S\times{A}\rightarrow{\mathbb{R}}
 \end{equation}
-
-Finally, the \textbf{optimal action-value function} (or \textbf{optimal Q function}) $Q*(s,a)$ as the maximum expected return achievable after seeing some state $s$ and then taking some action $a$. That is, 
+\\
+Finally, the \textbf{optimal action-value function} (or \textbf{optimal Q function}) $Q^*(s,a)$ as the maximum expected return achievable after seeing some state $s$ and then taking some action $a$. That is, 
 
 \begin{equation}\label{eq:optimal-action-value-function}
-Q^*(s,a)=\max_{\pi}\mathbb{E} [R_t\|s_t=s,a_t=a,\pi]
+Q^*(s,a)=\max_{\pi}\mathbb{E} [ R_t | s_t=s, a_t=a, \pi ]
 \end{equation}
 
 with the policy $\pi$ mapping the states to either actions or distributions over actions. 
-
+\\
+\\
 The relationship between the \textit{optimal value function} and the \textit{optimal action-value function} is, as already hinted by their names, easily obtained as
 
 \begin{equation}
-V^*(s)=\max_{a}Q^*(s,a)\forall{s}\in{S}
+V^*(s)=\max_{a}Q^*(s,a)\ \forall{s}\in{S}
 \end{equation}
-
-and thus the optimal policy for state $s$ can be derived by choosing the action $a$ that gives maximum value
+\\
+and thus the \textit{optimal policy} for state $s$ can be derived by choosing the action $a$ that gives maximum value
 
 \begin{equation}
-\pi^*(s)=\arg\max_{a}Q^*(s,a)\forall{s}\in{S}
+\pi^*(s)=\arg \max_{a} Q^*(s, a)\ \forall{s}\in{S}
 \end{equation}
 
 \subsection{Environment}
@@ -262,9 +320,9 @@ There are two types of environments:
 
     \item[Stochastic environment:] implies that there is an uncertainty about the outcome of taking an action $a$ in state $s_t$ as the next state $s_{t+1}$ and received reward $r_t$ might not be the same for each time.
 \end{description}
+\hfill
 \\
-\\
-Deterministic environments are, in general, easier to solve as the agent learns to improve the policy without uncertainties in the MDP. 
+\textit{Deterministic environments are, in general, easier to solve as the agent learns to improve the policy without uncertainties in the MDP. }
 
 \subsection{Agent}
 
@@ -291,36 +349,29 @@ This work makes use of the \textit{value based agent} approach which relies on t
 The intuition is that: if the optimal value action-value $Q^*(s',a')$ of the state $s'$ at the next time step $t+1$ was known for all possible actions $a'$, the optimal strategy is to select the action $a'$ which maximizes the expected value of $r+\gamma*Q^*(s',a')$,
 
 \begin{equation}\label{eq:bellman}
-Q^*(s,a)=\mathbb{E}[r+\gamma \max_{a'} Q^*(s',a')] \forall{s}\in{s}, a\in{A}
+Q^*(s,a)=\mathbb{E}[r+\gamma \max_{a'} Q^*(s',a')] \ \forall{s}\in{s},  a\in{A}
 \end{equation}
-
+\\
 The idea behind the many reinforcement learning algorithms which follow the iterative value approach is to estimate the action-value function by using the Bellman equation as an iterative update,
-
 \begin{equation}
 Q_{i+1}(s,a)=\mathbb{E}[r+\gamma \max_{a'}Q_{i}(s',a')]
 \end{equation}
-
-Value iteration algorithms converge to the \textit{optimal action-value} function $Q_{i} \rightarrow Q^*$ as $i \rightarrow \infty$. \cite{sutton1998reinforcement}
-
-\subsubsection{Q-Learning}
-
-One of the reinforcement learning algorithms used in this work is known as Q-Learning. 
-The name derives from the application of the previously presented Q-function (Eq. \ref{eq:q-function}), more specifically its use within the Bellman equation (\ref{eq:bellman}) which is iteratively updated.
 \\
-\\
-The general idea is ... 
+Value iteration algorithms then converge to the \textit{optimal action-value} function $Q_{i} \rightarrow Q^*$ as $i \rightarrow \infty$. \cite{sutton1998reinforcement}
 
 \subsection{Deep Reinforcement Learning}
 
 From \cite{deeprlcourse} goes that: \textit{"Reinforcement learning can be naturally integrated with artificial neural networks to obtain high-quality generalization"}.
-The term \textit{generalization} refers to the action-value function (Eq. \ref{eq:optimal-action-value-function}) and the fact that this value is estimated for each state separately, which becomes totally impractical in for large state spaces that oftentimes occur in real world scenarios.
+The term \textit{generalization} refers to the action-value function (Eq. \ref{eq:optimal-action-value-function}) and the fact that this value is estimated for each state separately--which becomes totally impractical in for large state spaces that can occur in real world scenarios.
 A function approximator is therefore a common choice to to estimate the action-value function instead. Typically a linear function approximator is being used but in deep reinforcement learning, one uses a non-linear function approximator; particularly a neural network with weights $\theta$. The \textit{action value function} therefore becomes
 
 \begin{equation}
 Q(s, a; \theta) \approx Q^*(s,a)
 \end{equation}.
-
+\\
 In terms of the previously described reinforcement pipeline, the use of a function approximator simplifies this process by replacing state estimation and modelling components by a perception:
 \\
 \\
 $Observation \rightarrow Perception \rightarrow Action$
+
+...
