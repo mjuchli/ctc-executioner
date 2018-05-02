@@ -3,34 +3,149 @@
 
 \section{Order Book}
 
-High frequency trading and sophisticated algorithmic trading makes up a substantial part of the participants of the electronic markets. 
-Their servers are oftentimes co-located with the exchanges and specialized computer networks have been constructed to provide millisecond advantage for arbitraging trades between the exchanges. 
-Large institutional traders feel that they are at a disadvantage in such an environment. \cite{patterson2012dark}
+Despite the fact that some of the participants in the market tend to gain a slight advantage over others (see Section \ref{sec:problem-statement}), without these highly active trading participants (also known as \textit{liquidity traders}) the market would suffer from the absence of liquidity.
+The offerings are thereby listed in a \textit{limit order book} indicating the will to buy and sell a given asset for a certain price.
+This section introduces the most popular order types and explains the characteristics of a limit order book.
+We further show how participants can list their orders to appear in the book.
 
-However, without those participants, order execution would become much less stable as there would not be enough liquidity in the market at the time when an investor attempts to buy or sell a significant amount of assets.
+\subsection{Orders}
+\label{sec:orders}
 
-This section explains the characteristics of an order book data structure and how participants list themselves in this book.
+As indicated by the name, an order is an order to buy or sell a stock.
+There are various types of orders which determine how the order that is placed should be executed on the broker side.
+In this section we provide information about the two most common types of orders, namely the \textit{limit order} and the \textit{market order},
+We define the indication on whether to buy or sell as the \textit{Order Side},
+\[OrderSide=\{Buy, Sell\}\]
+\\
+Before we define the order types in greater detail, we conclude what is said above and define the \textit{Order} as,
+\[Order=\{Order_{Limit}, Order_{Market}\}\]
 
-...
+\subsubsection{Limit order}
+\label{sec:limit-order}
+
+A limit order implies the attempt to a stock at a specific price or better,
+\[Order_{Limit}=\{OrderSide, Price_{Limit}, Quantity\}\]
+A buy limit order can only be executed at the limit price or lower, and a sell limit order can only be executed at the limit price or higher \cite{sec-limit-order}.
+More precisely, in case of a buy order and if the best price on the opposing side of the book becomes lower or equals (respectively higher or equals, in case of a sell order), the broker will match those two orders, resulting in a \textit{trade}.
+The disadvantage of this order type is that there is no guarantee whether the order gets executed.
+In case no order on the opposing side appears, the order remains (possibly forever) unexecuted.
+
+\subsubsection{Market order}
+\label{sec:market-order}
+
+A market order implies the attempt to buy or sell a stock at the current market price, expressing the desire to buy (respectively sell) for the best available price. Therefore,
+\[Order_{Market}=\{OrderSide, Quantity\}\]
+\\
+The advantage of a market order is that as long as there are willing buyers and sellers, the execution of the order is almost always guaranteed. \cite{sec-market-order}
+The disadvantage is the price you pay when your order is executed.
+Market orders are executed by starting from the best price of the opposing side, then traversing down the book as liquidity is consumed. 
+Hence, market orders tend to become expensive, especially for large orders.
+
+
+\subsection{Characteristics}
+
+Figure \ref{fig:intro-orderbook} shows a real world example of is known as a limit order book, in this case the snapshot was taken from a known crypto-currency exchange.
+Being precis, this is the state of an order book at some time $t$ and shows the current offerings (in form of limit orders, see \ref{sec:limit-order}) from participants at this moment in time (we neglect the possibility that the state might have been changed during the data sending process). 
+Hence, we refer to it as an \textit{order book state (OS)} and the \textit{order book (OB)} itself is defined as a set of order book states.
+\[
+OB=\{OS_1, ... OS_n\}
+\]
+As we can see, every such state holds entries on the buyer and seller side which change in their \textit{price} and \textit{amount} of what is offered.
+To each such row, which can be formed by participants who submitted limit orders of some amount at the same price level, we refer to as \textit{order book entry (OE)}.
+\[
+OE=\{Count, Price, Amount\}
+\]
+As a result, the order book state is a set of order book entries for each \textit{side} (buy and sell),
+\[
+OS=\{OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n}\}
+\]
+\\
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=10cm]{lob-simple.png}
+    }
+    \caption{Figure taken from \cite{miranda}. Simplified limit order book and provides understanding of some characteristics.}
+    \label{fig:orderbook-simple}
+\end{figure}
+\hfill
+\\
+Figure \ref{fig:orderbook-simple} illustrates a simplified order book, from which we can derived the following definitions:
+
+\begin{description}
+    \item[Quote:] the last price at which a security was traded.
+    This indicates the most recent price on which a buyer and seller agreed upon.
+
+    \item[Book Level:] specifies the position of an order book entry within the side of an order book state. 
+    The number of levels presented depends on the exchange. 
+    In general Level 1 data corresponds to the most basic information which includes best bid and ask price and size as well as the last traded price with its size.
+    Level 2 provides additional insight into the order book entries as the highest (respectively lowest) five to 15 prices are displayed on each side.
+    Level 3 is the highest level of order book entries and includes everything from level 2 plus the ability to enter quotes, execute orders and send information. On traditional stock exchanges, this feature is oftentimes exclusive for market makers. \cite{trading-levels}
+    
+    \item[Market depth:] corresponds to how deep in the order book buyers and sellers have listed offerings.
+    
+    \item[Volume:] the term volume can relate to the total volume traded over a given time horizon, or can indicate the sum of amounts of what is currently offered to a certain price.
+    
+    \item[(Best) Bid:] the term \textit{bid} refers to a price on the buyer side and the best bid represents the highest price for which someone is willing to buy a given asset. 
+    The best bid appears as the first order book entry on the buyer side, closest to the spread.
+    \item[(Best) Ask:] the term \textit{ask} refers to a price on the seller side and the best ask represents the lowest price for which someone is willing to sell a given asset. 
+    The best ask appears as the first order book entry on the seller side, closest to the spread.
+    \item[Market Price:] the average price between the best bid and best ask price.
+    
+    \item[Spread:] the difference between the best bid and best ask.
+    
+    \item[Liquidity:] in an \textit{order driven market}, liquidity is a synonym for the ease of trading.
+    Liquidity provided by parties of the opposing side is what effectively enables one to buy and sell securities.
+    
+    \item[Market Maker:] provides liquidity to the market by posting limit orders which are not immediately executed.
+    In return, the market maker pays less fees than a market taker.
+    
+    \item[Market Taker:] takes liquidity out of the market by either posting either market orders or limit orders which immediately execute.
+\end{description}
+
+
 
 \section{Match Engine}
 \label{sec:match-engine}
 
-Matching engines match buy and sell orders that are submitted to electronic trading networks, like \textit{NASDAQ} or \textit{NYSE} as examples of traditional stock exchanges; or \textit{Bitfinex}, \textit{Bittrex}, \textit{Coinbase} as examples of crypto-currency exchanges.
+Matching engines are responsible for the process of matching buy and sell orders that are submitted to electronic trading networks, like \textit{NASDAQ} or \textit{NYSE} as examples of traditional stock exchanges; or \textit{Bitfinex}, \textit{Bittrex}, \textit{Coinbase} as examples of crypto-currency exchanges.
+Without a local match engine, one would be forced to consult such an exchange and either trade on the live market or get access to a test environment, which can be, if existent, still costly.
+This section, describes the mechanics of a match engine which is used in this project and acts as one of the key components as it enables to simulate and evaluate order placement without the need to consult an electronic trading network.
 
-Without a local match engine, one would be forced to consult such an exchange and either trade on the live market or get access to a test environment, which can be, if existent, still costly. 
+\section{Interface}
 
-This section, describes the mechanics of a match engine, which acts as one of the key components of this project as it enables to simulate and evaluate order placement.
+Alongside the order that is sent to the match engine, directly or via an electronic trading network, the user can specify how long the order should stay active.
+The two most commonly used timing mechanisms are:
+\begin{description}
+    \item[Good Till Time (GTT): ] The order stays in the order book until a specified amount of time is consumed. \textit{(Some implementations declare the same idea as Good Till Date whereas a date and time is provided which specifies until when the order is valid.)}
+    \item[Good-Til-Canceled (GTC): ] The order stays in the order book until the user submits a cancellation.
+\end{description}
 
-...
 
-The behaviour of the mentioned participants are taken into account by feeding historical data.
+\section{Rules}
+
+The rules presented below are, compared to match engines used in electronic trading networks, are rather primitive, yet correct within the subset of its capability.
+The rules used by the order matching engine are mainly derived and simplified from [4]:
+\begin{enumerate}
+    \item Limit orders (defined in see Section \ref{sec:limit-order}) may be partially filled or not filled at all in case of absence of parties on the opposing side.
+    \item Market orders (defined in Section \ref{sec:market-order}) will execute immediately when an opposite order exists in the market.
+    \item Market orders may be partially filled, at different prices, depending on liquidity in the opposing side of the book.
+    \item Limit orders are attempted to be matched from the given point in time forward, or in case of a Good Till Time (GTT) for as long as specified.
+\end{enumerate}
+
+
+\section{Excluded features}
+
+
+- The behaviour of the mentioned participants are taken into account by feeding historical data.
+- serves solely to simulate matching of one order from one participant at a time. Hence, the match engine does not provide any queueing of orders and can only provide insight to the question: "How would an order have matched in a certain state of the market in the past."
+
 
 
 \section{Order execution and placement}
 
 A trader has a variety of options on how to approach a market and fulfill his duties to buy (respectively sell) shares.
-The process to be proceeded in order to do so involves the steps \textit{order execution} and \textit{order placement} for which we give a definition below.
+The process to be proceeded in order to do so involves the steps \textit{order execution} and \textit{order placement} (focus of this thesis) for which we give a definition below.
 In addition to other definitions regarding this process, this section shows an example of the empirical behavior of order execution and provides insight into a previously proceed order placement step using a Support Vector Machine (SVM).
 
 \subsection{Definitions}
@@ -39,6 +154,7 @@ Many useful definitions which highlight the difficulties related to the order ex
 \begin{description}
     \item[Order execution:] concerns about optimally slicing big orders into smaller ones in order to minimize the price impact, that is, on a daily or weekly basis.
     \item[Order placement: ] concerns about optimally placing orders within ten to hundred seconds.
+    Placing hereby refers to the setting of the limit level for a limit order as described in Section \ref{sec:limit-order}.
     \item[Impact cost:] moving the price up by executing large buy orders (respectively down for sell orders) at once. 
     By splitting up a big order (e.g. V shares) into smaller pieces and spreading the execution over a time horizon $H$, the impact cost can be lessened.
     \item[Opportunity cost:] arises when the price moves against our favour while splitting a big order into pieces and delaying execution. 
@@ -186,7 +302,7 @@ In addition, in reinforcement learning problems, the data is not independent and
 \\
 For optimizing order placement in limit order books, statistical approaches have long been the preferred choice.
 While statistics emphasizes inference of a process, machine learning on the other hand emphasizes the prediction of the future with respect to some variable.
-Although the capabilities of influencing a non-trivial procedure using predictions might be tempting, supervised learning machine learning approaches demand to facilitate complex intermediate steps in order to let the learner interact within the process of buying and selling assets.
+Although the capabilities of influencing a non-trivial procedure using predictions might be tempting, supervised learning machine learning approaches demand to facilitate complex intermediate steps in order to let the learner interact within the process of buying and selling securities.
 Reinforcement learning, as mentioned before, provides the capabilities to model the execution process pipeline whereas the learner improves upon the outcome of the submitted orders. \cite{deeprlcourse}
 \\
 \\
@@ -361,7 +477,7 @@ Value iteration algorithms then converge to the \textit{optimal action-value} fu
 
 \subsection{Deep Reinforcement Learning}
 
-From \cite{deeprlcourse} goes that: \textit{"Reinforcement learning can be naturally integrated with artificial neural networks to obtain high-quality generalization"}.
+From \cite{deeprlcourse} goes: \textit{``Reinforcement learning can be naturally integrated with artificial neural networks to obtain high-quality generalization''}.
 The term \textit{generalization} refers to the action-value function (Eq. \ref{eq:optimal-action-value-function}) and the fact that this value is estimated for each state separately--which becomes totally impractical in for large state spaces that can occur in real world scenarios.
 A function approximator is therefore a common choice to to estimate the action-value function instead. Typically a linear function approximator is being used but in deep reinforcement learning, one uses a non-linear function approximator; particularly a neural network with weights $\theta$. The \textit{action value function} therefore becomes
 

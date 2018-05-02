@@ -8,17 +8,20 @@ The following sections will elaborate this problem in detail and state the resea
 We then list the contributions made to the scientific community throughout this work, followed by a brief overview of the structure of this report.
 
 \section{Problem Statement}
+\label{sec:problem-statement}
 
-We are concerned about which are traded at stock exchanges.
+We are concerned about the way assets, specifically \textit{securities} (tradable assets), are traded at stock exchanges.
 Regarding stock exchanges there is little consensus as to when corporate stock was first traded; some argue that the exchange, in the form as we know it today, dates as far back as 1531, when the East Indian Company stock was traded in Antwerp\cite{stock-exchange}.
 Modern financial markets such as the London Stock exchange (LSE), the New York Stock Exchange (NYSE) but also the numerous cryptocurrency exchanges which appeared suddenly in the last few year, all rely on the same very same principles as back then.
-Every participant is either willing to buy or sell a given amount of an asset to, respectively for, a certain price.
+Every participant is either willing to buy or sell a given amount of a security to, respectively for, a certain price.
 
 When in the late '90s the regulatories started to let traders reach into the market using electronic communications networks (ECNs), a new era arose \cite{patterson2012dark}.
-High frequency traders (HFT) and algorithmic traders suddenly gained advantage over the traders who placed their orders manually.
-Nowadays anything else than trading trough electronic channels would be unthinkable.
-This certainly reduced the advantages some parties have over others, however, a certain gap still remains.
-Investors without fibre access to the exchange and supporting algorithms will likely take a small initial loss into account when buying or selling assets -- and might not even be aware of it.
+Since then, high frequency trading and sophisticated algorithmic trading makes up a substantial and ever increasing part of the participants of the electronic markets. 
+Their servers are oftentimes co-located with the exchanges and specialized computer networks have been constructed to provide millisecond advantage for arbitraging trades between the exchanges. 
+Large institutional traders feel that they are at a disadvantage in such an environment. \cite{patterson2012dark}
+While anything else than trading trough electronic channels would be unthinkable of today, a certain gap between trading companies and investors without fibre access to the exchanges or supporting algorithms still exists.
+As a result, the investor takes an initial loss into account when buying or selling securities -- and might not even be aware of it.
+In order to understand why that might be the case, we have to grasp a basic understanding of an order book and how securities are bought at an exchange.
 
 \begin{figure}[H]
     \centering
@@ -26,10 +29,10 @@ Investors without fibre access to the exchange and supporting algorithms will li
         \includegraphics[width=12cm]{orderbook-gdax.png}
     }
     \caption{Order book snapshot: https://www.bitfinex.com/t/BTC:USD}
-    \label{fit:intro-orderbook}
+    \label{fig:intro-orderbook}
 \end{figure}
 
-Figure \ref{fit:intro-orderbook} shows a snapshot taken at some time $t$ from the trading pair Bitcoin (BTC) versus US dollar (USD) taken at the Bitfinex\footnote{https://www.bitfinex.com} cryptocurrency exchange.
+Figure \ref{fig:intro-orderbook} shows a snapshot taken at some time $t$ from the trading pair Bitcoin (BTC) versus US dollar (USD) taken at the Bitfinex\footnote{https://www.bitfinex.com} cryptocurrency exchange.
 The order book shows two sides, the parties who are willing to buy on the left and the parties who are willing to sell on the right.
 The columns indicate the number of buyers and sellers (\textit{count}) who are willing to buy, respectively sell, a certain \textit{amount} for a given \textit{price}.
 The column \textit{total} is simply the cumulative sum of the amount, or volume, on each side.
@@ -59,21 +62,21 @@ This method is known as \textit{quote stuffing}.
 \\
 \\
 Clearly, posting an order is not as trivial as one would think.
-Nevertheless, the prices for some financial products, including cryptocurrencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
+However, the prices for some financial products, including cryptocurrencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
 Thus, placing orders \textit{deeper} in the book and wait could be beneficial.
 According to Guo et. al. \cite{guo2013optimal} algorithmic trading is based on two different time scales: \textit{order execution} concerns about optimally slicing big orders into smaller ones in order to minimize the \textit{price impact}, that is, on a daily or weekly basis.
 \textit{Order placement} on the other hand concerns about optimally placing orders within ten to hundred seconds. 
-In this thesis we are concerned about the latter, which conforms the context of the problem: at which price $p$ should one attempt to buy or sell $i$ shares of an asset and what are the factors that might interfere with our intention to do so, within a time horizon $H$ of 100 seconds.
+In this thesis we are concerned about the latter, which conforms the context of the problem: at which price $p$ should one attempt to buy or sell $i$ shares and which factors might interfere with our intention to do so--within a time horizon $H$ of 100 seconds.
 The fact that reinforcement learning does not require any supervision and instead learns by maximizing rewards, makes this technique unarguably suitable to work within this context.
+As a result a reinforcement learner should be able to foresee on how to place orders according to the given market condition and therefore protect an investor form paying a premium to other participants in the market.
 
 \section{Research objectives}
 
-This work should extend on the findings of Kearns et. al. \cite{nevmyvaka2006reinforcement} with the aim to understand and learn from the outcome of limit order placement in a given market.
+This work extends on the findings of Kearns et. al. \cite{nevmyvaka2006reinforcement} with the aim to understand and learn from the outcome of limit order placement in a given market.
 With this knowledge we should build a reinforcement learner that can act as an intelligent trader and places limit orders such that the outcome is the buy or sell of an asset to a favourable price.
-Therefore we shall build a framework that let us simulate and understand the outcome of order placement and more importantly allows to build reinforcement learning tools on top.
-We further have to reason about what features can be derived from an order book and if there are any patterns that can be detected, such that this information could contribute to the learning process.
+Therefore, we are required to build a framework which lets us simulate and understand the outcome of order placement and more importantly allows to build reinforcement learning tools on top.
+We further have to reason about what kind of features can be derived from an order book and if there are any patterns that can be detected, such that this information could contribute to the learning process.
 Lastly, we shall lay a focus on deep reinforcement learning techniques as this has had great success on learning to play video games \cite{mnih2013playing} based on a history of pixel inputs, but has never been applied to the optimal order placement problem.
-
 Hence, the main objective of this research can be formulated in one sentence: \begin{quote}
     How should one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement, and what are the limitations thereof?".
 \end{quote}
