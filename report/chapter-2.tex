@@ -15,16 +15,25 @@ As indicated by the name, an order is an order to buy or sell a stock.
 There are various types of orders which determine how the order that is placed should be executed on the broker side.
 In this section we provide information about the two most common types of orders, namely the \textit{limit order} and the \textit{market order},
 We define the indication on whether to buy or sell as the \textit{Order Side},
-\[OrderSide=\{Buy, Sell\}\]
+\begin{equation}\label{eq:order-side}
+    OrderSide=\{Buy, Sell\}
+\end{equation}
 \\
 Before we define the order types in greater detail, we conclude what is said above and define the \textit{Order} as,
-\[Order=\{Order_{Limit}, Order_{Market}\}\]
+\begin{equation}\label{eq:order}
+Order=\{Order_{Limit}, Order_{Market}\}
+\end{equation}
 
 \subsubsection{Limit order}
 \label{sec:limit-order}
 
 A limit order implies the attempt to a stock at a specific price or better,
-\[Order_{Limit}=\{OrderSide, Price_{Limit}, Quantity\}\]
+\begin{equation}
+    Order_{Limit}=\{side, quantity, price_{Limit}\}
+\end{equation}
+, where $side \in OrderSide$, $quantity \in \mathbb{R^+}$ and $price_{Limit} \in \mathbb{R^+}$.
+\\
+\\
 A buy limit order can only be executed at the limit price or lower, and a sell limit order can only be executed at the limit price or higher \cite{sec-limit-order}.
 More precisely, in case of a buy order and if the best price on the opposing side of the book becomes lower or equals (respectively higher or equals, in case of a sell order), the broker will match those two orders, resulting in a \textit{trade}.
 The disadvantage of this order type is that there is no guarantee whether the order gets executed.
@@ -34,31 +43,36 @@ In case no order on the opposing side appears, the order remains (possibly forev
 \label{sec:market-order}
 
 A market order implies the attempt to buy or sell a stock at the current market price, expressing the desire to buy (respectively sell) for the best available price. Therefore,
-\[Order_{Market}=\{OrderSide, Quantity\}\]
+\begin{equation}
+Order_{Market}=\{side, quantity\}
+\end{equation}
+, where $side \in OrderSide$ and $quantity \in \mathbb{R^+}$.
+\\
 \\
 The advantage of a market order is that as long as there are willing buyers and sellers, the execution of the order is almost always guaranteed. \cite{sec-market-order}
 The disadvantage is the price you pay when your order is executed.
 Market orders are executed by starting from the best price of the opposing side, then traversing down the book as liquidity is consumed. 
 Hence, market orders tend to become expensive, especially for large orders.
 
-
 \subsection{Characteristics}
+\label{sec:ob-characteristics}
 
 Figure \ref{fig:intro-orderbook} shows a real world example of is known as a limit order book, in this case the snapshot was taken from a known crypto-currency exchange.
 Being precis, this is the state of an order book at some time $t$ and shows the current offerings (in form of limit orders, see \ref{sec:limit-order}) from participants at this moment in time (we neglect the possibility that the state might have been changed during the data sending process). 
 Hence, we refer to it as an \textit{order book state (OS)} and the \textit{order book (OB)} itself is defined as a set of order book states.
-\[
+\begin{equation}
 OB=\{OS_1, ... OS_n\}
-\]
+\end{equation}
 As we can see, every such state holds entries on the buyer and seller side which change in their \textit{price} and \textit{amount} of what is offered.
 To each such row, which can be formed by participants who submitted limit orders of some amount at the same price level, we refer to as \textit{order book entry (OE)}.
-\[
-OE=\{Count, Price, Amount\}
-\]
-As a result, the order book state is a set of order book entries for each \textit{side} (buy and sell),
-\[
-OS=\{OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n}\}
-\]
+\begin{equation}
+OE=\{count, price, amount\}
+\end{equation}
+, whereas $count \in \mathbb{N}$, $price \in \mathbb{R^+}$ and $amount \in \mathbb{R^+}$.
+As a result, the order book state is a set containing order book entries for each \textit{side} (buy and sell) and a time stamp $ts$ of the state,
+\begin{equation}
+OS=\{ts, OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n}\}
+\end{equation}
 \\
 \begin{figure}[H]
     \centering
@@ -110,43 +124,85 @@ Figure \ref{fig:orderbook-simple} illustrates a simplified order book, from whic
 
 Matching engines are responsible for the process of matching buy and sell orders that are submitted to electronic trading networks, like \textit{NASDAQ} or \textit{NYSE} as examples of traditional stock exchanges; or \textit{Bitfinex}, \textit{Bittrex}, \textit{Coinbase} as examples of crypto-currency exchanges.
 Without a local match engine, one would be forced to consult such an exchange and either trade on the live market or get access to a test environment, which can be, if existent, still costly.
-This section, describes the mechanics of a match engine which is used in this project and acts as one of the key components as it enables to simulate and evaluate order placement without the need to consult an electronic trading network.
 
-\section{Interface}
+This section first give the definiton of a trade and subsequently introduces the mechanics of the match engine which is used in this project and acts as one of the key components.
 
-Alongside the order that is sent to the match engine, directly or via an electronic trading network, the user can specify how long the order should stay active.
+\subsection{Trade}
+
+In order to understand the purpose of the matching process, which is described in more detail below, we first have to define what a \textit{trade} is.
+A trade results when the orders (Eq. \ref{eq:order}) from two parties with opposing order side (Eq. \ref{eq:order-side}) agree on an amount and price to trade their shares.
+That is,
+\begin{equation}\label{eq:trade}
+    Trade=\{ ts, side, type, quantity, price \}
+\end{equation}
+, where $ts$ is the time-stamp when the participants agreed on the exchange of the products, $side \in OrderSide$, $type \in OrderType$, $quantity \in \mathbb{R^+}$ and $price \in \mathbb{R^+}$.
+
+\subsection{Interface}
+\label{sec:match-engine-interface}
+
+This match engine enables the simulation and evaluation of order placement without the need to consult an electronic trading network.
+Alongside the order that is sent to the match engine (directly or via an electronic trading network), the user can specify a \textit{time horizon} $H$ indicating how long the order should stay active.
 The two most commonly used timing mechanisms are:
 \begin{description}
     \item[Good Till Time (GTT): ] The order stays in the order book until a specified amount of time is consumed. \textit{(Some implementations declare the same idea as Good Till Date whereas a date and time is provided which specifies until when the order is valid.)}
     \item[Good-Til-Canceled (GTC): ] The order stays in the order book until the user submits a cancellation.
 \end{description}
+\hfill
+\\
+Hence, the match engine exposes an interface that represents a function $match$ which takes any type of an \textit{Order} (Section \ref{sec:orders}) and the time horizon $H$ and returns a sequence of \textit{trade} (Eq. \ref{eq:trade}).
+That is,
+\begin{equation}
+    match : Order \times H \rightarrow Trades
+\end{equation}
+, whereas $|Trades| \in \mathbb{N}$.
+The order is \textit{filled} if the sum of the traded quantity is equal to the amount stated in the submitted order, \textit{partially-filled} if the traded quantity is $> 0$ and \textit{not filled} otherwise.
+\\
+\\
+\textit{The matching process behaves different, depending on the submitted order type, and is explained in the following paragraph.}
 
-
-\section{Rules}
+\subsection{Rules}
 
 The rules presented below are, compared to match engines used in electronic trading networks, are rather primitive, yet correct within the subset of its capability.
 The rules used by the order matching engine are mainly derived and simplified from [4]:
 \begin{enumerate}
-    \item Limit orders (defined in see Section \ref{sec:limit-order}) may be partially filled or not filled at all in case of absence of parties on the opposing side.
+    \item Limit orders (defined in Section \ref{sec:limit-order}) may be partially filled or not filled at all in case of absence of parties on the opposing side.
+    
     \item Market orders (defined in Section \ref{sec:market-order}) will execute immediately when an opposite order exists in the market.
     \item Market orders may be partially filled, at different prices, depending on liquidity in the opposing side of the book.
     \item Limit orders are attempted to be matched from the given point in time forward, or in case of a Good Till Time (GTT) for as long as specified.
 \end{enumerate}
 
 
-\section{Excluded features}
+\subsection{Limitations}
 
-
-- The behaviour of the mentioned participants are taken into account by feeding historical data.
-- serves solely to simulate matching of one order from one participant at a time. Hence, the match engine does not provide any queueing of orders and can only provide insight to the question: "How would an order have matched in a certain state of the market in the past."
+Since the match engine used in this project is a rudimentary implementation for the purpose of simulating and analyzing order execution and placement, it features only a subset a conventional match engine used by electronic trading networks.
+That said, the following limitations have to be taken into consideration:
+\begin{description}
+    \item[Participants:] first and foremost, the match engine is used locally where no other participants are interacting during its use.
+    In order to be able to approximate the most likely outcome, historical data serves as a simulation of participants acting in the market.
+    While this is valuable real world data, unfortunately it does not cover 1) the possibility of hidden participants entering or 2) leaving the market upon placing an order from our side.
+    Participants who would enter the market would likely be in our favour as they would act as potential buyers and sellers and therefore provide liquidity.
+    Participants who leave the market would introduce a slight disadvantage as there would be less liquidity.
+    Since both parties are absent, we consider our implementation as a good approximation without a major advantage or disadvantage.
+    
+    \item[Ordering]this match engine is restricted to simulate the matching of only one order from one participant at a time.
+    Hence, any type of ordered processing of incoming orders (typically solved with a queuing system) is not supported.
+    However, this functionality is also not required for our purposes.
+    
+    \item[Timing inaccuracy:] occurs when submitting an order with a time horizon (see Section \ref{sec:match-engine-interface}).
+    The fact that we rely on historical data and the time stamps of the orders submitted from participants in the past is a limitation when submitting an order over a certain period of time (GTT).
+    It can occur that at the end of the period the order would have some time $t$ left (e.g. a few seconds) but the next following order book state is nearer to the future than $t$ would allow.
+    We therefore have to abort the matching process early.
+    
+\end{description}
 
 
 
 \section{Order execution and placement}
 
 A trader has a variety of options on how to approach a market and fulfill his duties to buy (respectively sell) shares.
-The process to be proceeded in order to do so involves the steps \textit{order execution} and \textit{order placement} (focus of this thesis) for which we give a definition below.
-In addition to other definitions regarding this process, this section shows an example of the empirical behavior of order execution and provides insight into a previously proceed order placement step using a Support Vector Machine (SVM).
+The process to do so involves the following two steps: \textit{order execution} and \textit{order placement}, whereas the latter is the main subject of this thesis.
+A specific definition is given below.
 
 \subsection{Definitions}
 
@@ -160,27 +216,21 @@ Many useful definitions which highlight the difficulties related to the order ex
     \item[Opportunity cost:] arises when the price moves against our favour while splitting a big order into pieces and delaying execution. 
     Therefore the opportunity to execute at a better price.
     \item[Execution strategy:] optimizes trade-off between impact cost and opportunity cost and therefore trying to find best execution.
+    
     \item[Placement strategy:] optimizes the trade-off between opportunity cost and paying a premium while proceeding an execution strategy.
+    
 \end{description}
 
-\subsection{Empirical behavior}
+\subsection{Relevant factors}
 
-Kearns et. al. \cite{nevmyvaka2005electronic} determine which limit order price results in the most advantageous execution price.
-An approach is presented on how to measure the \textit{return} of an execution.
-
-fig 
-
-Risk is being defined as the standard deviation the returns. 
-
-fig
-
-Lastly, they combine the two techniques and derive the efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}) which shows the trade-off between the risk and return.
-
-fig
-
-\subsection{Order placement approach}
-
-...
+According to [6], the factors which have an impact on order execution can be categorized into \textit{private variables} $P$ and \textit{market variables} $M$:
+\begin{description}
+    \item[Private Variables:] include the \textit{amount of time} $t$ that is remaining in order to execute a given \textit{inventory} $i$ of shares.
+    The execution can be of either subject: buy or sell.
+    \item[Market Variables:] reflect the condition of the market at the time of the execution.
+    The condition of the market is conformed by the infinite constellations of characteristics  within an order book as described in Section \ref{sec:ob-characteristics}.
+    
+\end{description}
 
 
 \section{Time series}
@@ -294,24 +344,34 @@ Therefore, when a decision made in a system affects the future decisions and eve
 \\
 In reinforcement learning there is no supervision and instead an agent learns by maximizing rewards.
 The feedback retrieved while proceeding a task with a sequence of actions might be delayed over several time steps and hence the agent might spend some time exploring until it finally reaches the goal and can updates its strategy accordingly.
+This process can be regarded as \textit{end-to-end learning} and is illustrated in Figure \ref{fig:rl-pipeline}.
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=12cm]{rl-pipeline.png}
+    }
+    \caption{Reinforcement learning end-to-end learning pipeline}
+    \label{fig:rl-pipeline}
+\end{figure}
+The agent makes an \textit{observation} of its environment and estimates a \textit{state} for which it \textit{models and predicts} the \textit{action} to be taken.
+Once the action was executed, the agent receives a \textit{reward} and will take this into consideration during during the prediction phases in the future. 
+\hfill
+\\
+\\
+In other machine learning paradigms, such as supervised learning, the algorithm learns by presenting a specific situation provided with the right action to do. 
+From there, the algorithm tries to generalize the model.
+In addition, for reinforcement learning problems, the data is not independent and identically distributed (I.I.D). 
+The agent might in fact, while exploring, miss out on some important parts to learn the optimal behaviour. 
+Hence, time is crucial as the agent must explore as many parts of the environment to be able to take the appropriate actions. \cite{rl-demystified}
 
-This process can be regarded as \textit{end-to-end learning}, and is unlike other machine learning paradigms.
-In supervised learning techniques, for example, the algorithm learns by presenting a specific situation provided with the right action to do. From there, the algorithm tries to generalize the model.
-In addition, in reinforcement learning problems, the data is not independent and identically distributed (I.I.D). The agent might in fact, while exploring, miss out on some important parts to learn the optimal behaviour. Hence, time is crucial as the agent must explore as many parts of the environment to be able to take the appropriate actions. \cite{rl-demystified}
-\\
-\\
+\subsection{Reinforcement Learning in context}
 For optimizing order placement in limit order books, statistical approaches have long been the preferred choice.
 While statistics emphasizes inference of a process, machine learning on the other hand emphasizes the prediction of the future with respect to some variable.
 Although the capabilities of influencing a non-trivial procedure using predictions might be tempting, supervised learning machine learning approaches demand to facilitate complex intermediate steps in order to let the learner interact within the process of buying and selling securities.
 Reinforcement learning, as mentioned before, provides the capabilities to model the execution process pipeline whereas the learner improves upon the outcome of the submitted orders. \cite{deeprlcourse}
 \\
 \\
-A generic end-to-end learning pipeline is as follows:
-
-$Observation \rightarrow State estimation \rightarrow Modelling & Prediction \rightarrow Action$
-\\
-\\
-Since we are working with financial systems, let us assume we want to buy and sell stocks on a stock exchange. 
+\textbf{Example:} Since we are working with financial systems, let us assume we want to buy and sell stocks on a stock exchange. 
 In reinforcement learning terms, the trader is represented as an \textit{agent} and the exchange is the \textit{environment}.
 The details of the environment do not have to be known as it is rather regarded as a black-box.
 The agents purpose is to observe the state of the environment: say for example the current price of a stock.
