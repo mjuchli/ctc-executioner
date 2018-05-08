@@ -59,6 +59,52 @@ Lastly, both techniques were combined and result in an efficient pricing frontie
 In this example, the point of minimum risk is at $(8, 18)$ and the point of maximum returns at $(29, 9)$.
 With this technique a trader can decide upon an execution strategy by choosing how much risk and return he is willing to take, and then translate the coordinates back into the corresponding limit level.
 
-\section{Statistical approaches}
+\section{Statistical approach}
+
+Profound work in a statistical context has been done by Chaiyakorn Yingsaeree in his dissertation \cite{yingsaeree2012algorithmic}.
+A framework is proposed for making order placement decisions based on the trade-off between the profit gained from favorable execution prices and the risk of non-execution.
+An execution probability model was developed which estimates the expected payoff (e.g. return) and its variance ($\implies$ risk) while placing orders at a certain limit level, followed by the application of \textit{mean variance optimization} to balance the trade-off.
+
+The framework allows the application of the \textit{liquidity trader problem}, where shares have to be bought using a market order in case the limit order was not filled completely. 
+Although this being the main subject of our thesis, we provide an overview of the framework without specific application only, as this would exceed the scope of this overview.
+\\
+\\
+The strategy is to buy $x$ shares in time $T$, whereas the trader is left with the following options:
+\begin{enumerate}
+    \item Do nothing.
+    \item Submit market order at $t=0$ for price $p_{0}^M$
+    \item Submit market order at $t=T$ for price $p_{T}^M$
+    \item Submit limit order for price $p^L$. If the order is not filled either a market order follows or no action is taken (depending on the use case).
+\end{enumerate}
+\hfill
+\\
+A function $U_{E}(p)$ defines the payoff in case of an execution at a price $p$, and a function $U_{NE}(p)$ defines the cost if the order is not executed at the end of the period with market price $p$. 
+Consequently, the payoff the trader will receive from submitting a limit buy order at price level $L$ is defined as,
+\begin{equation}
+    U(p^L) = \begin{cases}
+                U_E(p), & \text{if order is executed}.\\
+                U_{NE}(p_T^M), & \text{if not executed}.
+             \end{cases}
+\end{equation}
+\hfill
+\\
+The expected price is compounded of the probability that the limit order at price $p^L$ will be executed before the end of the period together with the distribution of the asset price at the end of the period,
+\begin{equation}
+    \mathbb{E}[U(p^L)] = P_E(p^L)\ U(p^L) + [1-P_E(p^L)] \int_{-\infty}^{\infty} U_{NE}(p) f_{p_M^T | p^L}(p) dp
+\end{equation}
+, whereas $P_E(p^L)$ is the probability that the limit order at price $p^L$ will be executed before the end of the period, and $f_{p_M^T | p^L}(.)$ is the probability density function of the asset price at the end of the period. 
+\\
+Similarly, the variance was drawn as $V[U(p^L)]$ followed by a mean variance optimization step which introduced the utility function,
+\begin{equation}
+    U_O(p^L) = \mathbb{E}[U(p^L)] - \lambda V[U(p^L)]
+\end{equation}
+, whereas $\lambda$ serves as a risk factor.
+That is, when $\lambda=0$ the trader is concerned about the profit only, and when $\lambda=1$ the trader is equally concerned about profit and risk and missed opportunities.
+\\
+As a result, the trade-off between profit and risk is defined as,
+\begin{equation}
+    \hat{p} = \arg\max_{p^L}\ U_O(p^L)
+\end{equation}
+
 
 \section{Machine Learning approaches}
