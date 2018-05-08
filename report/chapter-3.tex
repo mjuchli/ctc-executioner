@@ -1,20 +1,63 @@
 \chapter{Related Work}
 \label{chap:related-work}
 
-\section{Execution behaviour}
+The literature for the order placement problem is, relative to the execution problem, sparse (confirmed by Guo et al. \cite{guo2013optimal}).
+In this Chapter we provide an overview of the related work, upon which this project is built on or insight was taken from.
+We first give insight into an empirical study about the general behavior of order placements, which serves as a conceptual basis for this project.
+Subsequently, a statistical approach is presented to provide contrast to the following overview of previous machine learning approaches.
+The latter serve as a guideline on how to model the reinforcement learning process of this thesis.
 
-Kearns et. al. \cite{nevmyvaka2005electronic} determine which limit order price results in the most advantageous execution price.
-An approach is presented on how to measure the \textit{return} of an execution.
+\section{Execution/Placement behaviour}
 
-fig 
+Kearns et al. \cite{nevmyvaka2005electronic} determine which limit order price results in the most advantageous execution price.
+At first, the \textit{expected execution price} is investigated with respect to the placement of the limit order. 
+Based on this analysis the standard deviation of the resulted prices will uncover the \textit{risk} that comes along with limit order placement. 
+Finally, by combining the previous two results, an \textit{efficient pricing frontier} can be drawn which highlights the trade-off between risk and returns.
 
-Risk is being defined as the standard deviation the returns. 
+Regarding the definition stated in Section \ref{sec:execution-placement}, their research is in between order execution and placement.
+No splitting of orders is being done, however, a time horizon of several hours was chosen, resulting in an evaluation of order placement with an extended time horizon.
 
-fig
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{kearns-return.png}
+    }
+    \caption{Taken from \cite{nevmyvaka2005electronic} and illustrates the pricing strategy that produces the most favorable expected execution price.}
+    \label{fig:kearns-return}
+\end{figure}
 
-Lastly, they combine the two techniques and derive the efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}) which shows the trade-off between the risk and return.
+Their first approach was to measure the \textit{return} of an execution using the \textit{volume weighted average price} as suggested previously described in Section \ref{sec:execution-definition}.
+Figure \ref{fig:kearns-return} shows the return (y-axis) of the expected execution price while acquiring 10,000 shares of MSFT within one hour.
+The x-axis represents the limit level reaching from -\$50 to +\$100.
+As it is evident from the figure, the most favorable expected execution price occurs when setting the limit price close to the price of the spread, yet on the buyer side with a price approximately \$10 lower than what is currently offered.
+The return becomes worse when placing orders more deep in the order book (meaning offering a lower price) as the orders then to not get filled within an hours and instead the inventory has to be bought with a market order at the end of the period.
+Likewise, the return can be expected to be lower when placing the order higher in the order book (e.g. deeper in the opposing side of the book, meaning one is willing to pay more).
+This is due to the fact that the order is being filled instantly by paying a premium.
 
-fig
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{kearns-std.png}
+    }
+    \caption{Taken from \cite{nevmyvaka2005electronic} and illustrates the uncertainty of the expected execution price.}
+    \label{fig:kearns-std}
+\end{figure}
+
+Risk is being defined as the standard deviation of the returns and is illustrated on the y-axis in Figure \ref{fig:kearns-std}.
+Evidently, orders which are placed deep in either of the sides of the book are less likely to be executed and come with a higher uncertainty around the final price.
+
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{kearns-frontier.png}
+    }
+    \caption{Taken from \cite{nevmyvaka2005electronic} and illustrates the trade-off between risk and return indicated with the efficient pricing frontier.}
+    \label{fig:kearns-frontier}
+\end{figure}
+
+Lastly, both techniques were combined and result in an efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}). Therefore, Figure \ref{fig:kearns-frontier} shows the trade-off between the risk (x-axis) and return (y-axis).
+In this example, the point of minimum risk is at $(8, 18)$ and the point of maximum returns at $(29, 9)$.
+With this technique a trader can decide upon an execution strategy by choosing how much risk and return he is willing to take, and then translate the coordinates back into the corresponding limit level.
 
 \section{Statistical approaches}
 

@@ -10,17 +10,17 @@ We then list the contributions made to the scientific community throughout this 
 \section{Problem Statement}
 \label{sec:problem-statement}
 
-We are concerned about the way assets, specifically \textit{securities} (tradable assets), are traded at stock exchanges.
+We are concerned about the way assets, specifically \textit{securities} (exchange traded assets), are traded at stock exchanges.
 Regarding stock exchanges there is little consensus as to when corporate stock was first traded; some argue that the exchange, in the form as we know it today, dates as far back as 1531, when the East Indian Company stock was traded in Antwerp\cite{stock-exchange}.
 Modern financial markets such as the London Stock exchange (LSE), the New York Stock Exchange (NYSE) but also the numerous cryptocurrency exchanges which appeared suddenly in the last few year, all rely on the same very same principles as back then.
 Every participant is either willing to buy or sell a given amount of a security to, respectively for, a certain price.
 
 When in the late '90s the regulatories started to let traders reach into the market using electronic communications networks (ECNs), a new era arose \cite{patterson2012dark}.
-Since then, high frequency trading and sophisticated algorithmic trading makes up a substantial and ever increasing part of the participants of the electronic markets. 
+Since then, high frequency trading (HFT) and sophisticated algorithmic trading makes up a substantial and ever increasing part of the participants of the electronic markets. 
 Their servers are oftentimes co-located with the exchanges and specialized computer networks have been constructed to provide millisecond advantage for arbitraging trades between the exchanges. 
 Large institutional traders feel that they are at a disadvantage in such an environment. \cite{patterson2012dark}
 While anything else than trading trough electronic channels would be unthinkable of today, a certain gap between trading companies and investors without fibre access to the exchanges or supporting algorithms still exists.
-As a result, the investor takes an initial loss into account when buying or selling securities -- and might not even be aware of it.
+As a result, investors are forced to take an initial loss into account when buying or selling securities -- and might not even be aware of it.
 In order to understand why that might be the case, we have to grasp a basic understanding of an order book and how securities are bought at an exchange.
 
 \begin{figure}[H]
@@ -42,7 +42,7 @@ Therefore, the spread is currently \$20.00 wide.
 \\
 \\
 Suppose we want to buy 1.0 BTC.
-In simplified terms, there are essentially two possible ways to do so:
+Two possible ways to do so are:
 \begin{enumerate}
     \item Buy $i$ shares (1.0) right away for \$14,930.00 from a seller. We submit a \textit{market} order.
     \item State a price for which we are willing to to buy $i$ shares (1.0) at price $p$, for example at \$14'910.00, and wait until someone is willing to sell for this price. We submit a \textit{limit} order.
@@ -63,10 +63,14 @@ This method is known as \textit{quote stuffing}.
 \\
 Clearly, posting an order is not as trivial as one would think.
 However, the prices for some financial products, including cryptocurrencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
+In addition, there might be buyers and sellers in the near future which would consume our order.
 Thus, placing orders \textit{deeper} in the book and wait could be beneficial.
+
 According to Guo et. al. \cite{guo2013optimal} algorithmic trading is based on two different time scales: \textit{order execution} concerns about optimally slicing big orders into smaller ones in order to minimize the \textit{price impact}, that is, on a daily or weekly basis.
 \textit{Order placement} on the other hand concerns about optimally placing orders within ten to hundred seconds. 
-In this thesis we are concerned about the latter, which conforms the context of the problem: at which price $p$ should one attempt to buy or sell $i$ shares and which factors might interfere with our intention to do so--within a time horizon $H$ of 100 seconds.
+In this thesis we are concerned about the latter, which conforms the context of the problem: 
+at which price $p$ should one attempt to buy or sell $i$ shares and which factors might interfere with our intention to do so--within a time horizon $H$ of 100 seconds?
+
 The fact that reinforcement learning does not require any supervision and instead learns by maximizing rewards, makes this technique unarguably suitable to work within this context.
 As a result a reinforcement learner should be able to foresee on how to place orders according to the given market condition and therefore protect an investor form paying a premium to other participants in the market.
 
@@ -75,8 +79,8 @@ As a result a reinforcement learner should be able to foresee on how to place or
 This work extends on the findings of Kearns et. al. \cite{nevmyvaka2006reinforcement} with the aim to understand and learn from the outcome of limit order placement in a given market.
 With this knowledge we should build a reinforcement learner that can act as an intelligent trader and places limit orders such that the outcome is the buy or sell of an asset to a favourable price.
 Therefore, we are required to build a framework which lets us simulate and understand the outcome of order placement and more importantly allows to build reinforcement learning tools on top.
-We further have to reason about what kind of features can be derived from an order book and if there are any patterns that can be detected, such that this information could contribute to the learning process.
-Lastly, we shall lay a focus on deep reinforcement learning techniques as this has had great success on learning to play video games \cite{mnih2013playing} based on a history of pixel inputs, but has never been applied to the optimal order placement problem.
+We further have to reason about what kind of features can be derived from an order book and if there are any patterns that can be detected, such that the extracted information could contribute to the learning process.
+Lastly, we shall lay a focus on deep reinforcement learning techniques as this has had great success on learning to play video games \cite{mnih2013playing} based on a history of pixel inputs, but has never been applied to the optimal order placement problem, even though the structure of order book data seems similar.
 Hence, the main objective of this research can be formulated in one sentence: \begin{quote}
     How should one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement, and what are the limitations thereof?".
 \end{quote}
@@ -87,15 +91,16 @@ This thesis makes use of concepts from various research communities in order to 
 The particular contributions made throughout the project are:
 \begin{itemize}
     \item \textit{Information retrieval} techniques are provided in order to collect and process financial data sets.
-    \item \textit{Software engineering} contributions to a simulation of a rudimentary stock exchange and a set of tools that can be used for data science purposes.
-    \item \textit{Reinforcement learning} is the main contribution. Various approaches are developed and investigated related to \textit{order placement} and \textit{market making}.
+    \item \textit{Software engineering} contributions are made to provide a simulation of a rudimentary stock exchange and a set of tools that can be used for data science purposes.
+    \item \textit{Reinforcement learning} is the main contribution. 
+    Various approaches are developed and investigated related to \textit{order placement} and \textit{market making}.
     In addition, reinforcement learning environments are contributed to the OpenAI Gym community\footnote{https://github.com/openai/gym}.
 \end{itemize}
 
 
 \section{Document structure}
 
-We first provide in Chapter \ref{chap:preliminaries} background information to the reader concerning the components of a stock exchange and the fundamentals of the closely related time series.
+In Chapter \ref{chap:preliminaries} we first provide background information to the reader concerning the components of a stock exchange and the fundamentals of the closely related time series.
 We further make the reader familiar with (Deep) Reinforcement Learning.
 In Chapter \ref{chap:related-work} we elaborate on the behaviour of order execution followed by approaches of both statistical and machine learning nature.
 Chapter \ref{chap:data} explains the process of data collection and its preparation which was done prior its use in the following chapters.

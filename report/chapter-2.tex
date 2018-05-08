@@ -13,7 +13,7 @@ We further show how participants can list their orders to appear in the book.
 
 As indicated by the name, an order is an order to buy or sell a stock.
 There are various types of orders which determine how the order that is placed should be executed on the broker side.
-In this section we provide information about the two most common types of orders, namely the \textit{limit order} and the \textit{market order},
+In this section we provide information about the two most common types, namely the \textit{limit order} and the \textit{market order},
 We define the indication on whether to buy or sell as the \textit{Order Side},
 \begin{equation}\label{eq:order-side}
     OrderSide=\{Buy, Sell\}
@@ -27,7 +27,7 @@ Order=\{Order_{Limit}, Order_{Market}\}
 \subsubsection{Limit order}
 \label{sec:limit-order}
 
-A limit order implies the attempt to a stock at a specific price or better,
+A limit order implies the attempt to buy or sell a stock at a specific price or better,
 \begin{equation}
     Order_{Limit}=\{side, quantity, price_{Limit}\}
 \end{equation}
@@ -57,16 +57,16 @@ Hence, market orders tend to become expensive, especially for large orders.
 \subsection{Characteristics}
 \label{sec:ob-characteristics}
 
-Figure \ref{fig:intro-orderbook} shows a real world example of is known as a limit order book, in this case the snapshot was taken from a known crypto-currency exchange.
-Being precis, this is the state of an order book at some time $t$ and shows the current offerings (in form of limit orders, see \ref{sec:limit-order}) from participants at this moment in time (we neglect the possibility that the state might have been changed during the data sending process). 
+Figure \ref{fig:intro-orderbook} shows a real world example of a limit order book; in this case the snapshot was taken from a known crypto-currency exchange.
+Being precise, this is the \textit{state} of an order book at some time $t$ and shows the current offerings (in form of limit orders, see \ref{sec:limit-order}) from participants at this moment in time (we neglect the possibility that the state might have been changed during the data sending process). 
 Hence, we refer to it as an \textit{order book state (OS)} and the \textit{order book (OB)} itself is defined as a set of order book states.
 \begin{equation}
 OB=\{OS_1, ... OS_n\}
 \end{equation}
-As we can see, every such state holds entries on the buyer and seller side which change in their \textit{price} and \textit{amount} of what is offered.
-To each such row, which can be formed by participants who submitted limit orders of some amount at the same price level, we refer to as \textit{order book entry (OE)}.
+As we can see, every such state holds entries on the buyer and seller side which change in their \textit{price} and \textit{amount}.
+To each such row, which can be formed by participants who submitted limit orders of some amount at the same price level, we refer to as \textit{order book entry ($OE_{s_l}$)} of the side $s$ at level $l$.
 \begin{equation}
-OE=\{count, price, amount\}
+OE_{s_l}=\{count, price, amount\}
 \end{equation}
 , whereas $count \in \mathbb{N}$, $price \in \mathbb{R^+}$ and $amount \in \mathbb{R^+}$.
 As a result, the order book state is a set containing order book entries for each \textit{side} (buy and sell) and a time stamp $ts$ of the state,
@@ -118,7 +118,6 @@ Figure \ref{fig:orderbook-simple} illustrates a simplified order book, from whic
 \end{description}
 
 
-
 \section{Match Engine}
 \label{sec:match-engine}
 
@@ -163,12 +162,14 @@ The order is \textit{filled} if the sum of the traded quantity is equal to the a
 \subsection{Rules}
 
 The rules presented below are, compared to match engines used in electronic trading networks, are rather primitive, yet correct within the subset of its capability.
-The rules used by the order matching engine are mainly derived and simplified from [4]:
+The rules used by the order matching engine are mainly derived and simplified from \cite{match-engine}:
 \begin{enumerate}
     \item Limit orders (defined in Section \ref{sec:limit-order}) may be partially filled or not filled at all in case of absence of parties on the opposing side.
     
     \item Market orders (defined in Section \ref{sec:market-order}) will execute immediately when an opposite order exists in the market.
+    
     \item Market orders may be partially filled, at different prices, depending on liquidity in the opposing side of the book.
+    
     \item Limit orders are attempted to be matched from the given point in time forward, or in case of a Good Till Time (GTT) for as long as specified.
 \end{enumerate}
 
@@ -199,12 +200,14 @@ That said, the following limitations have to be taken into consideration:
 
 
 \section{Order execution and placement}
+\label{sec:execution-placement}
 
 A trader has a variety of options on how to approach a market and fulfill his duties to buy (respectively sell) shares.
 The process to do so involves the following two steps: \textit{order execution} and \textit{order placement}, whereas the latter is the main subject of this thesis.
 A specific definition is given below.
 
 \subsection{Definitions}
+\label{sec:execution-definition}
 
 Many useful definitions which highlight the difficulties related to the order execution domain were stated by Lim et al. \cite{lim2005optimal} and Guo et al. \cite{guo2013optimal}:
 \begin{description}
@@ -219,11 +222,19 @@ Many useful definitions which highlight the difficulties related to the order ex
     
     \item[Placement strategy:] optimizes the trade-off between opportunity cost and paying a premium while proceeding an execution strategy.
     
+    \item[Return:] the return of an order execution or placement is the difference between the price before the action was placed and the resulted price paid (respectively received) in order to fill the entire order.
+    Literature suggests (\cite{nevmyvaka2006reinforcement}) to use the \textit{volume weighted average price} as the return.
+    That is,
+    \begin{equation}
+        VAP=\frac{\sum{v_p*p}}{V}
+    \end{equation}
+    , whereas $p$ is the price paid for $v_p$ shares and $V$ represents the total volume of shares.
+    
 \end{description}
 
 \subsection{Relevant factors}
 
-According to [6], the factors which have an impact on order execution can be categorized into \textit{private variables} $P$ and \textit{market variables} $M$:
+According to \cite{nevmyvaka2006reinforcement}, the factors which have an impact on order execution can be categorized into \textit{private variables} $P$ and \textit{market variables} $M$:
 \begin{description}
     \item[Private Variables:] include the \textit{amount of time} $t$ that is remaining in order to execute a given \textit{inventory} $i$ of shares.
     The execution can be of either subject: buy or sell.
@@ -543,11 +554,14 @@ A function approximator is therefore a common choice to to estimate the action-v
 
 \begin{equation}
 Q(s, a; \theta) \approx Q^*(s,a)
-\end{equation}.
+\end{equation}
 \\
-In terms of the previously described reinforcement pipeline, the use of a function approximator simplifies this process by replacing state estimation and modelling components by a perception:
-\\
-\\
-$Observation \rightarrow Perception \rightarrow Action$
-
-...
+In terms of the previously described reinforcement pipeline, the use of a function approximator simplifies this process by replacing state estimation and modelling components by a perception, as shown in Figure \ref{fig:drl-pipeline}:
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=12cm]{drl-pipeline.png}
+    }
+    \caption{Deep Reinforcement learning end-to-end learning pipeline}
+    \label{fig:drl-pipeline}
+\end{figure}
