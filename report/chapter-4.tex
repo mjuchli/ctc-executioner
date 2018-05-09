@@ -3,16 +3,25 @@
 
 In the crypto-currency domain, real-time price data is, for most exchanges, freely available. Historical data is oftentimes limited with respect to how far back into past the data is being provided. However, continuously recording real-time data results in a complete historical data set from the time when recording was started and provides the desired data set for this research.
 
-In this chapter we explain the structure and process of data collection and subsequently how a historical order book was formed thereof.
+A historical limit order book consisting of states which stores all the bids and asks posted from traders in the past is commonly referred to as a \textit{complete order book}.
+The process to accumulate the data and build the order book is illustrated in a high level pipeline in Figure \ref{fig:data-pipeline} below.
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{data-pipeline.png}
+    }
+    \caption{Data collection pipeline}
+    \label{fig:data-pipeline}
+\end{figure}
+\hfill
+In this chapter we explain the details of the collection process process and subsequently how a historical order book was formed thereof.
+We further analyze a collected data set and visualize its key elements.
 
 \section{Collection}
 
-The data required for this project is a historical limit order book consisting of states which stores all the bids and asks posted from traders in the past.
-This is commonly referred to as a \textit{complete order book}.
 There are various ways in order to build a copy of a historical limit order book. However, the only way to rebuild a complete order book is by processing market \textit{events}, that is, every market update for a given ticker (trading pair).
-
-\subsection{Data Source}
-
+\\
+\\
 Our exchange of choice for collecting data is Bittrex\footnote{https://bittrex.com/} as the exchange provides a \textit{SignalR}\footnote{https://docs.microsoft.com/en-us/aspnet/signalr/overview/getting-started/introduction-to-signalr} (a library that abstracts \textit{HTTP} and \textit{WebSocket}) interface from which one can extract all status updates (events) from the market.
 More specifically, an event in this either a buy- or sell order, or a fill (e.g. trade).
 Thus, we subscribe to \texttt{https://socket.bittrex.com/signalr} and filter the data field \texttt{M} for \texttt{updateExchangeState}.
@@ -34,7 +43,11 @@ We segment those events into separate update events, whereas each event expresse
 , whereas $isTrade \in \{0,1\}$ and $isBid \in \{0,1\}$ indicating whether the update contains an order or a trade. 
 Consequently, $order \in Order_{Limit}$ and $trade \in Trade$.
 
-\subsection{Data Format}
-
 
 \section{Order book generation}
+
+The next step is to transform the collected events into an order book structure.
+For performance reasons we introduce an intermediate dictionary as a primitive representation into which the events are stored while chronologically iterating over the collected event data.
+
+\section{Visualization of data set}
+
