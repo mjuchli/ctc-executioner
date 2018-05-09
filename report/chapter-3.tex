@@ -108,4 +108,43 @@ As a result, the trade-off between profit and risk is defined as,
 \end{equation}
 
 
-\section{Machine Learning approaches}
+\section{Supervised Learning approach}
+
+Fletcher et al. \cite{fletcher2010multiple} investigates order books to find patterns which can be exploited with the aim of forecasting movement of bid and ask prices at time $t+\Delta{t}$.
+Although this is not directly applied to optimize order placement, the prediction can certainly be used as the limit price to be set while placing an order.
+
+SVM classification techniques with different kernels along with two Multiple Kernel Learning (MKL) techniques, SimpleMKL, were used.
+It is a multi-class setup with three labels, A: $P_{t+\Delta{t}}^{Bid} > P_t^{Ask}$, B: $P_{t+\Delta{t}}^{Ask} < P_t^{Bid}$ and C: $P_{t+\Delta{t}}^{Bid} < P_t^{Ask}, P_{t+\Delta{t}}^{Ask} > P_t^{Bid}$.
+The feature used is the volume at time $t$ at each of the price levels of the order book on both sides as a vector $V_t$.
+A set of features was constructed that contains volumes from the current time $t$ and previous time step $t-1$.
+
+With a time delta ($\Delta{t}$) of 100 seconds, an accuracy of 51\% was achieved.
+A shorter time delta results in significantly better performance, however, this is mostly due to the fact of accurate zero movement prediction.
+An increased time delta results in significatnly worse prediction accuracy.
+
+\section{Reinforcement Learning approach}
+
+A large-scale empirical application of reinforcement learning to optimize trade execution is presented by Kearns et al. \cite{nevmyvaka2006reinforcement}.
+Although the title of their research suggests otherwise, according to our definition in Section \ref{sec:execution-definition}, their work is related to order placement with a larger time horizon $H$ (2 minutes and 8 minutes).
+Hence, their research objective is defined as:
+\begin{quote}
+    The goal is to sell (respectively, buy) V shares of a given stock within a fixed time period (or horizon) H, in a manner that maximizes the revenue received (respectively, minimizes the capital spent).
+\end{quote}
+They built a reinforcement learning based on 1.5 years of millisecond time-scale limit order data from NASDAQ.
+The investigation included three stocks: AMZN, NVDA, and QCOM; each with an inventory $I$ of 5000 shares.
+The achieved relative improvement over a submit-and-leave strategy ranges from 27.16\% to 35.50\%.
+An additional improvement of 12.85\% was achieved by considering the following market variables: Spread, Immediate Cost, Signed Volume.
+\\
+\\
+The architecture developed is as follows:
+\begin{description}
+    \item[States:] are represented by a vector $x \in X$ and correspond to the observation state.
+    With that said, the partially observable environment is then treated to be fully observable.
+    \item[Actions:] ($a \in A$) represent the limit price relative to the current ask price, $ask - a$. That is, action $a = 0$ is the ask price, $a < 0$ is a limit price deep in the book and $a > 0$ is a limit order on the opposing side of the book.
+    \item[Rewards:] represent the VWAP (Eq. \ref{eq:vwap}) of the executed order relative to the bid-ask mid price ($(ask + bid) / 2$).
+    In case the order was not filled completely at the end of the time horizon H, then a market order follows.
+    \item[Algorithm:] a slightly adapted version of the Q-Learning algorithm was developed by the authors which explores the state space inductively.
+    Starting from $t=T...0$ the algorithm explores the inventories $i=0...I$.
+    For each such step, all possible actions in this state are evaluated, leading to the most rewarding strategy for $t=0$.
+    
+\end{description}

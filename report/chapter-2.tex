@@ -225,8 +225,8 @@ Many useful definitions which highlight the difficulties related to the order ex
     \item[Return:] the return of an order execution or placement is the difference between the price before the action was placed and the resulted price paid (respectively received) in order to fill the entire order.
     Literature suggests (\cite{nevmyvaka2006reinforcement}) to use the \textit{volume weighted average price} as the return.
     That is,
-    \begin{equation}
-        VAP=\frac{\sum{v_p*p}}{V}
+    \begin{equation}\label{eq:vwap}
+        VWAP=\frac{\sum{v_p*p}}{V}
     \end{equation}
     , whereas $p$ is the price paid for $v_p$ shares and $V$ represents the total volume of shares.
     
