@@ -60,7 +60,7 @@ Hence, market orders tend to become expensive, especially for large orders.
 Figure \ref{fig:intro-orderbook} shows a real world example of a limit order book; in this case the snapshot was taken from a known crypto-currency exchange.
 Being precise, this is the \textit{state} of an order book at some time $t$ and shows the current offerings (in form of limit orders, see \ref{sec:limit-order}) from participants at this moment in time (we neglect the possibility that the state might have been changed during the data sending process). 
 Hence, we refer to it as an \textit{order book state (OS)} and the \textit{order book (OB)} itself is defined as a set of order book states.
-\begin{equation}
+\begin{equation}\label{eq:order-book}
 OB=\{OS_1, ... OS_n\}
 \end{equation}
 As we can see, every such state holds entries on the buyer and seller side which change in their \textit{price} and \textit{amount}.
@@ -70,7 +70,7 @@ OE_{s_l}=\{count, price, amount\}
 \end{equation}
 , whereas $count \in \mathbb{N}$, $price \in \mathbb{R^+}$ and $amount \in \mathbb{R^+}$.
 As a result, the order book state is a set containing order book entries for each \textit{side} (buy and sell) and a time stamp $ts$ of the state,
-\begin{equation}
+\begin{equation}\label{eq:order-book-state}
 OS=\{ts, OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n}\}
 \end{equation}
 \\
