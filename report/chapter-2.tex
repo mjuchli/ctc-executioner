@@ -333,6 +333,7 @@ Forecasting methods can be classified, according to \cite{chatfield2000time}, in
 \textit{Over the course of this work, we make use of univariate- and multivariate methods.}
 
 \section{Reinforcement Learning}
+\label{sec:reinforcement-learning}
 
 This section first aims to describe what Reinforcement Learning is and highlights its differences to other machine learning paradigms. 
 We briefly reason why this particular technique might be an appropriate choice for the task of optimising order placement. 
@@ -443,7 +444,7 @@ We rely on the standard assumption that future rewards are discounted by a facto
 \\
 Hence we define the future discounted \textit{return} at time $t$ as 
 
-\begin{equation}
+\begin{equation}\label{eq:discounted-return}
 R_t=\sum_{i=t}^{T}{\gamma^{i-t}{*}r_{i}}
 \end{equation}
 , where $T$ is the length of the episode (which can be infinity if there is no maximum length for the episode).
@@ -499,6 +500,7 @@ and thus the \textit{optimal policy} for state $s$ can be derived by choosing th
 \end{equation}
 
 \subsection{Environment}
+\label{sec:rl-environment}
 
 There are two types of environments:
 \begin{description}
