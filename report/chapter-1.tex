@@ -52,28 +52,32 @@ Both types of orders come with their advantages and disadvantages.
 A market order ensures that we will be able to acquire the stated amount of shares immediately for \$14'930.00, provided that no one else is ahead of us or the seller cancels his/her listing. 
 In this case we are automatically willing to pay for the next available best price.
 However, we do pay a premium compared to the limit order since ask prices are listed higher than bid prices and the more shares one wants to buy, the more sellers we have to contact and buy their offerings to an increased price.
-
 With a limit order the exchange guarantees that we will pay \$14'910.00 or less.
 That is, when a seller is willing to sell for the stated price or less, the exchange would match the offerings of both parties.
-However, this comes with the risk that we will never be able to buy if nobody is going to sell at the mentioned price, which will force us to buy for a higher price within a specified time horizon $H$.
-Thus, we pay an \textit{opportunity cost}.
-Likewise, if a seller realizes that we are about to buy for price $p$ at which is was willing to sell, he then could \textit{cancel} his offer as his incentive is to sell for a higher price.
-Perhaps this has been his/her intention to only post an offer but withdrawal as soon as a counter-offer will be listed that is close to his/her price.
-This method is known as \textit{quote stuffing}.
-\\
-\\
-Clearly, posting an order is not as trivial as one would think.
-However, the prices for some financial products, including crypto-currencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
-In addition, there might be buyers and sellers in the near future which would consume our order.
-Thus, placing orders \textit{deeper} in the book and wait could be beneficial.
+However, this comes with the risk that we will never be able to buy if nobody is going to sell at the mentioned price, which will force us to buy the demanded shares at a later point in time.
+As the price of a share evolves over time, we might be lucky and be able to buy for a cheaper price than at the time of the initial attempt.
+The other scenario is that the price did not develop in our favour such that we have to buy for a higher price later on, thus we pay a so-called \textit{opportunity cost}.
 
-According to Guo et. al. \cite{guo2013optimal} algorithmic trading is based on two different time scales: \textit{order execution} concerns about optimally slicing big orders into smaller ones in order to minimize the \textit{price impact}, that is, on a daily or weekly basis.
-\textit{Order placement} on the other hand concerns about optimally placing orders within ten to hundred seconds. 
-In this thesis we are concerned about the latter, which conforms the context of the problem: 
-at which price $p$ should one attempt to buy or sell $i$ shares and which factors might interfere with our intention to do so--within a time horizon $H$ of 100 seconds?
+%A third order type, the \textit{cancel} order allows a trader to cancel his/her previously posted limit or market order at any given point in time.
+%Ultimately, we have a brief understanding of what traders are allowed to do at a stock exchange.
+%We will now elaborate briefly how such a relatively simple concept of an order book and three types of orders can lead to a diverse range of situations a trader can find himself whereas at times this may be beneficial for his intentions and at times it will lead to paying a premium.
+%If a seller realizes that we are about to buy for price $p$ at which is was willing to sell, he then could \textit{cancel} his offer as his incentive is to sell for a higher price.
+%Perhaps this has been his/her intention to only post an offer but withdrawal as soon as a counter-offer will be listed that is close to his/her price.
+%This method is known as \textit{quote stuffing}.
+\textit{Order placement} therefore concerns about optimizing the opportunity cost and as we shall see, even though the concept of the order book and the two order types a trader can choose from, it is not as trivial as one would think.
+Literature (According to Guo et. al. \cite{guo2013optimal}) specifies a time scale of ten to hundred seconds where a trader tries to place its order in order to achieve a favourable price.
+More precisely, the context of the problem is defined as: at which price $p$ should one attempt to buy or sell $i$ shares and which factors might interfere with our intention to do so--within a time horizon $H$ of 100 seconds?
 
-The fact that reinforcement learning does not require any supervision and instead learns by maximizing rewards, makes this technique unarguably suitable to work within this context.
-As a result a reinforcement learner should be able to foresee on how to place orders according to the given market condition and therefore protect an investor form paying a premium to other participants in the market.
+%However, the prices for some financial products, including crypto-currencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
+%In addition, there might be buyers and sellers in the near future which would consume our order.
+%Thus, placing orders \textit{deeper} in the book and wait could be beneficial.
+%
+%According to Guo et. al. \cite{guo2013optimal} algorithmic trading is based on two different time scales: \textit{order execution} concerns about optimally slicing big orders into smaller ones in order to minimize the \textit{price impact}, that is, on a daily or weekly basis.
+%\textit{Order placement} on the other hand concerns about optimally placing orders within ten to hundred seconds. 
+%In this thesis we are concerned about the latter, which conforms the context of the problem: 
+
+The fact that reinforcement learning learns by maximizing rewards, makes this technique unarguably suitable to work within this context.
+As a result, a reinforcement learner should be able to foresee on how to place orders according to the given market condition and therefore protect an investor form paying the aforementioned premium to other participants in the market.
 
 \section{Research objectives}
 
@@ -83,8 +87,9 @@ Therefore, we are required to build a framework which lets us simulate and under
 We further have to reason about what kind of features can be derived from an order book and if there are any patterns that can be detected, such that the extracted information could contribute to the learning process.
 Lastly, we shall lay a focus on deep reinforcement learning techniques as this has had great success on learning to play video games \cite{mnih2013playing} based on a history of pixel inputs, but has never been applied to the optimal order placement problem, even though the structure of order book data seems similar.
 Hence, the main objective of this research can be formulated in one sentence: \begin{quote}
-    How should one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement, and what are the limitations thereof?".
+    How should one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement?
 \end{quote}
+Clearly, included in the study are the limitations of the setting that we considered here.
 
 \section{Contributions}
 
