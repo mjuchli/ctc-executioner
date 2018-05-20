@@ -1,27 +1,27 @@
 \chapter{Introduction}
 
 Financial institutions make decisions on whether to buy or sell assets based on various reasons, including: customer requests, fundamental analysis\cite{fundamental-analysis}, technical analysis\cite{technical-analysis}, top-down investing\cite{td-investing}, bottom-up investing\cite{bu-investing} and many more. 
-The high-level trading strategies oftentimes define the purpose of their business and how the institution positions itself in the financial markets and, if existent, towards its customers. 
+The high-level trading strategies oftentimes define how the institution positions itself in the financial markets and, if existent, towards its customers. 
 Regardless of the high-level trading strategy that is being applied, the invariable outcome is the decision to buy or sell assets.
-This work aims to make a step towards answering the non-trivial question on how to optimize a buy or sell of an asset on a stock exchange with the use of reinforcement learning techniques.
-The following sections will elaborate this problem in detail and state the research objectives of this work. 
-We then list the contributions made to the scientific community throughout this work, followed by a brief overview of the structure of this report.
+This work aims to make a step towards answering the non-trivial question on how one can optimize a buy or sell of an asset on a stock exchange with the use of reinforcement learning techniques.
+The following sections will elaborate this problem briefly and state the research objectives of this work. 
+We then list the contributions made to the research communities throughout this work, followed by a brief overview of the structure of this report.
 
-\section{Problem Statement}
+\section{Context and Problem Statement}
 \label{sec:problem-statement}
 
 We are concerned about the way assets, specifically \textit{securities} (exchange traded assets), are traded at stock exchanges.
 Regarding stock exchanges there is little consensus as to when corporate stock was first traded; some argue that the exchange, in the form as we know it today, dates as far back as 1531, when the East Indian Company stock was traded in Antwerp\cite{stock-exchange}.
-Modern financial markets such as the London Stock exchange (LSE), the New York Stock Exchange (NYSE) but also the numerous cryptocurrency exchanges which appeared suddenly in the last few year, all rely on the same very same principles as back then.
-Every participant is either willing to buy or sell a given amount of a security to, respectively for, a certain price.
+Modern financial markets such as the London Stock exchange (LSE), the New York Stock Exchange (NYSE) but also the numerous crypto-currency exchanges which appeared suddenly in the last few year, all rely on the same very same principles as back then.
+They allow participant (so-called traders) to buy or sell a given amount of a security to, respectively for, a certain price.
 
 When in the late '90s the regulatories started to let traders reach into the market using electronic communications networks (ECNs), a new era arose \cite{patterson2012dark}.
 Since then, high frequency trading (HFT) and sophisticated algorithmic trading makes up a substantial and ever increasing part of the participants of the electronic markets. 
 Their servers are oftentimes co-located with the exchanges and specialized computer networks have been constructed to provide millisecond advantage for arbitraging trades between the exchanges. 
-Large institutional traders feel that they are at a disadvantage in such an environment. \cite{patterson2012dark}
+Ever since, traders without such equipment and techniques feel that they are at a disadvantage in such an environment. \cite{patterson2012dark}
 While anything else than trading trough electronic channels would be unthinkable of today, a certain gap between trading companies and investors without fibre access to the exchanges or supporting algorithms still exists.
-As a result, investors are forced to take an initial loss into account when buying or selling securities -- and might not even be aware of it.
-In order to understand why that might be the case, we have to grasp a basic understanding of an order book and how securities are bought at an exchange.
+As a result, traders are forced to take an initial loss into account when buying or selling securities -- and might not even be aware of it.
+In order to understand why that might be the case, we have to grasp a basic understanding of a so-called order book and how securities are bought at an exchange.
 
 \begin{figure}[H]
     \centering
@@ -45,15 +45,16 @@ Suppose we want to buy 1.0 BTC.
 Two possible ways to do so are:
 \begin{enumerate}
     \item Buy $i$ shares (1.0) right away for \$14,930.00 from a seller. We submit a \textit{market} order.
-    \item State a price for which we are willing to to buy $i$ shares (1.0) at price $p$, for example at \$14'910.00, and wait until someone is willing to sell for this price. We submit a \textit{limit} order.
+    \item State a price for which we are willing to to buy $i$ shares (1.0) at price $p$, for example at \$14,910.00, and wait until someone is willing to sell for this price. We submit a \textit{limit} order.
 \end{enumerate}
 
 Both types of orders come with their advantages and disadvantages.
 A market order ensures that we will be able to acquire the stated amount of shares immediately for \$14'930.00, provided that no one else is ahead of us or the seller cancels his/her listing. 
 In this case we are automatically willing to pay for the next available best price.
-However, we do pay a premium compared to the limit order.
+However, we do pay a premium compared to the limit order since ask prices are listed higher than bid prices and the more shares one wants to buy, the more sellers we have to contact and buy their offerings to an increased price.
 
 With a limit order the exchange guarantees that we will pay \$14'910.00 or less.
+That is, when a seller is willing to sell for the stated price or less, the exchange would match the offerings of both parties.
 However, this comes with the risk that we will never be able to buy if nobody is going to sell at the mentioned price, which will force us to buy for a higher price within a specified time horizon $H$.
 Thus, we pay an \textit{opportunity cost}.
 Likewise, if a seller realizes that we are about to buy for price $p$ at which is was willing to sell, he then could \textit{cancel} his offer as his incentive is to sell for a higher price.
@@ -62,7 +63,7 @@ This method is known as \textit{quote stuffing}.
 \\
 \\
 Clearly, posting an order is not as trivial as one would think.
-However, the prices for some financial products, including cryptocurrencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
+However, the prices for some financial products, including crypto-currencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
 In addition, there might be buyers and sellers in the near future which would consume our order.
 Thus, placing orders \textit{deeper} in the book and wait could be beneficial.
 
