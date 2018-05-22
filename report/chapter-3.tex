@@ -14,7 +14,7 @@ At first, the \textit{expected execution price} is investigated with respect to 
 Based on this analysis the standard deviation of the resulted prices will uncover the \textit{risk} that comes along with limit order placement. 
 Finally, by combining the previous two results, an \textit{efficient pricing frontier} can be drawn which highlights the trade-off between risk and returns.
 
-Regarding the definition stated in Section \ref{sec:execution-placement}, their research is in between order execution and placement.
+Regarding the definition stated in Section \ref{sec:execution-placement}, their research is to be categorized in between order execution and placement.
 No splitting of orders is being done, however, a time horizon of several hours was chosen, resulting in an evaluation of order placement with an extended time horizon.
 
 \begin{figure}[H]
@@ -26,8 +26,7 @@ No splitting of orders is being done, however, a time horizon of several hours w
     \label{fig:kearns-return}
 \end{figure}
 
-Their first approach was to measure the \textit{return} of an execution using the \textit{volume weighted average price} as suggested previously described in Section \ref{sec:execution-definition}.
-Figure \ref{fig:kearns-return} shows the return (y-axis) of the expected execution price while acquiring 10,000 shares of MSFT within one hour.
+Figure \ref{fig:kearns-return} shows on the y-axis the return as the weighted average price paid of the expected execution price while acquiring 10,000 shares of MSFT within one hour.
 The x-axis represents the limit level reaching from -\$50 to +\$100.
 As it is evident from the figure, the most favorable expected execution price occurs when setting the limit price close to the price of the spread, yet on the buyer side with a price approximately \$10 lower than what is currently offered.
 The return becomes worse when placing orders more deep in the order book (meaning offering a lower price) as the orders then to not get filled within an hours and instead the inventory has to be bought with a market order at the end of the period.
@@ -124,7 +123,7 @@ An increased time delta results in significantly worse prediction accuracy.
 \section{Reinforcement Learning approach}
 
 A large-scale empirical application of reinforcement learning to optimize trade execution is presented by Kearns et al. \cite{nevmyvaka2006reinforcement}.
-Although the title of their research suggests otherwise, according to our definition in Section \ref{sec:execution-definition}, their work is related to order placement with a larger time horizon $H$ (2 minutes and 8 minutes).
+Although the title of their research suggests otherwise, according to our definition in Section \ref{sec:execution-placement}, their work is related to order placement with a larger time horizon $H$ (2 minutes and 8 minutes).
 Hence, their research objective is defined as:
 \begin{quote}
     The goal is to sell (respectively, buy) V shares of a given stock within a fixed time period (or horizon) H, in a manner that maximizes the revenue received (respectively, minimizes the capital spent).
@@ -135,15 +134,12 @@ The achieved relative improvement over a submit-and-leave strategy ranges from 2
 An additional improvement of 12.85\% was achieved by considering the following market variables: Spread, Immediate Cost, Signed Volume.
 \\
 \\
-The architecture developed is as follows:
-\begin{description}
-    \item[States:] are represented by a vector $x \in X$ and correspond to the observation state.
-    With that said, the partially observable environment is then treated to be fully observable.
-    \item[Actions:] ($a \in A$) represent the limit price relative to the current ask price, $ask - a$. That is, action $a = 0$ is the ask price, $a < 0$ is a limit price deep in the book and $a > 0$ is a limit order on the opposing side of the book.
-    \item[Rewards:] represent the VWAP (Eq. \ref{eq:vwap}) of the executed order relative to the bid-ask mid price ($(ask + bid) / 2$).
-    In case the order was not filled completely at the end of the time horizon H, then a market order follows.
-    \item[Algorithm:] a slightly adapted version of the Q-Learning algorithm was developed by the authors which explores the state space inductively.
-    Starting from $t=T...0$ the algorithm explores the inventories $i=0...I$.
-    For each such step, all possible actions in this state are evaluated, leading to the most rewarding strategy for $t=0$.
-    
-\end{description}
+The architecture developed is as follows.
+\textit{States} are represented by a vector $x \in X$ and correspond to the observation state, whereas the partially observable environment is then treated to be fully observable.
+\textit{Actions} ($a \in A$) represent the limit price relative to the current ask price, $ask - a$. 
+That is, action $a = 0$ is the ask price, $a < 0$ is a limit price deep in the book and $a > 0$ is a limit order on the opposing side of the book.
+The \textit{reward} represent the VWAP (Eq. \ref{eq:vwap}) of the executed order relative to the bid-ask mid price ($(ask + bid) / 2$).
+In case the order was not filled completely at the end of the time horizon H, then a market order follows.
+The chosen \textit{algorithm} is a slightly adapted version of the Q-Learning algorithm was developed by the authors which explores the state space inductively.
+Starting from $t=T...0$ the algorithm explores the inventories $i=0...I$.
+For each such step, all possible actions in this state are evaluated, leading to the most rewarding strategy for $t=0$.

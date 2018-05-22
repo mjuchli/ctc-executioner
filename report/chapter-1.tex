@@ -70,7 +70,7 @@ Literature (According to Guo et. al. \cite{guo2013optimal}) therefore specifies 
 A time scale less than ten seconds refers to high frequncy trading and above 100 seconds is konwn as the process of \textit{order execution}.
 Thus, we define order placement opimization: at which price $p$ should one attempt to buy or sell $i$ shares within a time horizon $H$ of 100 seconds?
 As we shall see, optimizing the placement is not as trivial as one would think, even though the concept of the order book and the three order types a trader can choose from is admittedly simple.
-There are various properties that evolve from a limit order book and the participants in the market over time, which can interfer with the intention of buying and selling drastically.
+There are various properties that evolve from a limit order book and the participants in the market over time, which can interfere with the intention of buying and selling drastically.
 Furthermore, since the foundation of electronic trading networks and algorithmic trading, the amount and sophistication of other market participants is ever increasing whereas everyone aims for their advantage over others.
 %However, the prices for some financial products, including crypto-currencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
 %In addition, there might be buyers and sellers in the near future which would consume our order.
@@ -86,20 +86,20 @@ As a result, a reinforcement learner should be able to foresee on how to place o
 \section{Research objectives}
 
 This work extends on the findings of Kearns et. al. \cite{nevmyvaka2006reinforcement} who have studied the behaviour of order placement and order execution and further developed a reinforcement learning strategy in order to proceed optimization.
-Their work has preprocessed and applied features, which were derived from order book data, to a reinforcement learning algorithm which is similar to Q-Learning.
-Our works aims to do similar research, whereas the crypto-currency domain is choosen, instead of traditional stocks.
+Their work has pre-processed and applied features, which were derived from order book data, to a reinforcement learning algorithm which is similar to Q-Learning.
+Our works aims to do similar research, whereas the crypto-currency domain is chosen, instead of traditional stocks.
 We investigate the behaviour of order placement in a historical USD/BTC market setup and try to find properties which may be beneficial for optimization purposes.
 Given this knowledge we should build a reinforcement learner that can act as an intelligent trader and places limit orders with the incentive to buy or sell asset to a favourable price.
-Reinforcement learning is choosen as it allows to optimize on the outcome of the placed orders and therefore will improve accordingly, such that the trader is able learn a strategy which allows to buy and sell shares at favourable prices.
+Reinforcement learning is chosen as it allows to optimize on the outcome of the placed orders and therefore will improve accordingly, such that the trader is able learn a strategy which allows to buy and sell shares at favourable prices.
 However, in order to simulate and understand the outcome of order placement and more importantly allow interaction with a reinforcement learning learner, we are required to build a framework.
 The framework should provide capabilities to collect and process market data in order to reproduce a historical order book that serves as a data source.
 We further demand the framework to provide the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulted price paid (respectively received) according to the historical order book.
 Given the capabilities of the framework, a reinforcement learning environment should be built which allows agents to act as an intelligent traders.
-The agents will place limit orders with the incentive to learn how to buy or sell asset to a favourable price by choosing limit order prices accordigly.
+The agents will place limit orders with the incentive to learn how to buy or sell asset to a favourable price by choosing limit order prices accordingly.
 However, the agents demand features which contribute to the learning of how to place its orders accordingly.
 Therefore, we have to reason about what kind of features can be derived from an order book and if there are any patterns that can be detected, such that the extracted information could contribute to the learning process.
 In addition, while the previously mentioned work from Kearns et al. had success in using pre-processed market data as features, we believe that raw market data in combination with deep reinforcement learning can be equally successfull.
-Hencewhy our ambition is to determine if deep reinforcement learning is perhaps an even more suitable choise in order to deal with unexpected market situations.
+Hence why our ambition is to determine if deep reinforcement learning is perhaps an even more suitable choice in order to deal with unexpected market situations.
 Finally, the main objective of this research can be formulated in one sentence:
 \begin{quote}
     How should one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement?

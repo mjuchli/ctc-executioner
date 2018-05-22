@@ -1,18 +1,31 @@
 \chapter{Preliminaries}
 \label{chap:preliminaries}
 
+In this chapter we provide background information in order to understand the previous work done in this field that is introduced in Chapter \ref{chap:related-work}.
+We will further rely on the knowledge provided in this chapter when describing the data collection an processing in Chapter \ref{chap:data} as well as when constructing the experimental setup in Chapter \ref{chap:setup}.
+We rely on the reader to be patient while reading this chapter as the interplay between the introduced components may not be immediately obvious be will become clear later in the report when the components come to use.
+At first, the concept of the previously introduced order book is described in greater detail, as this serves as the data structure for the collected historical data.
+Subsequently, a simplified match engine is described with which we will emulate a local broker that can match orders given the historical order book.
+An introduction to the properties of a time series is then introduced as the order book underlies its principles.
+Furthermore, reinforcement learning is introduced, whereas we declare the differences to other machine learning techniques, followed by a detailed explanation of all its components.
+Finally, deep reinforcement learning is introduced as an extension to the previously described reinforcement learning principles.
+
 \section{Order Book}
 
-Despite the fact that some of the participants in the market tend to gain a slight advantage over others (see Section \ref{sec:problem-statement}), without these highly active trading participants (also known as \textit{liquidity traders}) the market would suffer from the absence of liquidity.
-The offerings are thereby listed in a \textit{limit order book} indicating the will to buy and sell a given asset for a certain price.
-This section introduces the most popular order types and explains the characteristics of a limit order book.
-We further show how participants can list their orders to appear in the book.
+Traders post orders in a limit order book in order to state their intention to buy (respectively sell) a given asset, as described in Section \ref{sec:problem-statement}).
+Orders listed in the limit order book implicitly provide so called \textit{liquidity} to the market as other traders can consume these offerings by posting an order with the equivalent price to sell (respectively buy) the asset.
+%The former group of traders is known as \textit{liquidity traders} and is rewarded by a broker with lower fees than the latter group as they provide liquidity and therefore make the market alive (hence why the feed is known as \textit{maker fee}).
+%The latter group who consumes the orders of the former group implicitly takes out liquidity of the market and therefore has to pay an increased fee to do so (hence why the feed is known as \textit{taker fee}).
+
+This section introduces the most popular order types with which a trader can post their offerings into a limit order book.
+We will learn with which type a trader can ensure to provide liquidity to the market and benefit from lower fees and with which type the trader can state the wish to immediately buy or sell assets and implicitly take liquidity from the market.
+Furthermore, the characteristics an historical order book that is filled with orders from traders is explained as this will come handy when the match engine is explained in the following section.
 
 \subsection{Orders}
 \label{sec:orders}
 
 As indicated by the name, an order is an order to buy or sell a stock.
-There are various types of orders which determine how the order that is placed should be executed on the broker side.
+There are various types of orders which determine how the order that is placed should be executed by the exchange.
 In this section we provide information about the two most common types, namely the \textit{limit order} and the \textit{market order},
 We define the indication on whether to buy or sell as the \textit{Order Side},
 \begin{equation}\label{eq:order-side}
@@ -29,7 +42,7 @@ Order=\{Order_{Limit}, Order_{Market}\}
 
 A limit order implies the attempt to buy or sell a stock at a specific price or better,
 \begin{equation}\label{eq:order-limit}
-    Order_{Limit}=\{side, quantity, price_{Limit}\}
+    Order_{Limit}=(side, quantity, price_{Limit})
 \end{equation}
 , where $side \in OrderSide$, $quantity \in \mathbb{R^+}$ and $price_{Limit} \in \mathbb{R^+}$.
 \\
@@ -44,7 +57,7 @@ In case no order on the opposing side appears, the order remains (possibly forev
 
 A market order implies the attempt to buy or sell a stock at the current market price, expressing the desire to buy (respectively sell) for the best available price. Therefore,
 \begin{equation}
-Order_{Market}=\{side, quantity\}
+Order_{Market}=(side, quantity)
 \end{equation}
 , where $side \in OrderSide$ and $quantity \in \mathbb{R^+}$.
 \\
@@ -59,19 +72,20 @@ Hence, market orders tend to become expensive, especially for large orders.
 
 Figure \ref{fig:intro-orderbook} shows a real world example of a limit order book; in this case the snapshot was taken from a known crypto-currency exchange.
 Being precise, this is the \textit{state} of an order book at some time $t$ and shows the current offerings (in form of limit orders, see \ref{sec:limit-order}) from participants at this moment in time (we neglect the possibility that the state might have been changed during the data sending process). 
-Hence, we refer to it as an \textit{order book state (OS)} and the \textit{order book (OB)} itself is defined as a set of order book states.
+Hence, we refer to it as an \textit{order book state (OS)}.
+We refer to the \textit{order book (OB)} that is used in this project as a recorded history of order book states.
 \begin{equation}\label{eq:order-book}
-OB=\{OS_1, ... OS_n\}
+OB=OS_1, ... OS_n
 \end{equation}
 As we can see, every such state holds entries on the buyer and seller side which change in their \textit{price} and \textit{amount}.
 To each such row, which can be formed by participants who submitted limit orders of some amount at the same price level, we refer to as \textit{order book entry ($OE_{s_l}$)} of the side $s$ at level $l$.
 \begin{equation}
-OE_{s_l}=\{count, price, amount\}
+OE_{s_l}=(count, price, amount)
 \end{equation}
 , whereas $count \in \mathbb{N}$, $price \in \mathbb{R^+}$ and $amount \in \mathbb{R^+}$.
-As a result, the order book state is a set containing order book entries for each \textit{side} (buy and sell) and a time stamp $ts$ of the state,
+As a result, the order book state is a sequence containing order book entries for each \textit{side} (buy and sell) and a time stamp $ts$ of the state,
 \begin{equation}\label{eq:order-book-state}
-OS=\{ts, OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n}\}
+OS=(ts, OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n})
 \end{equation}
 \\
 \begin{figure}[H]
@@ -84,47 +98,38 @@ OS=\{ts, OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n}\}
 \end{figure}
 \hfill
 \\
-Figure \ref{fig:orderbook-simple} illustrates a simplified order book, from which we can derived the following definitions:
+Figure \ref{fig:orderbook-simple} illustrates a simplified order book, from which we can derived definitions.
+The \textit{limit level} specifies the position of an order book entry within the side of an order book state and the so-called \textit{market depth} corresponds to how deep in the order book buyers and sellers have listed offerings.
+A deep order book therefore indicates a large range of limit levels.
+The term \textit{volume} can relate to the total volume traded over a given time horizon, or can indicate the sum of amounts of what is currently offered to a certain price.
+Considering the sides of the order book, a \textit{bid} refers to a price on the buyer side and the \textit{best bid} represents the highest price for which someone is willing to buy a given asset.
+The best bid appears as the first order book entry on the buyer side, closest to the spread.
+Contrarily, an \textit{ask} refers to a price on the seller side and the \textit{best ask} represents the lowest price for which someone is willing to sell a given asset. 
+The best ask appears as the first order book entry on the seller side, closest to the spread.
+Consequently, the \textit{market price} is the average between the best bid and best ask price and the \textit{spread} indicates the difference between the best bid and best ask.
 
-\begin{description}
-    \item[Quote:] the last price at which a security was traded.
-    This indicates the most recent price on which a buyer and seller agreed upon.
-
-    \item[Book Level:] specifies the position of an order book entry within the side of an order book state. 
-    The number of levels presented depends on the exchange. 
-    In general Level 1 data corresponds to the most basic information which includes best bid and ask price and size as well as the last traded price with its size.
-    Level 2 provides additional insight into the order book entries as the highest (respectively lowest) five to 15 prices are displayed on each side.
-    Level 3 is the highest level of order book entries and includes everything from level 2 plus the ability to enter quotes, execute orders and send information. On traditional stock exchanges, this feature is oftentimes exclusive for market makers. \cite{trading-levels}
-    
-    \item[Market depth:] corresponds to how deep in the order book buyers and sellers have listed offerings.
-    
-    \item[Volume:] the term volume can relate to the total volume traded over a given time horizon, or can indicate the sum of amounts of what is currently offered to a certain price.
-    
-    \item[(Best) Bid:] the term \textit{bid} refers to a price on the buyer side and the best bid represents the highest price for which someone is willing to buy a given asset. 
-    The best bid appears as the first order book entry on the buyer side, closest to the spread.
-    \item[(Best) Ask:] the term \textit{ask} refers to a price on the seller side and the best ask represents the lowest price for which someone is willing to sell a given asset. 
-    The best ask appears as the first order book entry on the seller side, closest to the spread.
-    \item[Market Price:] the average price between the best bid and best ask price.
-    
-    \item[Spread:] the difference between the best bid and best ask.
-    
-    \item[Liquidity:] in an \textit{order driven market}, liquidity is a synonym for the ease of trading.
-    Liquidity provided by parties of the opposing side is what effectively enables one to buy and sell securities.
-    
-    \item[Market Maker:] provides liquidity to the market by posting limit orders which are not immediately executed.
-    In return, the market maker pays less fees than a market taker.
-    
-    \item[Market Taker:] takes liquidity out of the market by either posting either market orders or limit orders which immediately execute.
-\end{description}
-
+The most recent price on which a buyer and seller agreed upon to trade a security is known as \textit{quote}.
+In an \textit{order driven market}, liquidity is a synonym for the ease of trading.
+\textit{Liquidity} stands for the amount provided by parties of the opposing side and is what effectively enables one to buy and sell securities.
+That is achieved by submitting limit orders which are not immediately executed.
+A so called \textit{market maker} provides liquidity to the market by posting limit orders which are not immediately executed.
+In return, the market maker pays less fees than a market taker, the so-called \textit{maker fee}.
+Contrarily, the \textit{market taker} takes liquidity out of the market by posting either market orders or limit orders which immediately execute.
+As this is not beneficial to the exchange, the market taker pays a slightly increased rate of fees, known as \textit{taker fee}.
 
 \section{Match Engine}
 \label{sec:match-engine}
 
-Matching engines are responsible for the process of matching buy and sell orders that are submitted to electronic trading networks, like \textit{NASDAQ} or \textit{NYSE} as examples of traditional stock exchanges; or \textit{Bitfinex}, \textit{Bittrex}, \textit{Coinbase} as examples of crypto-currency exchanges.
-Without a local match engine, one would be forced to consult such an exchange and either trade on the live market or get access to a test environment, which can be, if existent, still costly.
+The \textit{matching engine} is the component which responsible for the process of matching buy and sell orders at a stock exchange, such as \textit{NASDAQ} or \textit{NYSE} as examples of traditional stock exchanges; or \textit{Bitfinex}, \textit{Bittrex}, \textit{Coinbase} as examples of crypto-currency exchanges.
+In order to determine the outcome of an order, the trader would typically submit the order to an exchange and either trade on the live market or get access to a test environment, which can be, if existent, still costly.
+Consequently, the order is processed at the current market and there is no option to process it on a historical data set in order to determine outcome, had the order been posted at some time $t$ in the past.
+For the aforementioned reasons, a \textit{local} match engine is being developed that allows to evaluate the outcome of order placement on a historical order book data set, free of charge.
+The local match engine is a key element of the order placement optimization process that ultimately a reinforcement learner will proceed.
+The outcome of matched orders will directly affect the reward received by an agent with which it will try to improve its capabilities.
 
-This section first give the definiton of a trade and subsequently introduces the mechanics of the match engine which is used in this project and acts as one of the key components.
+This section first give the definition of a \textit{trade} as a result of two matching orders.
+Subsequently, the time horizon as an addition to the previously introduced order types (Section \ref{sec:orders}) is presented with which we can describe the interface of the match engine that will be used throughout the learning process.
+Finally the rules of the implementation of the local match engine is provided which explain the mechanics of the matching process.
 
 \subsection{Trade}
 
@@ -132,7 +137,7 @@ In order to understand the purpose of the matching process, which is described i
 A trade results when the orders (Eq. \ref{eq:order}) from two parties with opposing order side (Eq. \ref{eq:order-side}) agree on an amount and price to trade their shares.
 That is,
 \begin{equation}\label{eq:trade}
-    Trade=\{ ts, side, type, quantity, price \}
+    Trade=(ts, side, type, quantity, price )
 \end{equation}
 , where $ts$ is the time-stamp when the participants agreed on the exchange of the products, $side \in OrderSide$, $type \in OrderType$, $quantity \in \mathbb{R^+}$ and $price \in \mathbb{R^+}$.
 
@@ -154,7 +159,7 @@ That is,
     match : Order \times H \rightarrow Trades
 \end{equation}
 , whereas $|Trades| \in \mathbb{N}$.
-The order is \textit{filled} if the sum of the traded quantity is equal to the amount stated in the submitted order, \textit{partially-filled} if the traded quantity is $> 0$ and \textit{not filled} otherwise.
+The order is \textit{filled} if the sum of the traded quantity is equal to the amount stated in the submitted order, \textit{partially-filled} if the traded quantity is $> 0$ but not filled and \textit{not filled} otherwise.
 \\
 \\
 \textit{The matching process behaves different, depending on the submitted order type, and is explained in the following paragraph.}
@@ -186,7 +191,7 @@ That said, the following limitations have to be taken into consideration:
     Participants who leave the market would introduce a slight disadvantage as there would be less liquidity.
     Since both parties are absent, we consider our implementation as a good approximation without a major advantage or disadvantage.
     
-    \item[Ordering]this match engine is restricted to simulate the matching of only one order from one participant at a time.
+    \item[Ordering] this match engine is restricted to simulate the matching of only one order from one participant at a time.
     Hence, any type of ordered processing of incoming orders (typically solved with a queuing system) is not supported.
     However, this functionality is also not required for our purposes.
     
@@ -197,61 +202,36 @@ That said, the following limitations have to be taken into consideration:
     
 \end{description}
 
-
-
 \section{Order execution and placement}
 \label{sec:execution-placement}
 
-A trader has a variety of options on how to approach a market and fulfill his duties to buy (respectively sell) shares.
-The process to do so involves the following two steps: \textit{order execution} and \textit{order placement}, whereas the latter is the main subject of this thesis.
-A specific definition is given below.
+Given the understanding of the order book and the match engine, it is obvious that a trader has a variety of options on how to approach a market and fulfill his duties to buy (respectively sell) shares.
+Conceptually, the process a trader proceeds involves the following two steps: \textit{order execution} and \textit{order placement}, whereas the latter is the main subject of this thesis.
 
-\subsection{Definitions}
-\label{sec:execution-definition}
+Many useful definitions which highlight the difficulties related to the order execution domain were stated by Lim et al. \cite{lim2005optimal} and Guo et al. \cite{guo2013optimal}.
+Most importantly, \textit{order execution} concerns about optimally slicing big orders into smaller ones in order to minimize the price impact, that is, moving the price up by executing large buy orders (respectively down for sell orders) at once. 
+By splitting up a big order into smaller pieces and spreading the execution over an enlarged time horizon, the impact cost can be lessened.
+Typically on a daily or weekly basis.
+Contrarily, \textit{order placement} concerns about optimally placing orders within ten to hundred seconds.
+Placing hereby refers to the setting of the limit level for a limit order as described in Section \ref{sec:limit-order}.
+The aim is to minimize the \textit{opportunity cost} which arises when the price moves against our favour.
 
-Many useful definitions which highlight the difficulties related to the order execution domain were stated by Lim et al. \cite{lim2005optimal} and Guo et al. \cite{guo2013optimal}:
-\begin{description}
-    \item[Order execution:] concerns about optimally slicing big orders into smaller ones in order to minimize the price impact, that is, on a daily or weekly basis.
-    \item[Order placement: ] concerns about optimally placing orders within ten to hundred seconds.
-    Placing hereby refers to the setting of the limit level for a limit order as described in Section \ref{sec:limit-order}.
-    \item[Impact cost:] moving the price up by executing large buy orders (respectively down for sell orders) at once. 
-    By splitting up a big order (e.g. V shares) into smaller pieces and spreading the execution over a time horizon $H$, the impact cost can be lessened.
-    \item[Opportunity cost:] arises when the price moves against our favour while splitting a big order into pieces and delaying execution. 
-    Therefore the opportunity to execute at a better price.
-    \item[Execution strategy:] optimizes trade-off between impact cost and opportunity cost and therefore trying to find best execution.
-    
-    \item[Placement strategy:] optimizes the trade-off between opportunity cost and paying a premium while proceeding an execution strategy.
-    
-    \item[Return:] the return of an order execution or placement is the difference between the price before the action was placed and the resulted price paid (respectively received) in order to fill the entire order.
-    Literature suggests (\cite{nevmyvaka2006reinforcement}) to use the \textit{volume weighted average price} as the return.
-    That is,
-    \begin{equation}\label{eq:vwap}
-        VWAP=\frac{\sum{v_p*p}}{V}
-    \end{equation}
-    , whereas $p$ is the price paid for $v_p$ shares and $V$ represents the total volume of shares.
-    
-\end{description}
-
-\subsection{Relevant factors}
-
-According to \cite{nevmyvaka2006reinforcement}, the factors which have an impact on order execution can be categorized into \textit{private variables} $P$ and \textit{market variables} $M$:
-\begin{description}
-    \item[Private Variables:] include the \textit{amount of time} $t$ that is remaining in order to execute a given \textit{inventory} $i$ of shares.
-    The execution can be of either subject: buy or sell.
-    \item[Market Variables:] reflect the condition of the market at the time of the execution.
-    The condition of the market is conformed by the infinite constellations of characteristics  within an order book as described in Section \ref{sec:ob-characteristics}.
-    
-\end{description}
-
+Literature\cite{nevmyvaka2006reinforcement, guo2013optimal} suggests to use the \textit{volume weighted average price (VWAP)} as a measure of the \textit{return} of order placement and order execution.
+That is,
+\begin{equation}\label{eq:vwap}
+    p_{vwap}=\frac{\sum{v_p*p}}{V}
+\end{equation}
+, whereas $p$ is the price paid for $v_p$ shares and $V$ represents the total volume of shares.
 
 \section{Time series}
 
-According to the efficient market hypothesis\cite{malkiel1989efficient}, a stock market reflects all the information available to the market participants at any give time. 
-Given the vast information flow, the natural consequence is that financial markets are best described over time. 
+According to the efficient market hypothesis\cite{malkiel1989efficient}, the price of an asset reflects all the information available to the market participants at any give time. 
+Given the vast information flow, the natural consequence is that the price of such an asset changes over time.
+As we have seen in the previous Section \ref{sec:order-book}, the price of an asset is determined by actions proceeded by traders.
+Therefore, the financial markets and particularly the order book are best described over time, namely as a \textit{time series}. 
 More precisely, the definition of a time series is an ordered sequence of values of a variable at equally spaced time intervals \cite{intro-timeseries}.
-
-The nature of time series data originated the applications generally known as Time Series Analysis and Time Series Forecasting. 
-Both of which play an important role throughout this project.
+The nature of time series data originated the applications generally known as Time Series Analysis and Time Series Forecasting.
+Both of which play an important role throughout this project, and therefore a brief background is provided in this section.
 
 \subsection{Time series analysis}
 
@@ -259,25 +239,23 @@ The analysis of data observed at different points in time leads to problems in s
 More specifically, the correlation of adjacent points in time can restrict the applicability of conventional statistical methods which traditionally depend on the assumption that these adjacent observations are independent and identically distributed. 
 A systematic approach by which one attempts to answer the mathematical and statistical questions posed by these time correlations is commonly referred to as time series analysis. 
 Therefore, mathematical models are developed with the primary objective to provide plausible descriptions for sample data. \cite{shumway2000time}
-
-\subsubsection{Random variables}
-
-A collection of random variables indexed according to the order they are obtained in time serves as a representation of the time series. For example, a time series with three data points ($x_1$, $x_2$, $x_3$) can be considered as a sequence of the random variables $x_1$, $x_2$ and $x_3$, where the random variable $x_1$ denotes the value of the first time period, the variable $x_2$ denotes the value for the second time period and $x_3$ denotes the value for the third time period. While graphically plotting the values of random variables, it is conventional to display the random variables on the vertical axis with the time scale as abscissa. \cite{shumway2000time}
+%\subsubsection{Random variables}
+%
+%A collection of random variables indexed according to the order they are obtained in time serves as a representation of the time series. For example, a time series with three data points ($x_1$, $x_2$, $x_3$) can be considered as a sequence of the random variables $x_1$, $x_2$ and $x_3$, where the random variable $x_1$ denotes the value of the first time period, the variable $x_2$ denotes the value for the second time period and $x_3$ denotes the value for the third time period. While graphically plotting the values of random variables, it is conventional to display the random variables on the vertical axis with the time scale as abscissa. \cite{shumway2000time}
+%\\
+%\\
+%One such example of a time series analysis, %that is often times seen in the context of %financial data, is the moving average. 
+%
+%\begin{equation}
+%    v_t=\frac{1}{3}(x_{t-1}+x_t+x_{t+1})
+%\end{equation}
+%
+%Moving average allows to smoothen the %series by averaging the current value and %its immediate neighbors in the past and %future.
+%
 \\
 \\
-One such example of a time series analysis, that is often times seen in the context of financial data, is the moving average. 
-
-\begin{equation}
-    v_t=\frac{1}{3}(x_{t-1}+x_t+x_{t+1})
-\end{equation}
-
-Moving average allows to smoothen the series by averaging the current value and its immediate neighbors in the past and future.
-
-
-\subsubsection{Stationarity}
-
 Some of the time series behaviours, which will be presented within this body of work, may hint that a sort of regularity exist over time.
-We refer the notion of regularity using a concept called stationarity, as introduced in \cite{shumway2000time}.
+We refer the notion of regularity using a concept called \textit{stationarity}, as introduced in \cite{shumway2000time}.
 \\
 \\
 A \textbf{strictly stationary} time series is one for which the probabilistic behavior of every collection of values
@@ -288,7 +266,6 @@ for all time shifts $h=0,\pm1,\pm2,...$
 \\
 \\
 A \textbf{weakly stationary} time series, $x_t$, is a finite variance process such that
-
 \begin{itemize}
     \item the mean value function $\mu_t$ is constant and does not depend on time $t$, and
     \item the autocovariance function $\gamma(s, t)$, depends on $s$ and $t$ only through their difference $|s-t|$.
@@ -311,24 +288,20 @@ for all time points $s$ and $t$.
 \\
 \textit{Henceforth, we will use the term stationary to mean weakly stationary; if a process is stationary in the strict sense, we will use the term strictly stationary.}
 
-\subsubsection{Time series forecasting}
+\subsection{Time series forecasting}
 
 In statistics, prediction is a part of statistical inference. 
 Providing a means of the transfer of knowledge about a sample of a population to the whole population, and to other related populations is one description of statistics. 
 However, this is not necessarily equivalent to the process of predicting over time. 
-This process, instead, is known as forecasting and describes the transfer of information across, often to very specific point in, time \cite{wiki-timeseries}. \\
-\\
-Hence the problem is defined in \cite{ito1993encyclopedic} as: \textit{forecasting future values $X_(t+h)$ where $h > 0$ of a weakly stationary process ${X_t}$ from the known values $X_s$ where $s \leq t$}. 
+This process, instead, is known as forecasting and describes the transfer of information across, often to very specific point in, time \cite{wiki-timeseries}.
+Hence the problem is defined in \cite{ito1993encyclopedic} as: \textit{forecasting future values $X_{t+h}$ where $h > 0$ of a weakly stationary process ${X_t}$ from the known values $X_s$ where $s \leq t$}. 
 The integer $h$ is called lead time or forecasting horizon, whereas $h$ stands for horizon.
 \\
 \\
-Forecasting methods can be classified, according to \cite{chatfield2000time}, into three types:
-\begin{description}
-    \item[Judgemental forecasts:] produce projections based on intuition, inside knowledge, and any other relevant information.
-    \item[Univariate methods:] forecast depends on present or past values of the time series on which the forecast is projected. Augmentation by a function of time is possible.
-    \item[Multivariate methods:] forecast depends on one or more additional time series variables or multivariate models.
-\end{description}
-\hfill
+Forecasting methods can be classified, according to \cite{chatfield2000time}, into three types: \textit{Judgemental forecasts} produce projections based on intuition, inside knowledge, and any other relevant information.
+\textit{Univariate methods} forecast depends on present or past values of the time series on which the forecast is projected.
+Finally, \textit{multivariate methods} forecast depends on one or more additional time series variables or multivariate models.
+\\
 \\
 \textit{Over the course of this work, we make use of univariate- and multivariate methods.}
 
@@ -336,13 +309,10 @@ Forecasting methods can be classified, according to \cite{chatfield2000time}, in
 \label{sec:reinforcement-learning}
 
 This section first aims to describe what Reinforcement Learning is and highlights its differences to other machine learning paradigms. 
-We briefly reason why this particular technique might be an appropriate choice for the task of optimising order placement. 
+We briefly reason why this particular technique might be an appropriate choice for the task of optimizing order placement. 
 Then, a basic understanding about Markov Decision Processes is provided, after which we explain the interaction between the Reinforcement Learning components, followed by a description of their properties.
 
-\subsection{End-to-end learning}
-
-Reinforcement Learning is a specific learning approach in the Machine Learning (see Figure \ref{fig:ml-rl}) field and aims to solve problems which involve \textit{sequential decision making}.
-Therefore, when a decision made in a system affects the future decisions and eventually its outcome, the aim is to learn the optimal sequence of decisions with reinforcement learning.
+\subsection{Advantages of end-to-end learning}
 
 \begin{figure}[H]
     \centering
@@ -352,11 +322,10 @@ Therefore, when a decision made in a system affects the future decisions and eve
     \caption{Categorization of machine learning techniques}
     \label{fig:ml-rl}
 \end{figure}
-\hfill
-\\
-In reinforcement learning there is no supervision and instead an agent learns by maximizing rewards.
-The feedback retrieved while proceeding a task with a sequence of actions might be delayed over several time steps and hence the agent might spend some time exploring until it finally reaches the goal and can updates its strategy accordingly.
-This process can be regarded as \textit{end-to-end learning} and is illustrated in Figure \ref{fig:rl-pipeline}.
+
+Reinforcement Learning is a specific learning approach in the Machine Learning (see Figure \ref{fig:ml-rl}) field and aims to solve problems which involve \textit{sequential decision making}.
+Therefore, when a decision made in a system affects the future decisions and eventually its outcome, the aim is to learn the optimal sequence of decisions with reinforcement learning.
+
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -365,22 +334,22 @@ This process can be regarded as \textit{end-to-end learning} and is illustrated 
     \caption{Reinforcement learning end-to-end learning pipeline}
     \label{fig:rl-pipeline}
 \end{figure}
-The agent makes an \textit{observation} of its environment and estimates a \textit{state} for which it \textit{models and predicts} the \textit{action} to be taken.
-Once the action was executed, the agent receives a \textit{reward} and will take this into consideration during during the prediction phases in the future. 
-\hfill
-\\
-\\
-In other machine learning paradigms, such as supervised learning, the algorithm learns by presenting a specific situation provided with the right action to do. 
+
+For optimizing order placement in limit order books, statistical approaches have long been the preferred choice.
+While statistics emphasizes inference of a process, machine learning on the other hand emphasizes the prediction of the future with respect to some variable.
+Machine learning paradigms, such as supervised learning, rely on an algorithm that learns by presenting a specific situation provided with the right action to do. 
 From there, the algorithm tries to generalize the model.
+
+Contrarily, in reinforcement learning there is no supervision and instead an agent learns by maximizing rewards.
+The feedback retrieved while proceeding a task with a sequence of actions might be delayed over several time steps and hence the agent might spend some time exploring until it finally reaches the goal and can updates its strategy accordingly.
+This process can be regarded as \textit{end-to-end learning} and is illustrated in Figure \ref{fig:rl-pipeline}.
+In abstract terms, the agent makes an \textit{observation} of its environment and estimates a \textit{state} for which it \textit{models and predicts} the \textit{action} to be taken.
+Once the action was executed, the agent receives a \textit{reward} and will take this into consideration during during the prediction phases in the future. 
+The beauty of which is that an arbitrarily complex process can be regarded as a black box as long as it can take an input from the learner to do its job and responds how well the task was executed.
+In our context this implies that we would model the order placement process pipeline whereas the learner improves upon the outcome of the submitted orders.
 In addition, for reinforcement learning problems, the data is not independent and identically distributed (I.I.D). 
 The agent might in fact, while exploring, miss out on some important parts to learn the optimal behaviour. 
 Hence, time is crucial as the agent must explore as many parts of the environment to be able to take the appropriate actions. \cite{rl-demystified}
-
-\subsection{Reinforcement Learning in context}
-For optimizing order placement in limit order books, statistical approaches have long been the preferred choice.
-While statistics emphasizes inference of a process, machine learning on the other hand emphasizes the prediction of the future with respect to some variable.
-Although the capabilities of influencing a non-trivial procedure using predictions might be tempting, supervised learning machine learning approaches demand to facilitate complex intermediate steps in order to let the learner interact within the process of buying and selling securities.
-Reinforcement learning, as mentioned before, provides the capabilities to model the execution process pipeline whereas the learner improves upon the outcome of the submitted orders. \cite{deeprlcourse}
 \\
 \\
 \textbf{Example:} Since we are working with financial systems, let us assume we want to buy and sell stocks on a stock exchange. 
@@ -394,7 +363,7 @@ The action is then send to the environment which determines whether this was a g
 \label{rl-mdp}
 
 A process such as the one sketched above, can be formalized as a Markov Decision Process.
-An MDP is a 5-tuple $<S, A, P, R, \gamma >$ where:
+An MDP is a 5-tuple $(S, A, P, R, \gamma)$ where:
 \begin{enumerate}
     \item $S$ is the finite set of possible states $s_t \in S$ at some time step.
     \item $A(s_t)$ is the set of actions available in the state at time step $t$, that is $a_t \in A(s_t)$, whereas $A=\bigcup_{s_t \in S} A(s_t)$
@@ -435,7 +404,7 @@ A policy is a function that can be either deterministic or stochastic.
 The distribution $\pi(a|s)$ is used for a stochastic policy and a mapping function $\pi(s) : S \rightarrow A$ is used for a deterministic policy, whereas $S$ is the set of possible states and $A$ is the set of possible actions.
 \\
 \\
-The stochastic \textit{policy} at time step $t$: $\pi_t$ is a mapping from state to action probabilities as a result of the agents experience, and therefore, $\pi_t(s, a)$ is the probability that $a_t=a$ when $s_t=s$.
+The stochastic \textit{policy} at time step $t$: $\pi_t$ is a mapping from state to action probabilities as a result of the agents experience, and therefore, $\pi_t(a|s)$ is the probability that $a_t=a$ when $s_t=s$.
 
 \subsubsection{Reward}
 
@@ -453,10 +422,11 @@ The discounting factor has two obligations: it prevents the total reward from go
 
 \subsubsection{Value Functions}
 
-The value of a state $s$ indicates how good or bad a state is for the agent to be in, measured by the expected total reward for an agent starting from this state. Hence we introduce the \textbf{value function}, which depends on the policy the agent chooses its actions from:
+When the transition function of an MPD is not available, model-free reinforcement learning allows the agent to simply rely on some trial-and-error experience for action selection in order to learn an optimal policy.
+Therefore, the value of a state $s$ indicates how good or bad a state is for the agent to be in, measured by the expected total reward for an agent starting from this state. Hence we introduce the \textbf{value function}, which depends on the policy the agent chooses its actions from:
 
 \begin{equation}\label{eq:value-function}
-V^{\pi}(s)=\mathbb{E}[R_t]=\mathbb{E}[\sum_{i=1}^{T}{\gamma^{i-1}{*}r_{i}}]\ \forall s \in S
+V^{\pi}(s)=\mathbb{E}[R_t]=\mathbb{E}[\sum_{i=1}^{T}{\gamma^{i-1}{r_{i}}}]\ \forall s \in S
 \end{equation}
 \\
 Among all value functions there is an \textbf{optimal value function} which has higher values for all states
@@ -516,19 +486,15 @@ There are two types of environments:
 \subsection{Agent}
 
 The goal of the agent is to solve the MDP by finding the optimal policy, which means finding the sequence of action that lead to maximize the total received reward.
-However, there are various approaches to so, which are commonly categorized (see \cite{rl-demysitifed2}) as follows:
-\begin{description}
-    \item[Value Based Agent:] the agent starts off with a random value function and then finds a new (improved) value function in an iterative process, until reaching the optimal value function. 
-    As stated in Eq. \ref{eq:value-function} one can easily derive the optimal policy from the optimal value function. 
+However, there are various approaches to so, which are commonly categorized (see \cite{rl-demysitifed2}) as follows.
 
-    \item[Policy Based Agent:] the agent starts off with a random policy, then finds the value function of that policy and derives a new (improved) policy based on the previous value function, and so on. Each policy is guaranteed to be a strict improvement over the previous one (unless it is already optimal). As stated in Eq. \ref{eq:value-function-policy}, given a policy, one can derive the value function.
+A \textit{value based agent} starts off with a random value function and then finds a new (improved) value function in an iterative process, until reaching the optimal value function. 
+As stated in Eq. \ref{eq:value-function} one can easily derive the optimal policy from the optimal value function. 
+A \textit{policy based agent} starts off with a random policy, then finds the value function of that policy and derives a new (improved) policy based on the previous value function, and so on. Each policy is guaranteed to be a strict improvement over the previous one (unless it is already optimal). As stated in Eq. \ref{eq:value-function-policy}, given a policy, one can derive the value function.
+The \textit{actor-critic agent} is a combination of a value-based and policy-based agent. Both, the policy and the reward from each state will be stored.
+\textit{Model-based agents} attempt to approximate the environment using a model. It then suggests the best possible behaviour.
+Contrarily, the \textit{model-free agents} build a policy just from experience from which it will derive how to behave optimally to get the most possible rewards.
 
-    \item[Actor-Critic Agent:] the agent is a combination of a value-based and policy-based agent. Both, the policy and the reward from each state will be stored.
-
-    \item[Model-Based Agent:] the agent attempts to approximate the environment using a model. It then suggests the best possible behaviour.
-
-    \item[Model-Free Agent:] the agent builds a policy just from experience from which it will derive how to behave optimally to get the most possible rewards.
-\end{description}
 
 \subsubsection{Value iteration}
 
@@ -562,7 +528,7 @@ In terms of the previously described reinforcement pipeline, the use of a functi
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
-        \includegraphics[width=12cm]{drl-pipeline.png}
+        \includegraphics[width=8cm]{drl-pipeline.png}
     }
     \caption{Deep Reinforcement learning end-to-end learning pipeline}
     \label{fig:drl-pipeline}

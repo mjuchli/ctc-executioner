@@ -16,8 +16,8 @@ Raw event data is collected from an exchange (Bittrex in our case) and processed
 
 In this chapter we explain the details of the collection process process and subsequently how a historical order book can be formed thereof, such that it can serve as the historical data source for the match engine.
 A sample period of the collected data set is then being investigated in order to find find and visualize properties of the market situation and behaviour of the market participants.
-The goal of the investigation is to find theories why certain occurrences might be beneficial to consider for the purpose of limit order placement.
-Thus, the findings serve as the basis for the feature engineering process which determines the input for the learners.
+The goal of the investigation is to find hypotheses which state why certain occurrences might be beneficial to consider for the purpose of limit order placement.
+Thus, the findings serve as the basis for the feature engineering process which determines the input for the learners as described in Chapter \ref{chap:setup}.
 
 \section{Collection}
 
@@ -65,7 +65,7 @@ As a result, a \textit{list} of order book states is formed which represent a hi
 
 We take a random period of the recorded data set, representing \textasciitilde10 minutes worth of event data, and try to extract essential information from either raw events or the generated order book.
 Our aim is to obtain an understanding of the market situation and how market participants place orders, including some of the properties mentioned in \ref{sec:ob-characteristics}.
-Subsequently we try to formulate theories why certain properties might be beneficial for the order placement process.
+We further aim to formulate \textit{hypotheses} which concern why certain properties might be beneficial for the order placement process.
 Being aware that the following observations are taken from a random sample of a historical data set, the intent is to make a suggestion which properties might be worth to consider in the feature engineering process.
 This is by no means a guarantee that the same observations are true for any order book.
 
@@ -104,7 +104,7 @@ It is evident that the best bid and ask are close to the price before and after 
 During the dip, the spread widens and is at times as large as \$25.
 \\
 \\
-\textit{\textbf{Theory:} participants post offerings close to the spread when the price is stable and start offering with a certain threshold during price fall or rise.}
+\textit{\textbf{Hypothesis:} participants post offerings close to the spread when the price is stable and start offering with a certain threshold during price fall or rise.}
 \\
 \\
 The orders placed on the deepest level on the buyer and seller side undergo a very interesting change.
@@ -116,7 +116,7 @@ Knowing that the price rises shortly after, it becomes more evident that some se
 The ask prices return to the level before the dip as soon as the price starts rising again.
 \\
 \\
-\textit{\textbf{Theory:} sellers allure buyers with higher listings during a price fall.}
+\textit{\textbf{Hypothesis:} sellers allure buyers with higher listings during a price fall.}
 \\
 \begin{figure}[H]
     \centering
@@ -135,13 +135,13 @@ The ask prices return to the level before the dip as soon as the price starts ri
 
 Figure \ref{fig:ob-price-dist-unfiltered} shows the distribution of prices of all types of events (create, cancel, trade) within this data set.
 As can be seen, most of the events contain prices in the range of the traded price (see Figure \ref{fig:ob-price}) and significantly less below and above this range.
-However, the number of events increase with prices on both, the far end of the buyer and seller side, which supports the above stated theory that orders deep in the book might in fact affect the price movement--even though they were not executed within the spectrum of this data set.
+However, the number of events increase with prices on both, the far end of the buyer and seller side, which supports the above stated hypothesis that orders deep in the book might in fact affect the price movement--even though they were not executed within the spectrum of this data set.
 We then filter events by rejecting outliers of their price $p$ according to standard deviation $\sigma$, $ |p_i - \overline{p}| < m * \sigma_{p} $, whereas $m=2$.
 As a result, Figure \ref{fig:ob-price-dist-filtered} shows the distribution of the prices from the filtered events, that follows a standard distribution.
 The mean lays at approximately \$10'100, the price level before and after the dip.
 \\
 \\
-\textit{\textbf{Theory:} in case of a price dip (or raise) density estimation can be applied to find a more stable price level.}
+\textit{\textbf{Hypothesis:} in case of a price dip (or raise) density estimation can be applied to find a more stable price level.}
 
 \subsection{Bid and ask volume imbalance}
 
@@ -184,7 +184,7 @@ We take the last statement as an indication that the market participants may hav
 Interestingly, even though the price rose after the dip, not as much volume was used on creations and cancellations of orders on the seller side.
 \\
 \\
-\textit{\textbf{Theory:} imbalance of bids and asks of event types indicates future behaviour of participants.}
+\textit{\textbf{Hypothesis:} imbalance of bids and asks of event types indicates future behaviour of participants.}
 
 \subsection{Events investigated over time}
 
@@ -264,12 +264,12 @@ For some, their impact on the market price is immediately obvious, for others it
 However, an attempt to find correlation between the behaviour of the events and the resulted trades with the application of learning techniques seems promising.
 \\
 \\
-\textit{\textbf{Theory:} patterns arising from posted volume in events can be detected and allow to estimate future short-term trading behaviour which can be exploited in favour of order placement.}
+\textit{\textbf{Hypothesis:} patterns arising from posted volume in events can be detected and allow to estimate future short-term trading behaviour which can be exploited in favour of order placement.}
 
 \subsection{Impact of traded price and volume}
 
 The price levels and volume of events over time was investigated for each type in the previous subsections.
-Patterns were found and a theory was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which eventually influences the market price and implicitly determines optimal order placement.
+Patterns were found and a hypothesis was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which eventually influences the market price and implicitly determines optimal order placement.
 The next logical step is to investigate the sum of traded volume at a given point in time (as shown in Figure \ref{fig:data-volmap-traded}) in combination with the price the asset was traded for.
 
 \begin{figure}[H]
@@ -292,7 +292,7 @@ Concluding this observation it is evident that few trades with small volume caus
 Multiple consecutive trades initiated one side or a single large the like, however, led the market price to move for substantially longer period of time.
 \\
 \\
-\textit{\textbf{Theory:} consecutive small or one large trade give an impulse that drives the market price up or down.}
+\textit{\textbf{Hypothesis:} consecutive small or one large trade give an impulse that drives the market price up or down.}
 
 \section{Conclusion}
 

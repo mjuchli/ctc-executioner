@@ -3,7 +3,7 @@
 
 Knowledge about the components and techniques required for optimizing order placement was provided in Chapter \ref{chap:preliminaries}, and previous approaches were introduced in Chapter \ref{chap:related-work}.
 The process of collecting historical event data and the construction of a limit order book was explained in Chapter \ref{chap:data}.
-The data was investigated and theories were stated as a guideline for a future learning process.
+The data was investigated and hypotheses were stated as a guideline for a future learning process.
 However, in order to apply reinforcement learning, an environment has to be developed which is flexible enough to allow investigation regarding different types of features and learning algorithms that are incorporated in an agent.
 The correctness of such an environment is critical as it emulates a stock exchange and therefore determines how orders would have been transacted in the past.
 If the implementation varies from the one used in exchanges, or does not cover certain edge cases, the matching of placed orders would differ significantly from the one in a production setup.
@@ -13,7 +13,7 @@ Therefore, the setup of the environment is described at first and explains how t
 Additionally, an extension of this environment is provided
 to simulate simultaneous order placement on both sides of the book.
 This process is commonly referred to as \textit{market making}.
-Subsequently, feature engineering is described which incorporates previously stated theories and results in features that can be used by the agents.
+Subsequently, feature engineering is described which incorporates previously stated hypotheses and results in features that can be used by the agents.
 Finally, two implementations of reinforcement learning agents are provided.
 A Q-Learning agent will serve as the learner when no market variables are provided and a Deep Q-Network agent is developed to handle complex features.
 
@@ -92,8 +92,6 @@ The reason for this is that the chessboard is in our case the order book that un
 More precisely, the state space $S$ is defined as a sequence of order book states, from which an agent can observe an observation state $O$.
 Important to note is the criteria for reaching the final state; that is, when the entire inventory was bought or sold--Checkmate!.
 
-There are two general types of variables that can be used in order to create an observation state: \textit{private variables} and \textit{market variables}.
-
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -103,6 +101,7 @@ There are two general types of variables that can be used in order to create an 
     \label{fig:setup-inventory}
 \end{figure}
 
+There are two general types of variables that can be used in order to create an observation state: \textit{private variables} and \textit{market variables} \cite{nevmyvaka2006reinforcement}.
 For private variables, the size of the state space depends on the $V$ shares that have to be bought or sold and the given time horizon $H$, resulting in a state $s \in R^2$.
 However, fractions of shares and time which evolve during the matching process would result in a vastly large state space.
 Therefore, similar to the discrete time steps which are described above, the $V$ shares are divided into discrete inventory units $i$ of size $\Delta{i}$, as illustrated in Figure \ref{fig:setup-inventory}.
@@ -140,8 +139,8 @@ For example, with $|A|=5$ that is $(p_{m^T}-0.2, p_{m^T}-0.1, p_{m^T}, p_{m^T}+0
 The action space is configurable and the default implementation is of size $|A|=101$, indicating that $a_{min}=-50$ and $a_{max=50}$ result in an order price $p=p_{m^T}-\$5$ and $p=p_{m^T}+\$5$ respectively.
 
 \subsection{Reward}
-
-The reward is defined as the difference of the market price before the order was placed $p_{m^T}$ and the volume weighted average price (Eq. \ref{eq:vwap}) paid or received after the order has been filled. 
+As described in Section \ref{sec:execution-placement}, the volume weighted average price (see Eq. \ref{eq:vwap} serves as a measure of the \textit{return} of order placement.
+Consequently, the \textit{reward} is defined as the difference of the market price before the order was placed $p_{m^T}$ and the volume weighted average price paid or received after the order has been filled. 
 Hence, for buying assets the reward is defined as $r=p_{m^T}-p_{vwap}$ and for selling assets $r=p_{vwap}-p_{m^T}$.
 In case no trades resulted during the matching process, the reward is $r=0$, indicating that no direct negative reward is provided.
 Reasons for this are that in case the order could not be matched over the course of the time horizon, a market order which likely produces trades with a worse price than the market price before the placement has started.
