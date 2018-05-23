@@ -465,7 +465,7 @@ V^*(s)=\max_{a}Q^*(s,a)\ \forall{s}\in{S}
 \\
 and thus the \textit{optimal policy} for state $s$ can be derived by choosing the action $a$ that gives maximum value
 
-\begin{equation}
+\begin{equation}\label{eq:optimal-policy-s}
 \pi^*(s)=\arg \max_{a} Q^*(s, a)\ \forall{s}\in{S}
 \end{equation}
 
@@ -484,6 +484,7 @@ There are two types of environments:
 \textit{Deterministic environments are, in general, easier to solve as the agent learns to improve the policy without uncertainties in the MDP. }
 
 \subsection{Agent}
+\label{sec:rl-agent}
 
 The goal of the agent is to solve the MDP by finding the optimal policy, which means finding the sequence of action that lead to maximize the total received reward.
 However, there are various approaches to so, which are commonly categorized (see \cite{rl-demysitifed2}) as follows.
@@ -494,25 +495,6 @@ A \textit{policy based agent} starts off with a random policy, then finds the va
 The \textit{actor-critic agent} is a combination of a value-based and policy-based agent. Both, the policy and the reward from each state will be stored.
 \textit{Model-based agents} attempt to approximate the environment using a model. It then suggests the best possible behaviour.
 Contrarily, the \textit{model-free agents} build a policy just from experience from which it will derive how to behave optimally to get the most possible rewards.
-
-
-\subsubsection{Value iteration}
-
-This work makes use of the \textit{value based agent} approach which relies on the \textit{action-value function} (Eq. \ref{eq:optimal-action-value-function}) that obeys an important identity known as the \textbf{Bellman equation}. 
-\\
-\\
-The intuition is that: if the optimal value action-value $Q^*(s',a')$ of the state $s'$ at the next time step $t+1$ was known for all possible actions $a'$, the optimal strategy is to select the action $a'$ which maximizes the expected value of $r+\gamma*Q^*(s',a')$,
-
-\begin{equation}\label{eq:bellman}
-Q^*(s,a)=\mathbb{E}[r+\gamma \max_{a'} Q^*(s',a')] \ \forall{s}\in{s},  a\in{A}
-\end{equation}
-\\
-The idea behind the many reinforcement learning algorithms which follow the iterative value approach is to estimate the action-value function by using the Bellman equation as an iterative update,
-\begin{equation}
-Q_{i+1}(s,a)=\mathbb{E}[r+\gamma \max_{a'}Q_{i}(s',a')]
-\end{equation}
-\\
-Value iteration algorithms then converge to the \textit{optimal action-value} function $Q_{i} \rightarrow Q^*$ as $i \rightarrow \infty$. \cite{sutton1998reinforcement}
 
 \subsection{Deep Reinforcement Learning}
 
