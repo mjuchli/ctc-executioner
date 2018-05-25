@@ -21,12 +21,11 @@ A Q-Learning agent will serve as the learner when no market variables are provid
 \section{Order Placement Environment}
 \label{sec:setup-order-placement}
 
-The reinforcement learning environment (see Section \ref{sec:rl-environment}) that emulates order placement on historical market data is introduced in this section.
-Thus, the environment enables an agent to buy or sell $V$ shares within a time horizon $H$.
+The reinforcement learning environment (see Section \ref{sec:rl-environment}) that emulates order placement on historical market data is introduced in this section and enables an agent to buy or sell $V$ shares within a time horizon $H$.
 Therefore, the previously described components (introduced in Chapter \ref{chap:preliminaries}) come into play.
-The main idea of its working is that, the agent observes a state $s_t$ (so-called observation state) at some time $t$ and responds with an action $a_t$ that indicates at which price to place the order in the order book.
+The main idea of its working is that, the agent observes a state $s_t$ (so-called observation state) at some time $t$ and responds with an action $a_t$ that indicates at which position to place the order in the order book, relative to the current market price.
 The task of the environment is then to evaluate the outcome of the placed order and report to the agent accordingly with a reward $r_{t+1}$ and the next state $s_{t+1}$.
-Subsequently, the order is cancelled such that the agent can submit a new action for the remaining shares to be bought.
+Subsequently, the order is cancelled such that the agent can submit a new action for the remaining shares to be bought or sold.
 
 OpenAI Gym \cite{brockman2016openai} is an open source toolkit for reinforcement learning.
 The interfaces of this toolkit were used in order to follow their standards while building this environment.
@@ -44,18 +43,20 @@ The advantage of which is that any OpenAI Gym compatible agent and bench-marking
 \end{figure}
 
 Figure \ref{fig:rl-env-overview} shows the inner workings of the order placement environment.
-The process is initialized and driven by an agent sending an action to the environment.
+An epoch is initialized with the \texttt{reset} function, which clears the internal state of the environment.
+The internal state consists of the remaining shares the agent has to buy or sell, denoted by the \textit{inventory} $i$, the time step $t$ the agent has left to do so and the previous \textit{order}.
+The agent explores the environment using the $step$ function with which it sends the action to execute.
 The first component to react upon receiving the action is the \textit{order handling component}, which determines whether the agent is currently trying to fill an order, that is when the agent has started an epoch, or a new order needs to be created, that is when the agent starts an epoch.
-In either case, the order price will be adjusted according to the received action.
-Subsequently, the order is forwarded to the \textit{match engine}, which tries to execute the order within the historical data set that is represented by the \textit{order book}.
+In either case, a new order is created and the price is set according to the received action.
+Subsequently, the order is forwarded to the \textit{match engine}, which tries to execute the order within the historical data set, namely the \textit{order book}.
 The order and the possible resulted trades evolved during the matching process are then forwarded to the \textit{evaluation component}.
-Since it can take multiple steps for the agent to fill an order, the environment is required to have an internal state.
-Therefore, the remaining inventory and the consumed time of the order is updated and stored in the \textit{memory}.
+Since it can take multiple steps for the agent to fill an order, the remaining inventory and the consumed time of the order is updated and stored in the \textit{memory}.
 Additionally, the index of the last visited order book state is stored such that in a next step the match engine will proceed the matching where it stopped last.
 In case no trades resulted during the matching process, only the consumed time is subtracted from the order.
 Otherwise, the sum of the size of the trades is subtracted from the order's inventory.
 Subsequently, the evaluation component calculates the reward based on the previously resulted trades.
 Finally, the reward, the next observation state and whether or not the order is completely filled (e.g. the epoch is done) is finally forwarded to the agent.
+Additionally, if the order is not completely filled after the last step taken by the agent, a market order follows in order to get to the final state.
 
 \subsection{Configuration parameters}
 
@@ -76,10 +77,8 @@ The default time horizon is 100 seconds for reasons described in Section \ref{se
 As illustrated in Figure \ref{fig:setup-time-horizon}, the time horizon is segmented into discrete time steps $t$ and therefore limits the number of steps an agent can take within one epoch.
 Each step is of the same length $\Delta{t}$, which is for illustration purposes set to 10 seconds.
 We pick $T$ as the maximum value of $t$, indicating that the entire amount of time is remaining, whereas $t=0$ states that the time horizon is consumed.
-Consequently, within an epoch the GTT of the order is being adjusted to $\Delta{t}$ for each step, still resulting in a total GTT of $H$.
-Therefore, if the order is not completely filled after the last step was taken, a market order follows in order to get to the final state.
-
-Lastly, a \textit{feature type} has to be defined which determines the state observed by the agent.
+Consequently, within a single epoch, the GTT of the order is being adjusted to $\Delta{t}$ for each step, still resulting in a total GTT of $H$.
+Lastly, a \textit{feature type} has to be defined which determines the state observed by the agent, which represents one of the features described in Section \ref{sec:feature-engineering}.
 
 \subsection{State}
 \label{setup:state}
@@ -90,31 +89,14 @@ The epoch would continue until the agent either wins or looses the game and the 
 In the order placement environment however, it is, as if, for each step not only one or two figures of the chess board change their position, but almost all of them.
 And a reset of the environment will result in an ever changing setup of the figures on the chessboard.
 The reason for this is that the chessboard is in our case the order book that underlies a time series which evolves over time.
-More precisely, the state space $S$ is defined as a sequence of order book states, from which an agent can observe an observation state $O$.
-Important to note is the criteria for reaching the final state; that is, when the entire inventory was bought or sold, $i=0$--Checkmate!.
-
-\begin{figure}[H]
-    \centering
-    \makebox[\linewidth]{
-        \includegraphics[width=10cm]{images/setup-inventory}
-    }
-    \caption{Inventory of $V$ segmented shares with a remaining inventory $i$.}
-    \label{fig:setup-inventory}
-\end{figure}
-
+More precisely, the state space $S$ is defined as a sequence of order book states from which an agent can observe an observation state $O$ at some point in time.
+The final state is reached when the entire inventory was bought or sold, that is $i=0$--Checkmate!.
+\\
+\\
 There are two general types of variables that can be used in order to create an observation state: \textit{private variables} and \textit{market variables} \cite{nevmyvaka2006reinforcement}.
 For private variables, the size of the state space depends on the $V$ shares that have to be bought or sold and the given time horizon $H$, resulting in a state $s \in R^2$.
-However, fractions of shares and time which evolve during the matching process would result in a vastly large state space.
-Therefore, similar to the discrete time steps which are described above, the $V$ shares are divided into discrete inventory units $i$ of size $\Delta{i}$, as illustrated in Figure \ref{fig:setup-inventory}.
-The inventory units approximate the order size in order for our policy to distinguish between when creating an order.
-We pick $I$ as the maximum value of $i$, indicating that the entire inventory remains to be filled.
-The order is considered as filled when $i=0$, meaning that no inventory is left.
-Given the inventory units and the time steps, the state space remains $s \in R^2$ but becomes much smaller in its size, namely $I \times H$.
-In the default setup a segmentation of 0.01 BTC steps is applied.
-For example, if the initial inventory is 1.0 BTC and the order is partially filled with 0.015 BTC during an epoch, the remaining inventory is 0.99 BTC (instead of 0.985) for the next step the agent will take.
-
 Market variables can be any information derived from the order book at a given moment in time.
-Therefore the specified feature set (see Section \ref{sec:feature-engineering} below), results in some state $s \in R^d$, whereas $d$ is the dimension of the feature set.
+Therefore the specified feature set (see Section \ref{sec:feature-engineering} below) defines the dimension of the state the agent observes.
 Consequently, market variables increase the state space drastically, due to (1) the initialization of the environment using a random order book state and (2) the dimensionality of the feature set.
 Hence, for each step taken by the agent, the order book states are likely to be different and thus the state the agent observes changes equally. 
 
@@ -149,12 +131,7 @@ Reasons for this are that in case the order could not be matched over the course
 Given the definition of the discounted return (Eq. \ref{eq:discounted-return}) we calculate $R_t=\sum_{t'=t}^{t_0}{\gamma^{t'-t}*r_{t'}}$, where $t_0$ is the time step at which the agent has its time horizon for the ongoing order fully consumed.
 
 \section{Market making Environment}
-
 TODO
-
-\section{Feature engineering}
-\label{sec:feature-engineering}
-
 
 
 \section{Q-Learning agent}
@@ -183,13 +160,32 @@ Value iteration algorithms then converge to the \textit{optimal action-value} fu
 \\
 \\
 Q-Learning makes use of the aforementioned Bellman equation (Eq. \ref{eq:bellman}) that undergoes an iterative update.
-Q-learning has proven to be an efficient and effective choice to solve problems in a discrete state space.
+The algorithm has proven to be an efficient and effective choice to solve problems in a discrete state space.
 Limitations of this approach are known when the agent is applied to large or continuous state spaces \cite{gaskett2002q}.
 This becomes more apparent when considering the presented algorithm above.
 The iterative update of the action-value function $Q(s,a)$ (defined in Eq. \ref{eq:optimal-action-value-function} and used in Eq. \ref{eq:bellman}) is exposed to the size of the state $s$ and action $a$, and thus if $s$ is chosen too large, the optimal policy $\pi^*(s)$ (defined in Eq. \ref{eq:optimal-policy-s}) will likely not converge.
 As a result, the features derived in Chapter \ref{chap:data} are not applicable for this agent.
+
 However, private variables of the environment, as described in Section \ref{setup:state}, respect the aforementioned limitations.
 As a result, the observation the Q-Learning agent will receive from the environment is defined by the discrete inventory unit $i$ and time step $t$, that is, $s=(i, t)$.
+
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=10cm]{images/setup-inventory}
+    }
+    \caption{Inventory of $V$ segmented shares with a remaining inventory $i$.}
+    \label{fig:setup-inventory}
+\end{figure}
+
+However, fractions of shares and time which evolve during the matching process would result in a vastly large state space.
+Therefore, similar to the discrete time steps which are described above, the $V$ shares are divided into discrete inventory units $i$ of size $\Delta{i}$, as illustrated in Figure \ref{fig:setup-inventory}.
+The inventory units approximate the order size in order for our policy to distinguish between when creating an order.
+We pick $I$ as the maximum value of $i$, indicating that the entire inventory remains to be filled.
+The order is considered as filled when $i=0$, meaning that no inventory is left.
+Given the inventory units and the time steps, the state space remains $s \in R^2$ but becomes much smaller in its size, namely $I \times H$.
+In the default setup a segmentation of 0.01 BTC steps is applied.
+For example, if the initial inventory is 1.0 BTC and the order is partially filled with 0.015 BTC during an epoch, the remaining inventory is 0.99 BTC (instead of 0.985) for the next step the agent will take.
 
 \begin{algorithm}
 \caption{Q-Learning algorithm}\label{alg:q-learning}
@@ -208,9 +204,7 @@ As a result, the observation the Q-Learning agent will receive from the environm
 \EndFor
 \end{algorithmic}
 \end{algorithm}
-\hfill
-\\
-Algorithm \ref{alg:q-learning} describes the algorithm used in this work.
+Finall, Algorithm \ref{alg:q-learning} describes the Q-Learning algorithm used in this work.
 An adaption was made to a conventional Q-Learning algorithm\cite{sutton1998reinforcement} regarding the steps the agents will proceed, and therefore follows the same concept as presented in \cite{nevmyvaka2006reinforcement}.
 The agent solves the order placement problem inductively, starting off the episode at state $s=(i,0)$, when $t=0$.
 This has the benefit that the environment enforces a market order (see Section \ref{setup:reward}) at the beginning of an epoch, for all inventory units $i$ and therefore provides immediate reward to the agent.
@@ -226,3 +220,5 @@ Hence, the agent has learned each discrete step $i$ and $t$ in the process of bu
 
 \section{Deep Q-Network agent}
 \label{setup:dqn}
+
+\section{Conclusion}

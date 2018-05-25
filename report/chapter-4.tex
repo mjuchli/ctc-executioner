@@ -17,9 +17,12 @@ Raw event data is collected from an exchange (Bittrex in our case) and processed
 In this chapter we explain the details of the collection process process and subsequently how a historical order book can be formed thereof, such that it can serve as the historical data source for the match engine.
 A sample period of the collected data set is then being investigated in order to find find and visualize properties of the market situation and behaviour of the market participants.
 The goal of the investigation is to find hypotheses which state why certain occurrences might be beneficial to consider for the purpose of limit order placement.
-Thus, the findings serve as the basis for the feature engineering process which determines the input for the learners as described in Chapter \ref{chap:setup}.
+Thus, the findings serve as the basis for the feature engineering process which determines the input for the learner.
+Therefore, as a last section of this chapter, we engineer features which cover the stated hypotheses.
+As a result, the features serve as the observed state that is to be evaluated by the reinforcement learning agents described in Chapter \ref{chap:setup}.
 
 \section{Collection}
+\label{sec:data-collection}
 
 There are various ways in order to build a copy of a historical limit order book. However, the only way to rebuild a complete order book is by processing market \textit{events}, that is, every market update for a given ticker (trading pair, in our case USD/BTC).
 There are three common types of events, all of which are initiated by a market participant (trader): \textit{order created}, \textit{order cancelled} or \textit{order filled} in case a market order crosses the spread and initiates a trade.
@@ -44,6 +47,7 @@ We segment the status update into separate events with the same nonce, whereas e
 Consequently, $order \in Order_{Limit}$ and $trade \in Trade$.
 
 \section{Order book generation}
+\label{sec:data-generation}
 
 The next step is to transform the collected events into an order book structure.
 By chronologically iterating over the processed events (Eq. \ref{eq:event-update}), we create a new order book state (Eq. \ref{eq:order-book-state}) for each such event that has a consecutive time stamp.
@@ -62,11 +66,12 @@ As a result, a \textit{list} of order book states is formed which represent a hi
 \vfill
 
 \section{Understanding the data set}
+\label{sec:data-hypotheses}
 
 We take a random period of the recorded data set, representing \textasciitilde10 minutes worth of event data, and try to extract essential information from either raw events or the generated order book.
 Our aim is to obtain an understanding of the market situation and how market participants place orders, including some of the properties mentioned in \ref{sec:ob-characteristics}.
 We further aim to formulate \textit{hypotheses} which concern why certain properties might be beneficial for the order placement process.
-Being aware that the following observations are taken from a random sample of a historical data set, the intent is to make a suggestion which properties might be worth to consider in the feature engineering process.
+Being aware that the following observations are taken from a random sample of a historical data set, the intention is to make a suggestion which properties might be worth to consider in the feature engineering process.
 This is by no means a guarantee that the same observations are true for any order book.
 
 Figure \ref{fig:data-price-movement} below shows the price movement of the sample period, indicating a movement from \$10'100 to \$10'030 and back within 10 minutes.
@@ -80,7 +85,8 @@ Figure \ref{fig:data-price-movement} below shows the price movement of the sampl
     \label{fig:data-price-movement}
 \end{figure}
 
-\subsection{Bid and ask price positioning}
+\subsection{Importance of order prices}
+\label{sec:data-hypthesis-order-price}
 
 \begin{figure}[H]
     \centering
@@ -117,33 +123,34 @@ The ask prices return to the level before the dip as soon as the price starts ri
 \\
 \\
 \textit{\textbf{Hypothesis:} sellers allure buyers with higher listings during a price fall.}
-\\
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{images/ob-price-bars}
-        \caption{Distribution of prices}
-        \label{fig:ob-price-dist-unfiltered}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{images/ob-price-bars-rejected}
-        \caption{Distribution of prices (filtered)}
-        \label{fig:ob-price-dist-filtered}
-    \end{subfigure}
-    \caption{Price distribution of events}\label{fig:price-distribution}
-\end{figure}
+%\\
+%\begin{figure}[H]
+%    \centering
+%    \begin{subfigure}[b]{0.45\textwidth}
+%        \includegraphics[width=\textwidth]{images/ob-price-bars}
+%        \caption{Distribution of prices}
+%        \label{fig:ob-price-dist-unfiltered}
+%    \end{subfigure}
+%    \begin{subfigure}[b]{0.45\textwidth}
+%        \includegraphics[width=\textwidth]{images/ob-price-bars-rejected}
+%        \caption{Distribution of prices (filtered)}
+%        \label{fig:ob-price-dist-filtered}
+%    \end{subfigure}
+%    \caption{Price distribution of events}\label{fig:price-distribution}
+%\end{figure}
+%
+%Figure \ref{fig:ob-price-dist-unfiltered} shows the distribution of prices of all types of events (create, cancel, trade) within this data set.
+%As can be seen, most of the events contain prices in the range of the traded price (see Figure \ref{fig:ob-price}) and significantly less below and above this range.
+%However, the number of events increase with prices on both, the far end of the buyer and seller side, which supports the above stated hypothesis that orders deep in the book might in fact affect the price movement--even though they were not executed within the spectrum of this data set.
+%We then filter events by rejecting outliers of their price $p$ according to standard deviation $\sigma$, $ |p_i - \overline{p}| < m * \sigma_{p} $, whereas $m=2$.
+%As a result, Figure \ref{fig:ob-price-dist-filtered} shows the distribution of the prices from the filtered events, that follows a standard distribution.
+%The mean lays at approximately \$10'100, the price level before and after the dip.
+%\\
+%\\
+%\textit{\textbf{Hypothesis:} in case of a price dip (or raise) density estimation can be applied to find a more stable price level.}
 
-Figure \ref{fig:ob-price-dist-unfiltered} shows the distribution of prices of all types of events (create, cancel, trade) within this data set.
-As can be seen, most of the events contain prices in the range of the traded price (see Figure \ref{fig:ob-price}) and significantly less below and above this range.
-However, the number of events increase with prices on both, the far end of the buyer and seller side, which supports the above stated hypothesis that orders deep in the book might in fact affect the price movement--even though they were not executed within the spectrum of this data set.
-We then filter events by rejecting outliers of their price $p$ according to standard deviation $\sigma$, $ |p_i - \overline{p}| < m * \sigma_{p} $, whereas $m=2$.
-As a result, Figure \ref{fig:ob-price-dist-filtered} shows the distribution of the prices from the filtered events, that follows a standard distribution.
-The mean lays at approximately \$10'100, the price level before and after the dip.
-\\
-\\
-\textit{\textbf{Hypothesis:} in case of a price dip (or raise) density estimation can be applied to find a more stable price level.}
-
-\subsection{Bid and ask volume imbalance}
+\subsection{Importance of order volume}
+\label{sec:data-hypthesis-order-volume}
 
 It was shown that market participants position their offerings at different price levels as the asset price is moving due to trading.
 The second variable in posting orders is the volume and we aim to determine whether or not this is a factor which is affected during the previously introduced price movement.
@@ -186,7 +193,8 @@ Interestingly, even though the price rose after the dip, not as much volume was 
 \\
 \textit{\textbf{Hypothesis:} imbalance of bids and asks of event types indicates future behaviour of participants.}
 
-\subsection{Events investigated over time}
+\subsection{Volume of orders and trades over time on the market price}
+\label{sec:data-hypthesis-order-trade-volume-time}
 
 So far, the volume was investigated as a sum of events over time.
 In order to understand the behaviour of the participants in greater detail, a \textit{volume map} shall provide better insight into the single events occurred over time.
@@ -264,9 +272,10 @@ For some, their impact on the market price is immediately obvious, for others it
 However, an attempt to find correlation between the behaviour of the events and the resulted trades with the application of learning techniques seems promising.
 \\
 \\
-\textit{\textbf{Hypothesis:} patterns arising from posted volume in events can be detected and allow to estimate future short-term trading behaviour which can be exploited in favour of order placement.}
+\textit{\textbf{Hypothesis:} patterns arising from posted volume in events determines future short-term trading behaviour which can be exploited in favour of order placement.}
 
 \subsection{Impact of traded price and volume}
+\label{sec:data-hypthesis-trade-price-volume}
 
 The price levels and volume of events over time was investigated for each type in the previous subsections.
 Patterns were found and a hypothesis was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which eventually influences the market price and implicitly determines optimal order placement.
@@ -294,6 +303,157 @@ Multiple consecutive trades initiated one side or a single large the like, howev
 \\
 \textit{\textbf{Hypothesis:} consecutive small or one large trade give an impulse that drives the market price up or down.}
 
+
+\section{Feature engineering}
+\label{sec:feature-engineering}
+The previous section demonstrated certain trading behaviours of the market participants in an order driven market, which ultimately determines the evolution of the limit order book. 
+Hypotheses were laid out which give reasons to believe that the outcome in terms of a change in the order book constellation and price development can be related to aforementioned trading behaviour.
+Consequently this implies that orders can be placed and filled at limit levels which result in a favourable price.
+Therefore, the following subsections will introduce features that are derived from the previously collected (Section \ref{sec:data-collection}) and processed (Section \ref{sec:data-generation}) data and cover the assumptions stated in Section \ref{sec:data-hypotheses}.
+Instead of hand-engineer features such as shown in \cite{nevmyvaka2006reinforcement, hwangdeep, fletcher2010multiple}, the aim of this project is to learn the knowledge directly from raw inputs, similar to what has been proven to be a successful method in the gaming sector\cite{mnih2013playing} and was recently applied to the trading context\cite{lu2017agent}.
+
+\subsection{Feature: price and size of historical orders}
+The order book was defined in Eq. \ref{eq:order-book} and generated in Section \ref{sec:data-generation} serves as the first feature.
+More precisely for each sample at time $t$, we use $n$ order book entries (Eq.\ref{eq:order-book-entry}) of $m$ of the order book states (Eq. \ref{eq:order-book-state}) with time stamp $ts \le t$.
+Therefore, as shown in Eq. \ref{eq:feature-bid-ask}, $s_{bidask} \in \mathbb{R^+}^{m\times2\times2n}$ is the state observed by a reinforcement learning agent.
+The order book states are ordered such that $m$ is the closest to $t$.
+The $n$ order book entries are closest to the spread whereas only the price $bp$ (respectively $ap$) and size $bs$ (respectively $as$) are considered.
+
+\begin{equation}\label{eq:feature-bid-ask}
+s_{bidask} =\begin{bmatrix}
+{\displaystyle \begin{pmatrix}
+bp_{11} & bs_{11}\\
+bp_{12} & bs_{12}\\
+\vdots  & \vdots \\
+bp_{1n} & bs_{1n}\\
+ap_{11} & as_{11}\\
+ap_{12} & as_{12}\\
+\vdots  & \vdots \\
+ap_{1n} & as_{1n}
+\end{pmatrix}} & \begin{pmatrix}
+bp_{21} & bs_{21}\\
+bp_{22} & bs_{22}\\
+\vdots  & \vdots \\
+bp_{2n} & bs_{2n}\\
+ap_{21} & as_{21}\\
+ap_{22} & as_{22}\\
+\vdots  & \vdots \\
+ap_{2n} & as_{2n}
+\end{pmatrix} & \cdots  & \begin{pmatrix}
+bp_{m1} & bs_{m1}\\
+bp_{m2} & bs_{m2}\\
+\vdots  & \vdots \\
+bp_{mn} & bs_{mn}\\
+ap_{m1} & as_{m1}\\
+ap_{m2} & as_{m2}\\
+\vdots  & \vdots \\
+ap_{mn} & as_{mn}
+\end{pmatrix}
+\end{bmatrix} \ 
+\end{equation}
+
+Considering that the state will be observed by a deep learning agent, which makes use of a neural network, scaling of inputs will contribute to a faster learning process.
+We therefore further apply normalization the the prices ($bp, ap$) with respect to the best ask price for each state, that is $ap_{i1}$.
+Equivalently we normalize the sizes ($bs, as$) with respect to the size provided at the best ask $as_{i1}$.
+While this method does not scale the values of prices and sizes within a predefined range, the values sill decrease significantly.
+Furthermore, empirical observations show that the minimum and maximum of prices within a single order book state do not differ more than ~2\%, which determines the approximate scaling boundary.
+\\
+\\
+This feature incorporates some of the previously stated hypotheses and therefore enables the learner to determine whether the statements were valid or not.
+Particularly, the feature includes historical order prices (hypothesis \ref{sec:data-hypthesis-order-price}) their volume (hypothesis \ref{sec:data-hypthesis-order-volume} and partly \ref{sec:data-hypthesis-order-trade-volume-time}).
+\\
+\\
+\todo[inline]{Might be unnecessary according to our talk.}
+The question remains how large the window of $m$ order books states and the number of limit levels $n$ should be chosen.
+The following observation provides an intuition about the parameters, however, this by no means aims to make an estimate how well the agent may perform under the consideration a certain parameter setup.
+
+In order to reason about the impact of $n$ limit levels, we take the average of 100 evaluations whereas we take 1000 random order book states for which we measure the Shannon entropy\cite{shannon2001mathematical} for a range of 40 limit levels (maximum of what goes from collection) on the bid and ask side, applied to price and size.
+The entropy therefore serves as an indicator of how much information can be gained for each limit level, derived from the their change in price and size for each state.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{bidask-price-entropy}
+        \caption{Entropy of order prices}
+        \label{fig:bidask-price-entropy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{bidask-size-entropy}
+        \caption{Entropy of order sizes}
+        \label{fig:bidask-size-entropy}
+    \end{subfigure}
+    \caption{Entropy measured for 40 limit levels}\label{fig:bidask-entropy}
+\end{figure}
+
+It is noticeable that the entropy remains high regarding the prices for for limit levels 0-30 on both, bid and ask side, as shown in Figure \ref{fig:bidask-price-entropy}. 
+The price becomes slightly more constant for limit levels $>30$. 
+The entropy for order sizes, as shown in Figure \ref{fig:bidask-size-entropy}, drop after 20 limit levels, which indicates that the accumulated order size deep in the book is more constant. 
+We therefore suggest to consider at least 30 limit levels of the bid-ask feature.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{bidask-price-correlation}
+        \caption{Correlation of order prices}
+        \label{fig:bidask-price-correlation}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{bidask-size-correlation}
+        \caption{Correlation of order sizes}
+        \label{fig:bidask-size-correlation}
+    \end{subfigure}
+    \caption{Correlation measured for 100 order book states}\label{fig:bidask-correlation}
+\end{figure}
+
+After having a brief understanding of how limit levels $n$ affect order prices and sizes, we try to make a statement about how order book states are related to the most recent state.
+More precisely, we determine the correlation of the order prices and sizes from the previous $m$ states to the most recent order book state.
+We take the average of 100 evaluations whereas we take a single order book state at time $t$ and a sequence of 100 previous order book states for each of which we measure the Shannon entropy\cite{shannon2001mathematical} to the state at $t$, whereas $n=40$ (maximum).
+As can be seen in Figure \ref{fig:bidask-price-correlation}, the correlation of the price positions drop rapidly, however the effective change is not significant, indicating that the price changes are noticeable but overall do not differ much.
+Order book states which lay more than 40 states in the past are slightly less correlated to the current state.
+The correlation of order sizes, as shown in Figure \ref{fig:bidask-size-correlation} drops more rapid and to a much greater extent than the order prices.
+This indicates that traders choose a broad range of order sizes.
+As a result, a window size of order book states $m$ greater than 40 states is suggested to benefit from price differences within the feature.
+
+\subsection{Feature: price and size of historical trades}
+The previously worked out a feature provides information to the learner in order to reason about the hypotheses which are derived from order placed and cancelled.
+In order to reason about whether or not trade events can serve as appropriate input for a learner to optimize order placement, we construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time} as follows.
+A $Trade$ (Eq. \ref{eq:trade}) carries an order side $os$, a quantity $q$ and a price $p$.
+Similar to the previous feature, we take $n$ trades into consideration which occurred within a time window $m$, measured by the time stamps $ts$ of the trades.
+Since the feature is generated at some time $t$ when an order should be placed, the time stamp of the historical orders must satisfy $ts \leq t$.
+\\
+\\
+A straightforward approach would be to construct the feature $s_{trade}$ as,
+\begin{equation}
+    s_{trade} =\begin{pmatrix}
+        p_1 & q_1 & os_1 \\
+        p_2 & q_2 & os_2 \\
+        \vdots & \vdots & \vdots\\
+        p_n & q_n & os_n \\
+    \end{pmatrix}
+    \ \forall \ p, q, os, ts \in Trade
+\end{equation}, whereas $ts_n - ts_1 \leq m$.
+However, trades do not occur in fixed time intervals and therefore causes the length of the vector to vary.
+We therefore accumulate the prices and sizes of the trades with equal order side over a fixed amount of time (in seconds) $\Delta{s}$.
+That is,
+\begin{equation}
+    Trade' = (ts', os', \sum_{i=ts}^{ts+\Delta{s}}p_i, \sum_{i=ts}^{ts+\Delta{s}}q_i)
+    \ \forall \ p, q, os \in \{Trade \mid os = os'\}
+\end{equation}
+As a result we can redefine the feature $s_{trade}$, that is used by the learner as observation state, as,
+\begin{equation}
+    s_{trade} =\begin{pmatrix}
+        p_1 & q_1 & os_1 \\
+        p_2 & q_2 & os_2 \\
+        \vdots & \vdots & \vdots\\
+        p_n & q_n & os_n \\
+    \end{pmatrix}
+    \ \forall \ p, q, os, ts \in Trade'
+\end{equation}, whereas $ts_n - ts_1 \leq m \ \land \ ts_i \geq ts_{i-1} + \Delta{s}$.
+\hfill
+\\
+\\
+As a result we constructed a feature vector of length $n = \frac{m}{\Delta{s}}$ that contains information about the price and quantity of historical trades.
+
 \section{Conclusion}
 
 Event data was collected from a crypto-currency exchange and a limit order book was reconstructed thereof.
@@ -301,4 +461,4 @@ The limit order book serves as the historical data set and source for the match 
 Subsequently the price chart as the result of the generated order book was shown and an investigation of the underlying event data was proceeded.
 Patterns were found which give insight in how market participants positioned their offerings with respect to price and size.
 It was shown that the price movement was likely due to (1) an imbalance in bid and ask orders; (2) a distinctive way of posting or cancelling orders; and (3) consecutive or impulsive trades.
-Hence, the findings in this chapter serve as the basis for the feature engineering process. 
+These findings were incorporated within the feature engineering process, which resulted in two features that can be used by the reinforcement learning agents.

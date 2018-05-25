@@ -79,7 +79,7 @@ OB=OS_1, ... OS_n
 \end{equation}
 As we can see, every such state holds entries on the buyer and seller side which change in their \textit{price} and \textit{amount}.
 To each such row, which can be formed by participants who submitted limit orders of some amount at the same price level, we refer to as \textit{order book entry ($OE_{s_l}$)} of the side $s$ at level $l$.
-\begin{equation}
+\begin{equation}\label{eq:order-book-entry}
 OE_{s_l}=(count, price, amount)
 \end{equation}
 , whereas $count \in \mathbb{N}$, $price \in \mathbb{R^+}$ and $amount \in \mathbb{R^+}$.
