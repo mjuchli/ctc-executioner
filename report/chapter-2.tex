@@ -489,24 +489,40 @@ There are two types of environments:
 The goal of the agent is to solve the MDP by finding the optimal policy, which means finding the sequence of action that lead to maximize the total received reward.
 However, there are various approaches to so, which are commonly categorized (see \cite{rl-demysitifed2}) as follows.
 
-A \textit{value based agent} starts off with a random value function and then finds a new (improved) value function in an iterative process, until reaching the optimal value function. 
-As stated in Eq. \ref{eq:value-function} one can easily derive the optimal policy from the optimal value function. 
-A \textit{policy based agent} starts off with a random policy, then finds the value function of that policy and derives a new (improved) policy based on the previous value function, and so on. Each policy is guaranteed to be a strict improvement over the previous one (unless it is already optimal). As stated in Eq. \ref{eq:value-function-policy}, given a policy, one can derive the value function.
+A \textit{value based agent} starts off with a random value function and then finds a new (improved) value function in an iterative process, until reaching the optimal value function (Eq. \ref{eq:optimal-value-function}). 
+As shown in Eq. \ref{eq:value-function} one can easily derive the optimal policy from the optimal value function. 
+A \textit{policy based agent} starts off with a random policy, then finds the value function of that policy and derives a new (improved) policy based on the previous value function, until finding the optimal policy (Eq. \ref{eq:optimal-policy-s}). 
+Each policy is guaranteed to be a strict improvement over the previous one (unless it is already optimal). 
+As stated in Eq. \ref{eq:value-function-policy}, given a policy, one can derive the value function.
 The \textit{actor-critic agent} is a combination of a value-based and policy-based agent. Both, the policy and the reward from each state will be stored.
 \textit{Model-based agents} attempt to approximate the environment using a model. It then suggests the best possible behaviour.
-Contrarily, the \textit{model-free agents} build a policy just from experience from which it will derive how to behave optimally to get the most possible rewards.
 
 \subsection{Deep Reinforcement Learning}
 
 From \cite{deeprlcourse} goes: \textit{``Reinforcement learning can be naturally integrated with artificial neural networks to obtain high-quality generalization''}.
 The term \textit{generalization} refers to the action-value function (Eq. \ref{eq:optimal-action-value-function}) and the fact that this value is estimated for each state separately--which becomes totally impractical in for large state spaces that can occur in real world scenarios.
-A function approximator is therefore a common choice to to estimate the action-value function instead. Typically a linear function approximator is being used but in deep reinforcement learning, one uses a non-linear function approximator; particularly a neural network with weights $\theta$. The \textit{action value function} therefore becomes
-
+Deep reinforcement learning generally stands for approximating the value function, the policy, or the model of reinforcement learning via a neural network.
+As is preferred in reinforcement learning, neural network approximates a function as a non-linear function.
+Therefore, the estimate of the approximation is a local optimum, which is not always desirable.
+In our particular case, we use deep reinforcement learning in order to approximate the action-value function (Eq. \ref{eq:optimal-action-value-function}). 
+Therefore we represent the action-value function with weights $\omega$ as,
 \begin{equation}
-Q(s, a; \theta) \approx Q^*(s,a)
+Q(s, a; \omega) \approx Q^*(s,a)
 \end{equation}
+Given a state $s$, the neural network outputs $n$ linear output units (corresponding to $n$ actions), as shown in Figure \ref{drl-qvalues}.
+The agent will then choose the action with the maximum q-value.
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{drl-qvalues}
+    }
+    \caption{Neural network outputs q-values}
+    \label{fig:drl-q-values}
+\end{figure}
+\hfill
 \\
-In terms of the previously described reinforcement pipeline, the use of a function approximator simplifies this process by replacing state estimation and modelling components by a perception, as shown in Figure \ref{fig:drl-pipeline}:
+In terms of the previously described reinforcement end-to-end learning pipeline, the use of a function approximator simplifies this process.
+We can omit the state estimation step and instead rely on raw features \cite{mnih2013playing}, as illustrated in Figure \ref{fig:drl-pipeline}:
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{

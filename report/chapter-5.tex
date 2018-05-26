@@ -220,5 +220,32 @@ Hence, the agent has learned each discrete step $i$ and $t$ in the process of bu
 
 \section{Deep Q-Network agent}
 \label{setup:dqn}
+The second agent, which is presented in this section, is known as Deep Q-Network (mnih2015human) \cite{mnih2015human}.
+DQN is a deep reinforcement learning method that combines reinforcement learning with a class
+of artificial neural network known as deep neural networks.
+
+\todo[inline]{describe NN}
+%Notably, recent advances in deep neural networks9–11, in which several layers of
+%nodes are used to build up progressively more abstract representations of the data, have made it possible for artificial neural networks to learn concepts such as object categories directly from raw sensory data.
+%We use one particularly successful architecture, the deep convolutional network17, which uses hierarchical layers of tiled convolutional filters to mimic the effects of receptive fields--thereby exploiting the correlations present in trading activity.
+
+Similar to the Q-Learning approach described above, the Q-values should obey the Bellman equation \ref{eq:bellman}.
+The neural network treats the right-hand side, with weights $\omega$, as a target, that is, $r+\gamma \max_{a'} Q^*(s',a', \omega)$.
+We then minimize the mean squared error (MSE) by stochastic gradient descent,
+\begin{equation}
+    L=(r+\gamma \max_{a'} Q^*(s',a', \omega') - Q(s,a,\omega))^2
+\end{equation}
+Whereas the optimal q-value converges for the Q-Learning approach that uses a look-up table, the use of a non-linear function approximator can cause the convergence due to (1) correlation between samples and (2) non-stationary targets.
+
+In order to remove correlations we use \textit{experience replay} with which we build a data set $D$ from the agent's own experience.
+Therefore we store the agent's experience $e_t=(s_t, a_t, r_t, s_{t+1})$ at each time-step $t$ in the data set, such that $D_t = {e_1, ..., e_t}$.
+During learning process, Q-learning updates on samples (or mini-batches) of these experience $(s,a,r,s') ~ U(D)$ which are drawn uniformly at random from the pool of stored samples in $D$.
+Hence, we prevent the learner from developing a pattern from the sequential nature of the experiences the agent observes throughout one epoch.
+In our case this might be the case during a significant rise or fall of the market price.
+In addition, experience replay stores rare experiences for much longer such that the agent can learn these more often.
+That is for example when massive subsequent buy order led to a noticeable change in the order book.
+
+In order to deal with non-stationarity, the target network parameters $\delta'$ are only updated with $\delta$ every C steps and otherwise unchanged between individual updates.
+
 
 \section{Conclusion}
