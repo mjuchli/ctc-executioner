@@ -1,7 +1,9 @@
 \chapter{Data curation}
 \label{chap:data}
 
-In the crypto-currency domain, real-time price data is, for most exchanges, freely available. Historical data is oftentimes limited with respect to how far back into past the data is being provided. However, continuously recording real-time data results in a complete historical data set from the time when recording was started and provides the desired data set for this research.
+In the crypto-currency domain, real-time price data is, for most exchanges, freely available. 
+Historical data is oftentimes limited with respect to how far back into past the data is being provided.
+However, continuously recording real-time data results in a complete historical data set from the time when recording was started and provides the desired data set for this research.
 A historical limit order book consisting of states which store every bid and ask posted by traders is commonly referred to as a \textit{complete order book}.
 The process to accumulate the data and build the order book is illustrated in a high level pipeline in Figure \ref{fig:data-pipeline} below.
 Raw event data is collected from an exchange (Bittrex in our case) and processed in order to form a historical limit order book.
@@ -69,8 +71,9 @@ As a result, a \textit{list} of order book states is formed which represent a hi
 \label{sec:data-hypotheses}
 
 We take a random period of the recorded data set, representing \textasciitilde10 minutes worth of event data, and try to extract essential information from either raw events or the generated order book.
-Our aim is to obtain an understanding of the market situation and how market participants place orders, including some of the properties mentioned in \ref{sec:ob-characteristics}.
-We further aim to formulate \textit{hypotheses} which concern why certain properties might be beneficial for the order placement process.
+We first obtain an insight into the market situation with regards to some of the properties mentioned in Section \ref{sec:ob-characteristics} and understand how market participants place orders.
+Our aim is then to find patterns of how market participants behave and how this may affect the market.
+Subsequently, we formulate \textit{hypotheses} which concern why certain properties might be beneficial for the order placement process.
 Being aware that the following observations are taken from a random sample of a historical data set, the intention is to make a suggestion which properties might be worth to consider in the feature engineering process.
 This is by no means a guarantee that the same observations are true for any order book.
 
@@ -110,7 +113,7 @@ It is evident that the best bid and ask are close to the price before and after 
 During the dip, the spread widens and is at times as large as \$25.
 \\
 \\
-\textit{\textbf{Hypothesis:} participants post offerings close to the spread when the price is stable and start offering with a certain threshold during price fall or rise.}
+\textit{\textbf{Hypothesis:} participants post offerings close to the spread when the price is stable and start offering with a certain threshold from the spread during a price fall or rise.}
 \\
 \\
 The orders placed on the deepest level on the buyer and seller side undergo a very interesting change.
@@ -226,7 +229,7 @@ This is market with a red-dashed vertical box.
 Furthermore, a very distinctive pattern is when a trader posts orders within a short period of time but changing volume.
 This might be evidence of someone splitting a larger order into small pieces and is marked with an orange-dashed circle.
 Some refer to such a behaviour as \textit{buy-wall} (\textit{sell-wall} in case of an ask orders) and surprisingly, this behaviour appeared the most when before and during the price started rising again (compare time stamps from Figure \ref{fig:data-price-movement}).
-Last but not least, examples of areas dominated by one particular order side is marked with a purple box.
+Last but not least, examples of areas dominated by one particular order side (buy or sell) is marked with a purple box.
 
 \begin{figure}[H]
     \centering
@@ -304,7 +307,7 @@ Multiple consecutive trades initiated one side or a single large the like, howev
 \textit{\textbf{Hypothesis:} consecutive small or one large trade give an impulse that drives the market price up or down.}
 
 
-\section{Feature engineering}
+\section{Feature construction}
 \label{sec:feature-engineering}
 The previous section demonstrated certain trading behaviours of the market participants in an order driven market, which ultimately determines the evolution of the limit order book. 
 Hypotheses were laid out which give reasons to believe that the outcome in terms of a change in the order book constellation and price development can be related to aforementioned trading behaviour.
