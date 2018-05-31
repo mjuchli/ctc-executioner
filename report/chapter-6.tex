@@ -61,19 +61,19 @@ By doing so, the expected return is observed by the average return of placing (e
 The price of the orders are determined by a range of 201 limit levels ($-100...100$) with step size \$0.10, resulting in orders priced in the range of $p_m-10 \ \dots \ p_m+10$, whereas $p_m$ is the market price before the order was placed.
 
 \subsection{Order placement behaviour on data set I}
-For data set I, where the market undergoes a downwards trend, the intuition is as follows:
+For the data set I, where the market undergoes a downwards trend, the intuition is as follows:
 We expect buy orders to result in better returns when placing deep in the order book, meaning with a highly negative limit level.
-Since the price tends to fall, the assumption is that one is able to buy for a lower price once time has passed.
+Since the price tends to fall, the assumption is that an agent is able to buy for a lower price once time has passed.
 Therefore, the longer the time horizon, the lower the limit level can be chosen in order to still be able to execute the full amount of shares.
-Contrarily, we expect sell orders to provide better returns when crossing the spread with a positive limit level.
-The assumption is that in a falling market it is unlikely that anyone is willing to buy for higher prices and therefore the sell orders must be placed higher in the book in order to sell as soon as possible.
-Hence, the longer the time horizon, the more loss one would make.
-We proceed this investigation on the reinforcement learning environment as shown Figure \ref{fig:behvaiour-down}.
+Contrarily, we expect sell orders to provide better returns when the agent crosses the spread with a positive limit level.
+The assumption is that in a falling market it is unlikely that market participants are willing to buy for higher prices and therefore the agent must place sell orders higher in the book in order to sell immediately.
+Otherwise, the longer the time horizon, the less return an agent would retrieve as the market order after the order has not been filled becomes costly.
+We proceed this investigation within our reinforcement learning environment as shown Figure \ref{fig:behvaiour-down}.
 Therefore, time horizons of 10, 30, 60 and 100 seconds (y-axis) and limit levels reaching from -100 to +100 (x-axis) were chosen.
 The time horizons determine the various situations an agent is confronted while proceeding steps within an epoch.
 The limit levels are chosen broadly in order to retrieve understanding about the outcome of a variety of possible actions.
 
-With a time horizon of only 10 seconds left, the expected behaviour is only moderately confirmed.
+With a time horizon of only 10 seconds left, the expected behaviour is, however, proven wrong.
 For buy orders, shown in Figure \ref{fig:behvaiour-down-10s-buy}, the returns suggest to place the orders close to the spread, but still on the opposing side, at a limit level of $\sim$+5.
 The spike at limit level $\sim$-5 indicates that the overall best return was provided at this level, however it comes with the risk that the orders fails to execute, indicated by the downwards spike also close to level $\sim$-5.
 For selling within 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-sell}, the best return is given when crossing the spread with a positive limit level of $\sim$+50.
@@ -145,16 +145,37 @@ Placing orders very deep in the book have the same effect as when placing the or
 \end{figure}
 
 \subsection{Order placement behaviour on data set II}
-For the data set II, which contains an upwards trend, the intuition is exactly the opposite as when the data set I was investigated.
-Namely, we expect buy orders to result in better returns when immediately filled by crossing the spread and placing the order high in the order book.
-The assumption is that when the price rises, traders become less willing to sell for the market price or lower, the more time passes.
-Therefore, the longer the time horizon, the more critical it becomes to execute immediately, as otherwise shares have to be bought to an increased market price.
-Likewise, we expect better returns of sell orders which are placed deep in the book, meaning to be sold at a higher price.
-The assumption is that while the price is rising, market participants become more likely to buy assets for higher prices.
-Hence, the longer the time horizon, the deeper one is able to place a limit sell order in the book without the need of a following market order due to (partially) unexecuted shares.
+For the data set II, which contains an upwards trend, the intuition is the opposite as during the investigation of data set I.
+Namely, we expect buy orders to result in better returns when immediately filled, that is when the agent crosses the spread and places the order high in the book.
+The assumption is that as time passes and the market price rises, other traders become less willing to sell for the market price or lower.
+Therefore, the longer the time horizon given to the agent, the more critical it becomes to execute immediately, as otherwise shares would have to be bought to an increased market price.
+Likewise, better returns of sell orders are expected when placed deep in the book, meaning to be sold at a higher price.
+The assumption is that as the price rises, market participants become more likely to buy assets for higher prices.
+Hence, the longer the time horizon, the deeper the agent should place a limit sell order in the book, as this will likely not require a following market order due to (partially) unexecuted shares.
 We investigate these assumptions by proceeding the same experiment as in the previous section, as shown in Figure \ref{fig:behvaiour-up}, whereas time horizons of 10, 30, 60 and 100 seconds (y-axis) and limit levels reaching from -100 to +100 (x-axis) were chosen
 
+The returns of buy orders with a time horizon of 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-buy}, correlate with the above stated assumptions.
+That is, highest returns are achieved when crossing the spread and although limit levels in the range of 1-50 tend to perform the same, the wises choice for the agent would be to choose the one closest to the spread as it comes with the least risk of paying a premium.
+With the same time horizon, the sell orders placed contradict the assumptions, as shown in Figure \ref{fig:behvaiour-up-10s-sell}.
+Here the agent is rewarded the most when choosing a price for the order at market price, as indicated by the limit level 0, that is on the spread.
+A highly negative limit level causes to receive approximately \$3.00 less than when placing at the suggested market price.
 
+With 30 seconds left to buy 1.0 BTC, in Figure \ref{fig:behvaiour-up-30s-buy}, the orders placed above the spread become stable for any such limit level, much more so than in the previous investigation with the data set I.
+This is likely due to the higher order pressure of the data set II, as described in Section \ref{sec:analysis-data-sets}.
+Hence, there are more market participants willing to sell.
+The return curve that indicates sell orders placed by an agent, shown in Figure \ref{fig:behvaiour-up-30s-sell}, shifts towards a more evenly distributed returns compare to when only 10 seconds were left.
+Therefore, limit orders tend to become more rewarding and an agent might benefit from a slight increase in price within the given time horizon.
+
+Even more so, this pattern becomes evident when a time horizon of 60 and 100 seconds were given, as shown in Figures \ref{fig:behvaiour-up-60s-sell} and \ref{fig:behvaiour-up-100s-sell} respectively.
+With the increased time horizon the assumptions stated in the beginning of this section are confirmed by shown that the agent, when trying to sell shares, should place orders indeed deep in the order book.
+When time passes and the market price rises, market participants are willing to buy for an increasing price and an agent is able to sell all assets for such an increased price without the need of a following market order.
+Contrarily, if the agent decides to offer to sell the assets for a decreasing price, as indicated by the higher limit levels above the spread, the less reward would be given.
+More precisely, for a time horizon of 100 seconds, the agent would receive up to \$7.00 less when choosing to cross the spread with a limit level of +100 compared to some negative limit level.
+Figures \ref{fig:behvaiour-up-60s-buy} and \ref{fig:behvaiour-up-100s-buy} which show the result of an agent that tries to buy assets within the increased time horizon, the behaviour is clear.
+That is, during an uprising market, the damage can be minimized by crossing the spread and buying immediately.
+The advice stated before remains, that is, the agent should choose a price a few steps (\$0.10) above the market price as there is enough liquidity in the market to buy the demanded number of assets.
+\vfill
+\newpage
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -202,6 +223,13 @@ We investigate these assumptions by proceeding the same experiment as in the pre
 \end{figure}
 
 \section{Q-Learning without market variables}
+The previous section provided knowledge about the possibilities of the agent when placing buy and sell orders using the reinforcement learning environment and with the underlying data set I and II.
+The expected behaviour for each limit level has been observed under two significantly different market situations.
+More precisely, it has been shown that during an upwards trend, market participants are willing to buy and sell shares for higher prices and contrarily, during a downwards trend for lower prices.
+It has been observed that an agent would therefore indeed be able to place its orders accordingly in order to minimize the price to pay, respectively maximize the price for which to receive, the assets.
+
+This section aims to reproduce the optimal achieved results shown in the previous section with the use of the Q-Learning agent as described in Chapter \ref{chap:setup} (Section \ref{setup:q-learning}).
+
 
 \section{Deep Q-Network on execution}
 
