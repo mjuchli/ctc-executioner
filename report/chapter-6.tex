@@ -44,7 +44,7 @@ When reinforcement learning is applied, the data sets are split with ratio $2:1$
 
 \section{An empirical investigation of the reinforcement learning environment}
 
-This section serves to investigate the relationship between the limit order placement and the received reward, for the corresponding orders.
+This section serves to investigate the relationship between the limit order placement and the received reward, within a fixed time horizon.
 The demonstrated methods are based on the related work described in Section \ref{sec:related-execution-behaviour} and provide the ability to empirically evaluate the reinforcement learning environment (Chapter \ref{chap:setup}) by simulating the behaviour of an agent that buys and sells shares at every possible limit level and records the received rewards (e.g. immediate returns).
 The return is denoted by the difference between the market price prior the order placement and the volume weighted average price (VWAP) paid, respectively received, as stated in Eq. \ref{setup:reward}.
 As a result we gain understanding of the behaviour of order placement within a given historical market and set a baseline for the reinforcement learners to come.
@@ -225,11 +225,128 @@ The advice stated before remains, that is, the agent should choose a price a few
 \section{Q-Learning without market variables}
 The previous section provided knowledge about the possibilities of the agent when placing buy and sell orders using the reinforcement learning environment and with the underlying data set I and II.
 The expected behaviour for each limit level has been observed under two significantly different market situations.
-More precisely, it has been shown that during an upwards trend, market participants are willing to buy and sell shares for higher prices and contrarily, during a downwards trend for lower prices.
-It has been observed that an agent would therefore indeed be able to place its orders accordingly in order to minimize the price to pay, respectively maximize the price for which to receive, the assets.
+For each such observation, a fixed time horizon was chosen for which an order was residing in the order book, followed by a market order in case the order has not been filled completely.
+It has been shown that during an upwards trend, market participants are willing to buy and sell shares for higher prices and contrarily, during a downwards trend for lower prices.
+However, it has been observed that an agent would therefore indeed be able to, if limit orders were placed accordingly, minimize the price to pay, respectively maximize the price for which to receive, the assets.
 
-This section aims to reproduce the optimal achieved results shown in the previous section with the use of the Q-Learning agent as described in Chapter \ref{chap:setup} (Section \ref{setup:q-learning}).
+This section aims to investigate whether or not a Q-Learning agent, as described in Chapter \ref{chap:setup} (Section \ref{setup:q-learning}), can reproduce the optimal achieved results shown in the previous section.
+Therefore the agent is allowed to cancel its order after every 10 seconds and place a new order with the remaining inventory, until the time horizon is fully consumed.
+For both data sets (I and II) an independent learning experiment is being proceeded, whereas the agent is supposed to either buy or sell shares.
+For each such experiment, the training is limited to 5000 epochs and 1000 orders are being back-tested on the test set.
+The Q-Learning agent is set up as follows:
+the learning rate $\alpha=0.1$ is chosen small due to extensive amounts of steps the agent will make throughout the epochs.
+The discount factor $\gamma=0.7$ is chosen slightly in favour of immediate rewards in the hope to prevent the agent from running out of time which would result in a following market order.
+Initially, the exploration constant $\epsilon$ is set to 0.1 but then multiplied by an epsilon decay factor for each step taken by the agent, such that $\epsilon=\sim0.8$ once training is completed.
+This allows the agent first to explore the action space and then exploit on the learned optimal actions to take.
 
+As a result of this setup, four observations were made and for each of which the training and testing results are stated below.
+During training, the mean rewards given and average action chosen for each epoch are recorded.
+Using the training model, a backtest is run on the test data sets, whereas the agent executes orders and chooses the learned optimal action to take.
+The result of which is shown as the average reward received while doing so.
+The difference to the occurring costs of a market order then serves as the guideline of how well the algorithm performs.
+\vfill
+\newpage
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_1_10000_BUY_mean_rewards.png}
+        \caption{Mean rewards per epoch (buy)}
+        \label{fig:analysis-q-learn-1-reward-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_1_10000_BUY_mean_actions.png}
+        \caption{Mean actions per epoch (buy)}
+        \label{fig:analysis-q-learn-1-action-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_1_10000_SELL_mean_rewards.png}
+        \caption{Mean rewards per epoch (sell)}
+        \label{fig:analysis-q-learn-1-reward-sell}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_1_10000_SELL_mean_actions.png}
+        \caption{Mean actions per epoch (sell)}
+        \label{fig:analysis-q-learn-1-action-sell}
+    \end{subfigure}
+    \caption{Mean rewards and actions for buying and selling on training data set I.}
+    \label{fig:analysis-q-learn-1}
+\end{figure}
+
+Figure \ref{fig:analysis-q-learn-1} shows the experiment proceeded on data set I.
+The average received reward during the training where the agents task was to buy 1.0 BTC within 100 seconds is shown in Figure \ref{fig:analysis-q-learn-1-reward-buy}.
+Over the course of 5000 epochs, the agent was able to improve the mean reward slightly, by $\sim$0.5.
+Reasons for this is the change in chosen actions as illustrated in Figure \ref{fig:analysis-q-learn-1-action-buy}.
+The agent started off with an average action of $\sim$-3 which is a result of the low epsilon parameter that makes the agent choose actions randomly.
+Actions where then adapted to the more negative side of the order book, such that after $\sim$1500 epochs the agent choose actions as low as -20 and then adjusted and stagnated at $\sim$-15.
+The backtest, during which 1000 orders were executed on the test data set, resulted in an average reward of \textit{-1.17}--that is worse than the average reward received on the training close to the end of the training.
+The cost of a market order on the test data set is -0.05 such that the strategy of the agent results in additional costs of \$-1.12 when buying 1.0 BTC.
+Comparing the found results to the empirical analysis proceeded on the same data set, as shown in Figure \ref{fig:behvaiour-down}, provides means for interpretation:
+Considering the backtest results and the highly negative average action the agent chooses towards the end of the training indicates that the order was oftentimes not able to be filled within the time horizon and a market order was followed.
+
+The rewards received for the agents tasks to sell the assets are much more volatile, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}, and no clear improvement can be seen.
+Consequently, there was no significant adjustment made by the agent regarding the chosen actions, as indicated in Figure \ref{fig:analysis-q-learn-1-action-sell}.
+The agent started off at limit level 0 and after some exploration concluded to keep choosing actions at the same level as it started off.
+The backtest resulted in an average reward of -21.34 achieved by the agent.
+The reward received for placing market orders on the test set account to a negative reward of -27.70.
+Hence, the agent is able to save \$6.36 when selling 1.0 BTC.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_BUY_mean_rewards.png}
+        \caption{Mean rewards per epoch (buy)}
+        \label{fig:analysis-q-learn-2-reward-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_BUY_mean_actions.png}
+        \caption{Mean actions per epoch (buy)}
+        \label{fig:analysis-q-learn-2-action-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_SELL_mean_rewards.png}
+        \caption{Mean rewards per epoch (sell)}
+        \label{fig:analysis-q-learn-2-reward-sell}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_SELL_mean_actions.png}
+        \caption{Mean actions per epoch (sell)}
+        \label{fig:analysis-q-learn-2-action-sell}
+    \end{subfigure}
+    \caption{Mean rewards and actions for buying and selling on training data set II.}
+    \label{fig:analysis-q-learn-2}
+\end{figure}
+
+Figure \ref{fig:analysis-q-learn-2} shows the experiment proceeded on data set II.
+The average received reward while training to buy the asset is shown in Figure \ref{fig:analysis-q-learn-2-reward-buy}.
+Throughout the epochs, the agent was able to improve the mean reward like with the previous data by roughly 0.5.
+Even though the trend of this data set is the opposite, the change in chosen actions correlates to the previous findings and is illustrated in Figure \ref{fig:analysis-q-learn-2-action-buy}.
+The backtest on the test data set (of data set II), resulted in an average reward of \textit{-1.04} -- again worse than the average reward received on the training set.
+A market order on this test data accounts to an average reward of -1.06, indicating that the agent is saving \$0.02 when buying 1.0 BTC.
+When taking the empirical analysis proceeded on this data set into consideration, as shown in Figure \ref{fig:behvaiour-up}, the received rewards indicate that the agent again failed to execute orders with the placed limit orders and oftentimes market orders followed.
+
+Similar to the order placed on data set I, the rewards received for the agents tasks to sell the assets are much more volatile when it comes to selling, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}.
+No improvement can be seen from the rewards during the training as no significant adjustment was made by the agent regarding the chosen actions, as indicated in Figure \ref{fig:analysis-q-learn-2-action-sell}.
+The backtest resulted in an average reward of -4.74 achieved by the agent, whereas market orders result to an average reward of -1.72.
+Hence, the agent causes to pay a premium of \$3.02 for selling 1.0 BTC.
+\begin{table}[H]
+\centering
+\begin{tabular}{l|l|l|}
+\cline{2-3}
+& \textbf{Agent} & \textbf{\begin{tabular}[c]{@{}l@{}}Market\\ Order\end{tabular}} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & -1.17          & -0.05                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -21.34         & -27.70                                                          \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.04          & -1.06                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & -4.74          & -1.72                                                           \\ \hline
+\end{tabular}
+\caption{Summary of rewards for the Q-Learning agent and market orders.}
+\label{tbl:analysis-q-learn-summary}
+\end{table}
+The findings of this section are summarized in Table \ref{tbl:analysis-q-learn-summary}.
+We conclude that the Q-Learning agent was not able to place buy and sell orders in a way which would result in a price better than the current market price.
+Oftentimes, a market order which would cause an immediate buy or sell would even be the better choice.
+Clearly, this is due to the fact that the agent was not able to find the most suitable actions.
+In this section we have only investigated the mean of the actions chosen throughout an epoch, which gave enough proofs that the chosen actions resulted mostly in market orders.
+In the following section, where the DQN agent is being investigated, we plan to investigate the chosen sequence of actions within one epoch in order to gain even better understanding about the decision process of the agent.
 
 \section{Deep Q-Network on execution}
 

@@ -58,10 +58,8 @@ Finally, the reward, the next observation state and whether or not the order is 
 Additionally, if the order is not completely filled after the last step taken by the agent, a market order follows in order to get to the final state.
 
 \subsection{Configuration parameters}
-
-For the environment to be flexible, such that agents can place orders in various settings, configuration parameter have to be defined.
+For the environment to be flexible, such that agents can place orders in various settings, a total of four configuration parameter have to be defined: \textit{order side (OS), time horizon (H), time step length ($\Delta{t}$)} and \textit{feature type (F)}.
 The \textit{order side} $OS$ (previously defined in Eq. \ref{eq:order-side}) specifies whether the orders, which are created within the environment, are intended to be buy or sell orders.
-
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -70,14 +68,13 @@ The \textit{order side} $OS$ (previously defined in Eq. \ref{eq:order-side}) spe
     \caption{Segmented time horizon $H$ with remaining time $t$.}
     \label{fig:setup-time-horizon}
 \end{figure}
-
 The time horizon $H$ defines the amount of time given in order fill an order.
 The default time horizon is 100 seconds for reasons described in Section \ref{sec:execution-placement}, which reflects the Good-Till-Time (see \ref{sec:ob-characteristics}) of the order.
 As illustrated in Figure \ref{fig:setup-time-horizon}, the time horizon is segmented into discrete time steps $t$ and therefore limits the number of steps an agent can take within one epoch.
 Each step is of the same length $\Delta{t}$, which is for illustration purposes set to 10 seconds.
 We pick $T$ as the maximum value of $t$, indicating that the entire amount of time is remaining, whereas $t=0$ states that the time horizon is consumed.
 Consequently, within a single epoch, the GTT of the order is being adjusted to $\Delta{t}$ for each step, still resulting in a total GTT of $H$.
-Lastly, a \textit{feature type} has to be defined which determines the state observed by the agent, which represents one of the features described in Section \ref{sec:feature-engineering}.
+Lastly, the \textit{feature type } $F$ determines the state observed by the agent, which represents one of the features described in Section \ref{sec:feature-engineering}.
 
 \subsection{State}
 \label{setup:state}
@@ -238,13 +235,10 @@ Whereas the optimal q-value converges for the Q-Learning approach that uses a lo
 
 In order to remove correlations we use \textit{experience replay} with which we build a data set $D$ from the agent's own experience.
 Therefore we store the agent's experience $e_t=(s_t, a_t, r_t, s_{t+1})$ at each time-step $t$ in the data set, such that $D_t = {e_1, ..., e_t}$.
-During learning process, Q-learning updates on samples (or mini-batches) of these experience $(s,a,r,s') ~ U(D)$ which are drawn uniformly at random from the pool of stored samples in $D$.
+During learning process, Q-learning updates on samples (or mini-batches) of these experience $(s,a,r,s') \sim U(D)$ which are drawn uniformly at random from the pool of stored samples in $D$.
 Hence, we prevent the learner from developing a pattern from the sequential nature of the experiences the agent observes throughout one epoch.
 In our case this might be the case during a significant rise or fall of the market price.
 In addition, experience replay stores rare experiences for much longer such that the agent can learn these more often.
 That is for example when massive subsequent buy order led to a noticeable change in the order book.
 
 In order to deal with non-stationarity, the target network parameters $\delta'$ are only updated with $\delta$ every C steps and otherwise unchanged between individual updates.
-
-
-\section{Conclusion}
