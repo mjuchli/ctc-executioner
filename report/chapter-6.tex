@@ -246,6 +246,9 @@ The result of which is shown as the average reward received while doing so.
 The difference to the occurring costs of a market order then serves as the guideline of how well the algorithm performs.
 \vfill
 \newpage
+
+\subsection{Results of training and testing on data set I and II}
+
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -328,6 +331,9 @@ Similar to the order placed on data set I, the rewards received for the agents t
 No improvement can be seen from the rewards during the training as no significant adjustment was made by the agent regarding the chosen actions, as indicated in Figure \ref{fig:analysis-q-learn-2-action-sell}.
 The backtest resulted in an average reward of -4.74 achieved by the agent, whereas market orders result to an average reward of -1.72.
 Hence, the agent causes to pay a premium of \$3.02 for selling 1.0 BTC.
+
+\subsection{Conclusion of Q-Learning approach}
+
 \begin{table}[H]
 \centering
 \begin{tabular}{l|l|l|}
@@ -345,11 +351,36 @@ The findings of this section are summarized in Table \ref{tbl:analysis-q-learn-s
 We conclude that the Q-Learning agent was not able to place buy and sell orders in a way which would result in a price better than the current market price.
 Oftentimes, a market order which would cause an immediate buy or sell would even be the better choice.
 Clearly, this is due to the fact that the agent was not able to find the most suitable actions.
+Furthermore, in order to investigate whether or not these results were a result of the agent aiming for too much immediate reward, the same experiment was proceeded with $\gamma=0.3$.
+However, no improvement could be made and instead the agent achieved similar results while requiring more epochs in order to converge to the same mean of actions.
 In this section we have only investigated the mean of the actions chosen throughout an epoch, which gave enough proofs that the chosen actions resulted mostly in market orders.
 In the following section, where the DQN agent is being investigated, we plan to investigate the chosen sequence of actions within one epoch in order to gain even better understanding about the decision process of the agent.
+Furthermore, it is to be assumed that the absence of market variables, while only relying on the given rewards, makes it hard for any learner to determine an optimal strategy.
+Therefore, the following section will make use of market variables in order to determine whether or not a learner can exploit the information hidden in the market and then act in favour of optimally placing limit orders.
 
-\section{Deep Q-Network on execution}
+\section{Deep Q-Network}
 
-\section{Deep Q-Network on market making}
+In the previous section the Q-Learning agent was trained on the given data sets and no significant optimization in terms of buying and selling assets was achieved.
+That was, without market variables and by only relying on private variables instead.
+By considering the previously found results of the empirical analysis of the limit order placement behaviour we found that most of the limit orders placed by the Q-Learning agent were not filled within the given time horizon and instead market orders had to be submitted after the time was consumed.
 
-\section{Deep Q-Network with event flow data}
+In this section we aim to determine whether or not the DQN agent is capable of extracting information provided by the raw market features and therefore improve the limit order placement strategy.
+The setup is the same as in the previous section whereas the agents task is to buy and sell 1.0 BTC within 100 seconds (step size 10 seconds) on both data sets I and II.
+Furthermore, both features which were derived in Chapter \ref{chap:data} will be applied and investigated separately.
+We then reason about the capabilities of this approach in greater detail by investigating a sample order submission and uncover the actions the agent chooses to take throughout one epoch.
+In addition, artificial order books are being created which serve as new data sets to train and test the DQN agent on.
+By doing so, we aim to determine the limitations of this approach.
+The final evaluation will take place using the market making environment (described in Chapter \ref{chap:setup}) whereas we place buy and sell orders simultaneously and determine if the agent is capable of making a profit, which implies that on average the order placement must be better than the market price before the orders were placed.
+Eventually, we conclude our findings and reason about the capabilities of the DQN approach (and its use of the market features) by comparing it to the previously stated Q-Learning results.
+
+\subsection{Application of historical order feature}
+
+
+
+\subsection{Application of historical trade feature}
+
+\subsection{Evaluation of limitations using artificial market data}
+
+\subsection{Capability of making profits by acting as a market maker}
+
+\subsection{Conclusion of DQN approach}

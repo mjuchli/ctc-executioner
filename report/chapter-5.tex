@@ -200,7 +200,7 @@ For example, if the initial inventory is 1.0 BTC and the order is partially fill
 \EndFor
 \end{algorithmic}
 \end{algorithm}
-Finall, Algorithm \ref{alg:q-learning} describes the Q-Learning algorithm used in this work.
+Finally, Algorithm \ref{alg:q-learning} describes the Q-Learning algorithm used in this work.
 An adaption was made to a conventional Q-Learning algorithm\cite{sutton1998reinforcement} regarding the steps the agents will proceed, and therefore follows the same concept as presented in \cite{nevmyvaka2006reinforcement}.
 The agent solves the order placement problem inductively, starting off the episode at state $s=(i,0)$, when $t=0$.
 This has the benefit that the environment enforces a market order (see Section \ref{setup:reward}) at the beginning of an epoch, for all inventory units $i$ and therefore provides immediate reward to the agent.

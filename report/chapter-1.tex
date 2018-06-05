@@ -1,26 +1,26 @@
 \chapter{Introduction}
 
-Financial institutions make decisions on whether to buy or sell assets based on various reasons, including: customer requests, fundamental analysis\cite{fundamental-analysis}, technical analysis\cite{technical-analysis}, top-down investing\cite{td-investing}, bottom-up investing\cite{bu-investing} and many more.
-The high-level trading strategies oftentimes define how the institution positions itself in the financial markets and, if existent, towards its customers.
-Regardless of the high-level trading strategy that is being applied, the invariable outcome is the decision to buy or sell assets.
-This work aims to make a step towards answering the non-trivial question on how one can optimize a buy or sell of an asset on a stock exchange with the use of reinforcement learning techniques.
-The following sections will elaborate this problem briefly and state the research objectives of this work.
-We then list the contributions made to the research communities throughout this work, followed by a brief overview of the structure of this report.
+Financial institutions make decisions to buy or sell assets for many reasons, including: customer requests, fundamental analysis\cite{fundamental-analysis}, technical analysis\cite{technical-analysis}, top-down investing\cite{td-investing}, and bottom-up investing\cite{bu-investing}.
+High-level trading strategies oftentimes define how an institution positions itself in financial markets and, if applicable, towards its customers.
+Regardless of the high-level trading strategy that is being applied, the invariable outcome is a decision to buy or sell assets.
+This work aims to take a step towards answering the important question of how one can optimize a purchase or sale of an asset on a stock exchange with the use of reinforcement learning techniques.
+The subsequent sections will elaborate this problem briefly and state the research objectives of this work.
+We will list the contributions made to research communities throughout this work, followed by a brief overview of the structure of this report.
 
 \section{Context and Problem Statement}
 \label{sec:problem-statement}
 
-We are concerned about the way assets, specifically \textit{securities} (exchange traded assets), are traded at stock exchanges.
-There is little consensus as to when corporate stock was first traded; some argue that the exchange, in the form as we know it today, dates as far back as 1531, when the East Indian Company stock was traded in Antwerp\cite{stock-exchange}.
-Modern financial markets such as the London Stock exchange (LSE), the New York Stock Exchange (NYSE) but also the numerous crypto-currency exchanges which appeared suddenly in the last few year, all rely on the same very same principles as back then.
-They allow participant (so-called traders) to buy or sell a given amount of a security to, respectively for, a certain price.
-When in the late '90s the regulatories started to let traders reach into the market using electronic communications networks (ECNs), a new era arose \cite{patterson2012dark}.
-Since then, high frequency trading (HFT) and sophisticated algorithmic trading makes up a substantial and ever increasing part of the participants of the electronic markets.
-Their servers are oftentimes co-located with the exchanges and specialized computer networks have been constructed to provide millisecond advantage for arbitraging trades between the exchanges.
-Ever since, traders without such equipment and techniques feel that they are at a disadvantage in such an environment. \cite{patterson2012dark}
-While anything else than trading trough electronic channels would be unthinkable of today, a certain gap between trading companies and investors without fibre access to the exchanges or supporting algorithms still exists.
-As a result, traders are forced to take an initial loss into account when buying or selling securities -- and might not even be aware of it.
-In order to understand why that might be the case, we have to grasp a basic understanding of a so-called order book and how securities are bought at an exchange.
+We are concerned about the way assets, specifically \textit{securities} (exchange traded assets), are traded on stock exchanges.
+There is little consensus as to when corporate stock was first traded; some argue that the exchange, in the form we know it today, dates back as far as 1531, when East Indian Company stock was traded in Antwerp\cite{stock-exchange}.
+Modern financial markets such as the London Stock exchange (LSE), the New York Stock Exchange (NYSE), but also the numerous crypto-currency exchanges which have appeared suddenly in the last few years, all rely on the very same principles as back then.
+They allow participants (called "traders") to buy or sell a given amount of a security at a particular price.
+In the late 1990s, the regulatory authorities started to let traders access the markets using electronic communications networks (ECNs) and so a new era dawned \cite{patterson2012dark}.
+Since then, high frequency trading (HFT) and sophisticated algorithmic trading vehicles have made up a substantial and ever-increasing part of electronic market participants.
+Their servers are oftentimes located within exchanges and specialized computer networks have been constructed to provide millisecond-level advantage in the arbitrage of trades between exchanges.
+Ever since, traders without such equipment and techniques have felt that they are at a disadvantage in such an environment. \cite{patterson2012dark}
+While anything except trading through electronic channels would be unthinkable today, a certain gap still exists between trading companies that have fibre access to the exchanges or supporting algorithms and investors who do not.
+As a result, investors are forced to take an initial loss into account when buying or selling securities, which they might not even be aware of.
+In order to understand why these losses are incurred, we have to have a basic understanding of a so-called order book and how securities are bought at an exchange.
 
 \begin{figure}[H]
     \centering
@@ -31,47 +31,48 @@ In order to understand why that might be the case, we have to grasp a basic unde
     \label{fig:intro-orderbook}
 \end{figure}
 
-Figure \ref{fig:intro-orderbook} shows a snapshot taken at some time $t$ from the trading pair Bitcoin (BTC) versus US dollar (USD) taken at the Bitfinex\footnote{https://www.bitfinex.com} cryptocurrency exchange.
-The order book shows two sides, the parties who are willing to buy on the left and the parties who are willing to sell on the right.
-The columns indicate the number of buyers and sellers (\textit{count}) who are willing to buy, respectively sell, a certain \textit{amount} for a given \textit{price}.
+Figure \ref{fig:intro-orderbook} shows a snapshot taken at some time $t$ of the trading pair Bitcoin (BTC) versus US dollar (USD) taken on the Bitfinex\footnote{https://www.bitfinex.com} cryptocurrency exchange.
+The order book shows two columns, the parties who are willing to buy are on the left and the parties who are willing to sell are on the right.
+The two columns indicate the number of buyers and sellers (\textit{count}) who are willing respectively to buy and sell a certain \textit{amount} for a given \textit{price}.
 The column \textit{total} is the cumulative sum of the amount, or volume, on each side.
-The two sides are separated by the \textit{spread}.
-In this particular case, the current best \textit{bid} price at which someone is willing to buy, is \$14,910.00 and the best ask-price at which someone is willing to sell, is \$14,930.00.
-Therefore, the spread is currently \$20.00 wide.
+The difference between the figures in each column is the \textit{spread}.
+In this particular case, the current best \textit{bid} price--at which someone is willing to buy--is \$14,910.00 and the best ask-price at which someone is willing to sell, is \$14,930.00.
+Therefore, the spread is currently \$20.00.
 \\
 \\
 Suppose we want to buy 1.0 BTC.
 Two possible ways to do so are:
 \begin{enumerate}
-    \item Buy $i$ shares (1.0) right away for \$14,930.00 from a seller. We submit a \textit{market} order.
-    \item State a price for which we are willing to to buy $i$ shares (1.0) at price $p$, for example at \$14,910.00, and wait until someone is willing to sell for this price. We submit a \textit{limit} order.
+    \item Buy 1.0 shares right away for \$14,930.00 from a seller. To do so, we submit a \textit{market} order.
+    \item State a price at which we are willing to buy 1.0 shares at price $p$, for example at \$14,910.00, and wait until someone is willing to sell at this price. To do so, we submit a \textit{limit} order.
 \end{enumerate}
 
 Both types of orders come with their advantages and disadvantages.
-A market order ensures that we will be able to acquire the stated amount of shares immediately for \$14'930.00, provided that no one else is ahead of us or the seller cancels his/her listing.
-In this case we are automatically willing to pay for the next available best price.
-However, we do pay a premium compared to the limit order since ask prices are listed higher than bid prices and the more shares one wants to buy, the more sellers we have to contact and buy their offerings to an increased price.
-With a limit order the exchange guarantees that we will pay \$14'910.00 or less.
-That is, when a seller is willing to sell for the stated price or less, the exchange would match the offerings of both parties.
-However, this comes with the risk that we will never be able to buy if nobody is going to sell at the mentioned price, which will force us to buy the demanded shares at a later point in time.
-As the price of a share evolves over time, we might get lucky and be able to buy for a cheaper price than at the time of the initial attempt.
-The other scenario is that the price did not develop in our favour such that we have to buy for a higher price later on, thus we pay a so-called \textit{opportunity cost}.
-A third order type, the \textit{cancel} order allows a trader to cancel his/her previously posted limit or market order at any given point in time.
+A market order ensures that we will be able to acquire the stated amount of shares immediately for \$14'930.00, provided that no one else  has a prior claim to them and that the seller does not cancel his/her listing.
+In this case, we are automatically willing to pay the next available best price.
+However, we do pay a premium compared to the limit order since ask prices are listed higher than bid prices and the more shares one wants to buy, the more sellers we have to contact and accept their offers at an increased price.
+With a limit order, the exchange guarantees that we will pay \$14,910.00 or less.
+That is, when a seller is willing to sell for the stated price or less, the exchange will match the offers of both parties.
+However, this comes with the risk that we will never be able to buy if nobody is going to sell at the demanded price, and this will force us to buy the shares demanded at a later point in time.
+As the price of a share evolves over time, we might get lucky and be able to buy at a cheaper price than at the time of the initial attempt.
+The other scenario is that the price did not develop in our favour such that we have to buy at a higher price later on; thus, we pay a so-called \textit{opportunity cost}.
+A third order type, the \textit{cancel} order, allows a trader to cancel his/her previously posted limit or market order at any given point in time.
 %Ultimately, we have a brief understanding of what traders are allowed to do at a stock exchange.
 %We will now elaborate briefly how such a relatively simple concept of an order book and three types of orders can lead to a diverse range of situations a trader can find himself whereas at times this may be beneficial for his intentions and at times it will lead to paying a premium.
 %If a seller realizes that we are about to buy for price $p$ at which is was willing to sell, he then could \textit{cancel} his offer as his incentive is to sell for a higher price.
 %Perhaps this has been his/her intention to only post an offer but withdrawal as soon as a counter-offer will be listed that is close to his/her price.
 %This method is known as \textit{quote stuffing}.
 
-With the brief understanding of how traders can interact with the exchange, we specify the problem of \textit{Order placement} as follows.
-Order placement determines the price at which a trades places its order.
-Optimizing order plaement tries to minimize the opportunity cost ideally aims to achieve a more favourable price to pay (respectively receive) than what is currently offered at the market price.
-Literature (According to Guo et. al. \cite{guo2013optimal}) therefore specifies a time scale of ten to hundred seconds within which a trader has to complete his task to either buy or sell the shares.
-A time scale less than ten seconds refers to high frequncy trading and above 100 seconds is konwn as the process of \textit{order execution}.
-Thus, we define order placement opimization: at which price $p$ should one attempt to buy or sell $i$ shares within a time horizon $H$ of 100 seconds?
-As we shall see, optimizing the placement is not as trivial as one would think, even though the concept of the order book and the three order types a trader can choose from is admittedly simple.
-There are various properties that evolve from a limit order book and the participants in the market over time, which can interfere with the intention of buying and selling drastically.
-Furthermore, since the foundation of electronic trading networks and algorithmic trading, the amount and sophistication of other market participants is ever increasing whereas everyone aims for their advantage over others.
+With this brief understanding of how traders can interact with the exchange, we can define the problem of \textit{order placement} as follows.
+Order placement determines the price at which a trader places its order.
+The aim of optimizing order placement are to minimize the opportunity cost and, ideally, achieve a more favorable price payable (or receive) than what is currently being offered at the market price.
+Literature therefore specifies a time scale of from ten to one hundred seconds within which a trader has to complete his task of either buying or selling the shares \cite{guo2013optimal}.
+A time scale of less than ten seconds applies in high frequency trading and one of above 100 seconds is known as \textit{order execution optimization}.
+Thus, could we define order placement optimization as the price $p$ at which one should attempt to buy or sell $i$ shares within a time horizon $H$ of 100 seconds?
+As we shall see, optimizing placement is not as trivial as one might think, even though the concepts of the order book and the three order types a trader can choose from are admittedly simple.
+There are various properties in a limit order book, as well as the behaviour of the market participants, that changes over time.
+All of which can drastically interfere with the intention of buying and selling.
+Furthermore, since the foundation of electronic trading networks and algorithmic trading, the amount and sophistication of other market participants has been ever-increasing, with everyone aiming for an advantage over others.
 %However, the prices for some financial products, including crypto-currencies, are very volatile such that it is likely to be able to buy for less than what is offered at the mentioned time $t$.
 %In addition, there might be buyers and sellers in the near future which would consume our order.
 %Thus, placing orders \textit{deeper} in the book and wait could be beneficial.
@@ -80,36 +81,40 @@ Furthermore, since the foundation of electronic trading networks and algorithmic
 %\textit{Order placement} on the other hand concerns about optimally placing orders within ten to hundred seconds.
 %In this thesis we are concerned about the latter, which conforms the context of the problem:
 
-The fact that reinforcement learning learns by maximizing rewards, makes this technique unarguably suitable to work within this context.
-As a result, a reinforcement learner should be able to foresee on how to place orders according to the given market condition and therefore protect an investor form paying the aforementioned premium to other participants in the market.
+The fact that reinforcement learning functions by maximizing rewards makes this technique unarguably suitable in this context.
+That is, how to place orders according to the given market condition and therefore protect an investor form paying the aforementioned premium to other participants in the market.
+Ideally, such a learner will be able to foresee short term trend changes such that the investor ultimately benefits from a better price at which to buy or sell the asset. 
 
 \section{Research objectives}
 
-This work extends on the findings of Kearns et. al. \cite{nevmyvaka2006reinforcement} who have studied the behaviour of order placement and order execution and further developed a reinforcement learning strategy in order to proceed optimization.
+This work extends the findings of Kearns et. al. who have studied the behavior of order placement and order execution\cite{nevmyvaka2005electronic}, and further developed a reinforcement learning strategy\cite{nevmyvaka2006reinforcement} in order to proceed optimization.
 Their work has pre-processed and applied features, which were derived from order book data, to a reinforcement learning algorithm which is similar to Q-Learning.
-Our works aims to do similar research, whereas the crypto-currency domain is chosen, instead of traditional stocks.
-In addition, rather than constructing features by hand we make an attempt to benefit from hidden patterns in raw market data by using deep reinforcement learning techniques.
-We therefore investigate the behaviour of order placement in a historical USD/BTC market and try to find properties which may be beneficial for optimization purposes.
-Given this knowledge we should build a reinforcement learner that can act as an intelligent trader and places limit orders with the incentive to buy or sell asset to a favourable price.
-We make use of an end-to-end learning process with which the agent improves based on the outcome of the placed orders and ultimately learns a strategy that allows to buy and sell shares at favourable prices.
-However, in order to simulate and understand the outcome of order placement and more importantly allow interaction with a reinforcement learning agent, we are required to build a framework.
-The framework should provide capabilities to collect and process market data in order to reproduce a historical order book that serves as a data source.
-We further demand the framework to provide the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulted price paid (respectively received) according to the historical order book.
-Given the capabilities of the framework, a reinforcement learning environment should be built which allows agents to act as an intelligent traders.
-The agents will place limit orders with the incentive to learn how to buy or sell asset to a favourable price by choosing limit order prices accordingly.
-However, the agents demand features which contribute to the learning of how to place its orders accordingly.
-Therefore, we have to reason about what kind of features can be derived from an order book and if there are any patterns that can be detected, such that the extracted information could contribute to the learning process.
-In addition, while the previously mentioned work from Kearns et al. had success in using pre-processed market data as features, we believe that raw market data in combination with deep reinforcement learning can be equally successfull.
-Hence why our ambition is to determine if deep reinforcement learning is perhaps an even more suitable choice in order to deal with unexpected market situations.
+Rather than constructing features by hand, the work in this thesis makes an attempt to benefit from hidden patterns in raw market data by using deep reinforcement learning techniques.
+In addition, the crypto-currency domain is chosen, instead of traditional stocks.
+Furthermore, while the previously mentioned work of Kearns et al. had success in using pre-processed market data as features, we believe that raw market data in combination with deep reinforcement learning can be equally successful.
+Hence, our ambition is to determine if deep reinforcement learning is perhaps an even more suitable choice in order to deal with unexpected market situations.
+
+The research proceeded and presented with this thesis is as follows.
+To simulate and understand the outcome of order placement and more importantly build a reinforcement learning environment that allows interaction with agents, we are required to build a framework.
+The framework should provide collection and market data processing capabilities in order to reproduce a historical order book that serves as a data source.
+Further, we require that the framework provides the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to the historical order book.
+Ultimately, a reinforcement learning environment should be built which allows to simulate and evaluate order placement.
+The environment should allow direct user interaction, in order to place orders on demand, and interaction with agents which act as intelligent traders.
+However, the first use of the environment will be to simulate the behaviour of order placement in a historical USD/BTC market and try to find properties which may be beneficial for optimization with deep reinforcement learning.
+With this knowledge, we then build two reinforcement learners whereas both act as an intelligent trader and place limit orders that provide an incentive to buy or sell an asset at a favorable price.
+Both agents are driven by an end-to-end learning process by which the agent improves based on the outcome of the placed orders and ultimately learns a strategy that allows to buy and sell shares at favorable prices.
+The former agent is an adaption of the well known Q-Learning algorithm and optimizes based on the amount of assets to buy or sell and a given time horizon only.
+The latter is a deep reinforcement learning agent that makes use of a convolutional neural network in order to detect patterns in market data.
+Therefore, we have to determine how to shape the data such that an agent can detect patterns which allow to learn how to place orders at the most optimal price.
 Finally, the main objective of this research can be formulated in one sentence:
 \begin{quote}
-    How should one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement?
+    How should one design a deep reinforcement learning environment and construct features, which are derived from a limit order book, such that an agent can detect patterns to mitigate the impact of the important problem of limit order placement?
 \end{quote}
-Clearly, included in the study are the limitations of the setting that we considered here.
+Clearly, included in the study are the limitations of this setup that we have considered here.
 
 \section{Contributions}
 
-This thesis makes use of concepts from various research communities in order to work on the above mentioned objectives.
+This thesis makes use of concepts from various research communities in order to work towards the above mentioned objectives.
 The particular contributions made throughout the project are:
 \begin{itemize}
     \item Information retrieval techniques are applied in order to collect and process financial data sets.
