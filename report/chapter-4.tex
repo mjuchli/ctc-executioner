@@ -436,10 +436,10 @@ A straightforward approach would be to construct the feature $s_{trade}$ as,
     \ \forall \ p, q, os, ts \in Trade
 \end{equation}, whereas $ts_n - ts_1 \leq m$.
 However, trades do not occur in fixed time intervals and therefore causes the length of the vector to vary.
-We therefore accumulate the prices and sizes of the trades with equal order side over a fixed amount of time (in seconds) $\Delta{s}$.
+We therefore calculate the mean price and accumulate the sizes of the trades with equal order side over a fixed amount of time (in seconds) $\Delta{s}$.
 That is,
 \begin{equation}
-    Trade' = (ts', os', \sum_{i=ts}^{ts+\Delta{s}}p_i, \sum_{i=ts}^{ts+\Delta{s}}q_i)
+    Trade' = (ts', os', \frac{\sum_{i=ts}^{ts+\Delta{s}}p_i}{ts+\Delta{s}}, \sum_{i=ts}^{ts+\Delta{s}}q_i)
     \ \forall \ p, q, os \in \{Trade \mid os = os'\}
 \end{equation}
 As a result we can redefine the feature $s_{trade}$, that is used by the learner as observation state, as,

@@ -43,7 +43,7 @@ Therefore, the spread is currently \$20.00.
 Suppose we want to buy 1.0 BTC.
 Two possible ways to do so are:
 \begin{enumerate}
-    \item Buy 1.0 shares right away for \$14,930.00 from a seller. To do so, we submit a \textit{market} order.
+    \item Buy 1.0 shares immediately for \$14,930.00 from a seller. To do so, we submit a \textit{market} order.
     \item State a price at which we are willing to buy 1.0 shares at price $p$, for example at \$14,910.00, and wait until someone is willing to sell at this price. To do so, we submit a \textit{limit} order.
 \end{enumerate}
 
@@ -114,25 +114,25 @@ Clearly, included in the study are the limitations of this setup that we have co
 
 \section{Contributions}
 
-This thesis makes use of concepts from various research communities in order to work towards the above mentioned objectives.
+This thesis makes use of concepts from various research communities in order to work towards the above-mentioned objectives.
 The particular contributions made throughout the project are:
 \begin{itemize}
     \item Information retrieval techniques are applied in order to collect and process financial data sets.
     We analyze the data and find patterns which might be beneficial for the process of limit order placement optimization.
-    Feature sets are then constructed which incorporate the found patterns and allow deep reinforcement learning agents to learn an order placement strategy.
+    Feature sets are then constructed which incorporate the patterns found and allow deep reinforcement learning agents to learn an order placement strategy.
     \item We study how to translate the problem of limit order placement into a reinforcement learning context.
-    With the use of software engineering techniques we then build an environment which simulates a rudimentary stock exchange and allows an agent to optimize on the given problem.
-    Therefore we make use of the OpenAI Gym\footnote{https://github.com/openai/gym} library and contribute our work to the community to proceed further investigations.
-    \item Investigations of reinforcement learning agents applied to the process of \textit{order placement} (and the closely related process known as \textit{market making}) will unveil the capabilities of deep reinforcement learning on a continuously changing state space derived from a multivariate time series.
-    Under these circumstances we determine the possible benefits and limitations of deep reinforcement learning, when applied to noisy environments.
+    With the use of software engineering techniques we then build an environment which simulates a rudimentary stock exchange and allows an agent to mitigate the impact of the given problem.
+    Therefore, we make use of the OpenAI Gym\footnote{https://github.com/openai/gym} library and contribute our work to the community to enable further investigations to proceed.
+    \item Investigations of reinforcement learning agents applied to the process of \textit{order placement} (and the closely related process known as "market making") will unveil the capabilities of deep reinforcement learning on a continuously changing state space derived from a multivariate time series.
+    Under these circumstances, we determine the possible benefits and limitations of deep reinforcement learning, when applied to noisy environments.
 \end{itemize}
 
 \section{Document structure}
 
-In Chapter \ref{chap:preliminaries} we first provide background information to the reader concerning the components of a stock exchange and the fundamentals of the closely related time series.
-We further make the reader familiar with (Deep) Reinforcement Learning.
-In Chapter \ref{chap:related-work} we elaborate on the behaviour of order execution followed by approaches of both statistical and machine learning nature.
-Chapter \ref{chap:data} explains the process of data collection and its preparation which was done prior its use in the following chapters.
-Namely, Chapter \ref{chap:setup} explains the experimental setup of the Reinforcement Learning environments, the agents and the features being processed and used.
-In Chapter \ref{chap:analysis} we then analyze the data and proceed execution placement with various techniques, including the reasoning of our findings.
-Finally, Chapter \ref{chap:conclusion} formulates a conclusion of our findings and states a future research direction.
+In Chapter \ref{chap:preliminaries} we first provide background information to the reader on the components of a stock exchange and the fundamentals of the closely related time series.
+Further, we make the reader familiar with (Deep) Reinforcement Learning.
+In Chapter \ref{chap:related-work}, we elaborate on the behavior of order execution followed by approaches of both statistical and machine learning nature.
+Chapter \ref{chap:data} explains the process of data collection and preparation which was carried out prior to its use in the subsequent chapters.
+Chapter \ref{chap:setup} explains the experimental setup of the Reinforcement Learning environments, the agents and the features processed and used.
+In Chapter \ref{chap:analysis}, we analyze the data, carry out execution placement, and include reasons for our findings.
+Finally, in Chapter \ref{chap:conclusion}, we formulate a conclusion of our findings and state a future research direction.
