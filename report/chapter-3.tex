@@ -1,73 +1,73 @@
 \chapter{Related Work}
 \label{chap:related-work}
 
-The literature for the order placement problem is, relative to the execution problem, sparse (confirmed by Guo et al. \cite{guo2013optimal}).
-In this Chapter we provide an overview of the related work, upon which this project is built on or insight was taken from.
-We first give insight into an empirical study about the general behavior of order placements, which serves as a conceptual basis for this project.
-Subsequently, a statistical approach is presented to provide contrast to the following overview of previous machine learning approaches.
-The latter serve as a guideline on how to model the reinforcement learning process of this thesis.
+Compared to the execution problem, the literature for the order placement problem is sparse (as confirmed by Guo et al. \cite{guo2013optimal}).
+In this Chapter, we will provide an overview of the work relied upon for the foundations of this project and for the insights they provided.
+We will first consider an empirical study of the general behavior of order placements, which serves as the conceptual basis for this project.
+Then, a statistical approach will be presented to provide contrast to the subsequent overview of previous machine learning approaches.
+This approach will serve as a guide to modeling the reinforcement learning process presented in this thesis.
 
 \section{Execution/Placement behaviour}
 \label{sec:related-execution-behaviour}
 
-Kearns et al. \cite{nevmyvaka2005electronic} determine which limit order price results in the most advantageous execution price.
-At first, the \textit{expected execution price} is investigated with respect to the placement of the limit order. 
-Based on this analysis the standard deviation of the resulted prices will uncover the \textit{risk} that comes along with limit order placement. 
+Kearns et al. \cite{nevmyvaka2005electronic} determined which limit order price results in the most advantageous execution price.
+First, the \textit{expected execution price} is investigated with respect to the placement of the limit order. 
+Based on this analysis, the standard deviation of the resulting prices will identify the \textit{risk} that comes with limit order placement. 
 Finally, by combining the previous two results, an \textit{efficient pricing frontier} can be drawn which highlights the trade-off between risk and returns.
 
-Regarding the definition stated in Section \ref{sec:execution-placement}, their research is to be categorized in between order execution and placement.
-No splitting of orders is being done, however, a time horizon of several hours was chosen, resulting in an evaluation of order placement with an extended time horizon.
+Regarding the definition stated in Section \ref{sec:execution-placement}, their research can be categorized between order execution and placement.
+No splitting of orders is being done, however a time horizon of several hours was chosen, resulting in an evaluation of order placement with an extended time horizon.
 
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
         \includegraphics[width=8cm]{kearns-return.png}
     }
-    \caption{Taken from \cite{nevmyvaka2005electronic} and illustrates the pricing strategy that produces the most favorable expected execution price.}
+    \caption{Taken from \cite{nevmyvaka2005electronic}. An illustration of the pricing strategy that produces the most favorable expected execution price.}
     \label{fig:kearns-return}
 \end{figure}
 
 Figure \ref{fig:kearns-return} shows on the y-axis the return as the weighted average price paid of the expected execution price while acquiring 10,000 shares of MSFT within one hour.
-The x-axis represents the limit level reaching from -\$50 to +\$100.
-As it is evident from the figure, the most favorable expected execution price occurs when setting the limit price close to the price of the spread, yet on the buyer side with a price approximately \$10 lower than what is currently offered.
-The return becomes worse when placing orders more deep in the order book (meaning offering a lower price) as the orders then to not get filled within an hours and instead the inventory has to be bought with a market order at the end of the period.
-Likewise, the return can be expected to be lower when placing the order higher in the order book (e.g. deeper in the opposing side of the book, meaning one is willing to pay more).
-This is due to the fact that the order is being filled instantly by paying a premium.
+The x-axis represents the limit level ranging from -\$50 to +\$100.
+As is evident from the figure, the most favorable expected execution price occurs when setting the limit price close to the price of the spread, yet on the buyer side with a price approximately \$10 lower than what is currently offered.
+The return becomes worse when placing orders deeper in the order book (in other words, offering a lower price) as the orders then do not get filled within an hour and instead, the inventory has to be bought by means of a market order at the end of the period.
+Likewise, the return can be expected to be lower when placing the order higher in the order book (i.e. deeper in the opposing side of the book, meaning one is willing to pay more).
+This is due to the fact that the order is filled instantly by paying a premium.
 
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
         \includegraphics[width=8cm]{kearns-std.png}
     }
-    \caption{Taken from \cite{nevmyvaka2005electronic} and illustrates the uncertainty of the expected execution price.}
+    \caption{Taken from \cite{nevmyvaka2005electronic}. An illustration of the uncertainty of the expected execution price.}
     \label{fig:kearns-std}
 \end{figure}
 
-Risk is being defined as the standard deviation of the returns and is illustrated on the y-axis in Figure \ref{fig:kearns-std}.
-This is an important aspect to be considered throughout our project as it unveils to danger that comes along with placing limit orders on less favourable limit levels.
-Evidently, orders which are placed deep in either of the sides of the book are less likely to be executed and come with a higher uncertainty around the final price.
+Risk is defined as the standard deviation of the returns and is illustrated on the y-axis in Figure \ref{fig:kearns-std}.
+This is an important aspect to be considered throughout our project as it illustrates the danger that arises from placing limit orders on less favourable limit levels.
+Evidently, orders which are placed deep in either side of the book are less likely to be executed and their final prices are necessarily less certain.
 
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
         \includegraphics[width=8cm]{kearns-frontier.png}
     }
-    \caption{Taken from \cite{nevmyvaka2005electronic} and illustrates the trade-off between risk and return indicated with the efficient pricing frontier.}
+    \caption{Taken from \cite{nevmyvaka2005electronic} An illustration of the trade-off between risk and return indicated by the efficient pricing frontier.}
     \label{fig:kearns-frontier}
 \end{figure}
 
-Lastly, both techniques were combined and result in an efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}). 
+Lastly, both techniques were combined and this resulted in an efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}). 
 Therefore, Figure \ref{fig:kearns-frontier} shows the trade-off between the risk (x-axis) and return (y-axis).
 In this example, the point of minimum risk is at $(8, 18)$ and the point of maximum returns at $(29, 9)$.
-With this technique a trader, or in our case a reinforcement learning agent, can decide upon an execution strategy by choosing how much risk and return he is willing to take, and then translate the coordinates back into the corresponding limit level.
+With this technique, a trader, or in our case a reinforcement learning agent, can decide upon an execution strategy by choosing how much risk and return he is willing to accept, and then translate the coordinates back into the corresponding limit level.
 
 \section{Statistical approach}
 
-Profound work in a statistical context has been done by Chaiyakorn Yingsaeree in his dissertation \cite{yingsaeree2012algorithmic}.
-A framework is proposed for making order placement decisions based on the trade-off between the profit gained from favorable execution prices and the risk of non-execution.
-An execution probability model was developed which estimates the expected payoff (e.g. return) and its variance ($\implies$ risk) while placing orders at a certain limit level, followed by the application of \textit{mean variance optimization} to balance the trade-off.
-The framework was not able to beat the best static strategy in all evaluated cases, however, the improvement gained when it could beat the best static strategy was very significant.
-This gives us hope that where the statistical approach has its limitations, the reinforcement learning approach presented in this work may be able to understand the market data to a greater extent and avoid the shortcomings of the former.
+Profound work in a statistical context was carried out by Chaiyakorn Yingsaeree in his dissertation \cite{yingsaeree2012algorithmic}.
+A framework is proposed for the making of order placement decisions based on the trade-off between the profit gained from favorable execution prices and the risk of non-execution.
+An execution probability model was developed which estimates the expected payoff (e.g. return) and its variance ($\implies$ risk) while placing orders at a certain limit level.  This is followed by the application of \textit{mean variance optimization} to balance the trade-off.
+The framework was not able to beat the best static strategy in all evaluated cases, however the improvement gained when it could beat the best static strategy was very significant.
+This gives us hope that, where the statistical approach has its limitations, the reinforcement learning approach presented in this work may be able to understand the market data to a greater extent and avoid the shortcomings of the former strategy.
 \\
 \\
 \textit{We provide an overview of the framework without specific application, as this would exceed the scope of this overview.}
@@ -76,13 +76,13 @@ This gives us hope that where the statistical approach has its limitations, the 
 The strategy is to buy $x$ shares in time $T$, whereas the trader is left with the following options:
 \begin{enumerate}
     \item Do nothing.
-    \item Submit market order at $t=0$ for price $p_{0}^M$
-    \item Submit market order at $t=T$ for price $p_{T}^M$
-    \item Submit limit order for price $p^L$. If the order is not filled either a market order follows or no action is taken (depending on the use case).
+    \item Submit a market order at $t=0$ at price $p_{0}^M$
+    \item Submit a market order at $t=T$ at price $p_{T}^M$
+    \item Submit limit order at price $p^L$. If the order is not filled, either a market order follows or no action is taken (depending on the use case).
 \end{enumerate}
 \hfill
 \\
-A function $U_{E}(p)$ defines the payoff in case of an execution at a price $p$, and a function $U_{NE}(p)$ defines the cost if the order is not executed at the end of the period with market price $p$. 
+A function $U_{E}(p)$ defines the payoff in the event of an execution at a price $p$, and a function $U_{NE}(p)$ defines the cost if the order is not executed at the end of the period with market price $p$. 
 Consequently, the payoff the trader will receive from submitting a limit buy order at price level $L$ is defined as,
 \begin{equation}
     U(p^L) = \begin{cases}
@@ -92,18 +92,18 @@ Consequently, the payoff the trader will receive from submitting a limit buy ord
 \end{equation}
 \hfill
 \\
-The expected price is compounded of the probability that the limit order at price $p^L$ will be executed before the end of the period together with the distribution of the asset price at the end of the period,
+The expected price is compounded by the probability that the limit order at price $p^L$ will be executed before the end of the period together with the distribution of the asset price at the end of the period,
 \begin{equation}
     \mathbb{E}[U(p^L)] = P_E(p^L)\ U(p^L) + [1-P_E(p^L)] \int_{-\infty}^{\infty} U_{NE}(p) f_{p_M^T | p^L}(p) dp
 \end{equation}
 , whereas $P_E(p^L)$ is the probability that the limit order at price $p^L$ will be executed before the end of the period, and $f_{p_M^T | p^L}(.)$ is the probability density function of the asset price at the end of the period. 
 \\
-Similarly, the variance was drawn as $V[U(p^L)]$ followed by a mean variance optimization step which introduced the utility function,
+Similarly, the variance was drawn as $V[U(p^L)]$, and this was followed by a mean variance optimization step which introduced the utility function,
 \begin{equation}
     U_O(p^L) = \mathbb{E}[U(p^L)] - \lambda V[U(p^L)]
 \end{equation}
 , whereas $\lambda$ serves as a risk factor.
-That is, when $\lambda=0$ the trader is concerned about the profit only, and when $\lambda=1$ the trader is equally concerned about profit and risk and missed opportunities.
+That is, when $\lambda=0$ the trader is concerned only about the profit, and when $\lambda=1$ the trader is equally concerned about profit, risk and missed opportunities.
 As a result, the trade-off between profit and risk is defined as,
 \begin{equation}
     \hat{p} = \arg\max_{p^L}\ U_O(p^L)
@@ -112,8 +112,8 @@ As a result, the trade-off between profit and risk is defined as,
 
 \section{Supervised Learning approach}
 
-Fletcher et al. \cite{fletcher2010multiple} investigates order books to find patterns which can be exploited with the aim of forecasting movement of bid and ask prices at time $t+\Delta{t}$.
-Although this is not directly applied to optimize order placement, the prediction can certainly be used as the limit price to be set while placing an order.
+Fletcher et al. \cite{fletcher2010multiple} investigates order books to find patterns which can be exploited with the aim of forecasting the movements of bid and ask prices at time $t+\Delta{t}$.
+Although this is not directly applied to the optimization of order placement, the prediction can certainly be used as the limit price to be set while placing an order.
 
 SVM classification techniques with different kernels along with two Multiple Kernel Learning (MKL) techniques, SimpleMKL, were used.
 It is a multi-class setup with three labels, A: $P_{t+\Delta{t}}^{Bid} > P_t^{Ask}$, B: $P_{t+\Delta{t}}^{Ask} < P_t^{Bid}$ and C: $P_{t+\Delta{t}}^{Bid} < P_t^{Ask}, P_{t+\Delta{t}}^{Ask} > P_t^{Bid}$.

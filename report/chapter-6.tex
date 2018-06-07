@@ -4,24 +4,26 @@
 In the previous Chapter we have built a reinforcement learning environment with the use of the components which were described earlier in Chapter \ref{chap:preliminaries}.
 The environment allows to simulate order placement on a historical order book that was described in Chapter \ref{chap:data}.
 Furthermore, two agents were introduced, a Q-Learner which learns on private variables and a Deep Q-Network which learns on market variables.
-
-The aim of this chapter is to run simulations and observe whether or not reinforcement learning is indeed capable of optimizing the placement of limit orders.
+The aim of this chapter is to make use of this setup and to run simulations and observe whether or not reinforcement learning is indeed capable of optimizing the placement of limit orders.
 Throughout this chapter we make use of real world order books as well artificially created order books, whereas the latter allow to define distinctive price trends and eliminate the noise present in real market data.
-We first present the data sets chosen for this analysis.
-Before evaluating the learners, we investigate the reinforcement learning environment empirically by simulating an agent that places buy and sell orders at a range of limit levels.
-This will provide knowledge of how well we should expect the reinforcement learners to perform.
-Subsequently we make an attempt to build a strategy based on the private variables only, with the use of the Q-Learner.
-This gives insight of the performance of a naive reinforcement learner and  serves as a benchmark for the following simulations proceeded in which we consider market variables.
+We first present the data sets chosen for the work to be done and describe the procedure of how we evaluate the capabilities of the reinforcement learning agents.
+As a first step of our evaluation procedure, we investigate the reinforcement learning environment empirically by simulating an agent that places buy and sell orders at a range of limit levels.
+This will provide knowledge about the limitations of the optimization capabilities within the given data set and how well we should expect the reinforcement learners to perform.
+Subsequently, we make an attempt to build an order placement strategy based on the private variables only, by using the Q-Learner.
+This will provide insights of the performance of a naive reinforcement learner and serves as a benchmark for the following simulations proceeded in which we consider market variables.
 While applying market variables to the DQN agent we make use of both features, price and size of historical order as well as the price and size of historical trades, separately.
-In doing this, we determine the capabilities and limitations not only by evaluating the received rewards but also by looking at the submitted actions of the agent.
-Since we are interested in the general ability for reinforcement learning to learn how to place orders, potential maker or taker fees are neglected in this setup.
+Furthermore, we aim to determine the capabilities and limitations of the DQN agent in greater detail.
+As a result, this chapter quantifies how effective deep reinforcement learning and the use of features constructed from raw market data is.
 
-\section{Data sets}
+\section{Data sets and evaluation procedure}
 \label{sec:analysis-data-sets}
 We have selected two $\sim$30 minute samples of historical order book recordings with which we proceed experiments in this chapter.
-Thereby we have consciously chosen one sample (I) order book with downwards trend (bid/ask mid-price) and the other sample (II) with an upwards trend, as shown in Figure \ref{fig:sample-price}.
-The sample in Figure \ref{fig:sample-down-price} consists of 1132 order book states with a duration of 1681.8 seconds, resulting in 0.67 states per second.
-The sample in Figure \ref{fig:sample-up-price} consists of 1469 order book states with a duration of 1746.0 seconds, resulting in 0.84 states per second, indicating that there was slightly more pressure in terms of orders placed and cancelled in this data set.
+Thereby we have consciously chosen two very distinctive samples periods of an order book recording.
+Reasons for choosing two very distinguishable data sets include to determine the ability of the learners to react on a variety of market situations.
+And, as explained in the following section, the expected return of a learner for buying and selling assets heavily depends on the market price movement and therefore the situations become very different for the data sets in use.
+More precisely, \textit{data set I}, as shown in Figure \ref{fig:sample-down-price}), is a downwards trend (indicated by the bid/ask mid-price) and consists of 1132 order book states with a duration of 1681.8 seconds, resulting in 0.67 states per second.
+Contrarily, \textit{data set II}, as shown in Figure \ref{fig:sample-up-price}, consists of 1469 order book states with a duration of 1746.0 seconds, resulting in 0.84 states per second, which indicates that there was slightly more pressure in terms of orders placed and cancelled in this data set.
+When reinforcement learning is applied, the data sets are split with ratio $2:1$, resulting in a training set of $\sim$20 minutes and a test set of $\sim$10 minutes.
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -37,10 +39,28 @@ The sample in Figure \ref{fig:sample-up-price} consists of 1469 order book state
     \caption{Bid/ask mid-price of 30 minute order book recordings.}
     \label{fig:sample-price}
 \end{figure}
-Reasons for choosing two very distinguishable data sets include to determine the ability of the learners to react on a variety of market situations.
-As explained in the following section, the expected return of a learner for buying and selling assets heavily depends on the market price movement and therefore the situations become very different for the data sets in use.
 
-When reinforcement learning is applied, the data sets are split with ratio $2:1$, resulting in a training set of $\sim$20 minutes and a test set of $\sim$10 minutes.
+As is explained in Chapter \ref{chap:setup}, the historical data sets are not maintained by the reinforcement learning agents directly but instead by the reinforcement learning environment.
+The environment provides observation states with information from the data set to an agent, after which the agent decides to take an action in form of a limit level.
+In turn, the environment prices the order at the received price level and returns the evaluated outcome to the agent.
+This way, the agent can simulate the placement of limit orders (by submitting limit levels), such that, within the given time horizon, the demanded inventory can be either bought or sold.
+Each \textit{epoch} an agent proceeds, one order, with a specified inventory and time horizon, is defined and is to be filled.
+The time window from the data set, which is chosen by the environment in order to match this order, is very critical.
+Depending on the window of data, not only will the agent receive a corresponding observation state, but also the matching process and its outcome will rely on the given data.
+\todo{random points in time...}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=10cm]{images/evaluation-orderbook.png}
+    }
+    \caption{Order placement training and testing on an order book data set.}
+    \label{fig:eval-orderbook}
+\end{figure}
+
+
+Since we are interested in the general ability for reinforcement learning to learn how to place orders, potential maker or taker fees are neglected in this setup.
+
 
 \section{An empirical investigation of the reinforcement learning environment}
 
@@ -174,9 +194,8 @@ More precisely, for a time horizon of 100 seconds, the agent would receive up to
 Figures \ref{fig:behvaiour-up-60s-buy} and \ref{fig:behvaiour-up-100s-buy} which show the result of an agent that tries to buy assets within the increased time horizon, the behaviour is clear.
 That is, during an uprising market, the damage can be minimized by crossing the spread and buying immediately.
 The advice stated before remains, that is, the agent should choose a price a few steps (\$0.10) above the market price as there is enough liquidity in the market to buy the demanded number of assets.
-\vfill
-\newpage
-\begin{figure}[H]
+
+\begin{figure}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{images/behaviour-up-10s-buy.png}
@@ -222,6 +241,23 @@ The advice stated before remains, that is, the agent should choose a price a few
     \label{fig:behvaiour-up}
 \end{figure}
 
+\subsection{Conclusion of empirical analysis}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{l|l|l|}
+\cline{2-3}
+& \textbf{Limit order (optimal)} & \textbf{\begin{tabular}[c]{@{}l@{}}Market order\end{tabular}} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & ?          & -0.05                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & ?         & -27.70                                                          \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & ?          & -1.06                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & ?          & -1.72                                                           \\ \hline
+\end{tabular}
+\caption{Summary of rewards derived form the empirical analysis.}
+\label{tbl:analysis-empirical-summary}
+\end{table}
+
+\newpage
 \section{Q-Learning without market variables}
 The previous section provided knowledge about the possibilities of the agent when placing buy and sell orders using the reinforcement learning environment and with the underlying data set I and II.
 The expected behaviour for each limit level has been observed under two significantly different market situations.
@@ -375,7 +411,19 @@ Eventually, we conclude our findings and reason about the capabilities of the DQ
 
 \subsection{Application of historical order feature}
 
-
+\begin{table}[H]
+\centering
+\begin{tabular}{l|l|l|}
+\cline{2-3}
+& \textbf{DQN (Feature I)} & \textbf{\begin{tabular}[c]{@{}l@{}}Market\\ Order\end{tabular}} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 22.06          & -0.05                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -54.56         & -27.70                                                          \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -2.26          & -1.06                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & ?          & -1.72                                                           \\ \hline
+\end{tabular}
+\caption{Summary of rewards for the Q-Learning agent and market orders.}
+\label{tbl:analysis-dqn-orderfeature-summary}
+\end{table}
 
 \subsection{Application of historical trade feature}
 
