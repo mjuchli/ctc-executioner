@@ -10,9 +10,6 @@ If the implementation varies from the one used in exchanges, or does not cover c
 
 This chapter aims to build an environment that emulates a subset of the capabilities of a real world exchange in order to determine how limit orders would have been processed, had they been placed at a given point in time in the past.
 Therefore, the setup of the environment is described at first and explains how the required components work in combination such that a learner can simulate order placement.
-Additionally, an extension of this environment is provided
-to simulate simultaneous order placement on both sides of the book.
-This process is commonly referred to as \textit{market making}.
 Finally, two implementations of reinforcement learning agents are provided.
 A Q-Learning agent will serve as the learner when no market variables are provided and a Deep Q-Network agent is developed to handle complex features.
 
@@ -125,10 +122,6 @@ Hence, for buying assets the reward is defined as $r=p_{m^T}-p_{vwap}$ and for s
 In case no trades resulted during the matching process, the reward is $r=0$, indicating that no direct negative reward is provided.
 Reasons for this are that in case the order could not be matched over the course of the time horizon, when $t=0$, a market order follows which will likely produces trades with a worse price than the market price before the placement has started.
 Given the definition of the discounted return (Eq. \ref{eq:discounted-return}) we calculate $R_t=\sum_{t'=t}^{t_0}{\gamma^{t'-t}*r_{t'}}$, where $t_0$ is the time step at which the agent has its time horizon for the ongoing order fully consumed.
-
-\section{Market making Environment}
-TODO
-
 
 \section{Q-Learning agent}
 \label{setup:q-learning}
