@@ -17,10 +17,10 @@ Raw event data is collected from an exchange (Bittrex in our case) and processed
 \end{figure}
 
 In this chapter we explain the details of the collection process process and subsequently how a historical order book can be formed thereof, such that it can serve as the historical data source for the match engine.
-A sample period of the collected data set is then being investigated in order to find find and visualize properties of the market situation and behaviour of the market participants.
+A sample period of the collected data set is then being investigated in order to find and visualize properties of the market situation and behaviour of the market participants.
 The goal of the investigation is to find hypotheses which state why certain occurrences might be beneficial to consider for the purpose of limit order placement.
-Thus, the findings serve as the basis for the feature engineering process which determines the input for the learner.
-Therefore, as a last section of this chapter, we engineer features which cover the stated hypotheses.
+Thus, the findings serve as the basis for the feature construction process which determines the input for the learner.
+Therefore, as a last section of this chapter, we construct features which cover the stated hypotheses.
 As a result, the features serve as the observed state that is to be evaluated by the reinforcement learning agents described in Chapter \ref{chap:setup}.
 
 \section{Collection}
@@ -74,7 +74,7 @@ We take a random period of the recorded data set, representing \textasciitilde10
 We first obtain an insight into the market situation with regards to some of the properties mentioned in Section \ref{sec:ob-characteristics} and understand how market participants place orders.
 Our aim is then to find patterns of how market participants behave and how this may affect the market.
 Subsequently, we formulate \textit{hypotheses} which concern why certain properties might be beneficial for the order placement process.
-Being aware that the following observations are taken from a random sample of a historical data set, the intention is to make a suggestion which properties might be worth to consider in the feature engineering process.
+Being aware that the following observations are taken from a random sample of a historical data set, the intention is to make a suggestion which properties might be worth to consider in the feature construction process.
 This is by no means a guarantee that the same observations are true for any order book.
 
 Figure \ref{fig:data-price-movement} below shows the price movement of the sample period, indicating a movement from \$10'100 to \$10'030 and back within 10 minutes.

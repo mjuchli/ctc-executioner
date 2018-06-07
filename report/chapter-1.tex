@@ -89,43 +89,63 @@ Ideally, such a learner will be able to foresee short term trend changes such th
 
 This work extends the findings of Kearns et. al. who have studied the behavior of order placement and order execution\cite{nevmyvaka2005electronic}, and further developed a reinforcement learning strategy\cite{nevmyvaka2006reinforcement} in order to proceed optimization.
 Their work has pre-processed and applied features, which were derived from order book data, to a reinforcement learning algorithm which is similar to Q-Learning.
-Rather than constructing features by hand, the work in this thesis makes an attempt to benefit from hidden patterns in raw market data by using deep reinforcement learning techniques.
-In addition, the crypto-currency domain is chosen, instead of traditional stocks.
+Rather than constructing features by hand, the work in this thesis makes an attempt to benefit from patterns in raw market data by using deep reinforcement learning techniques.
+In addition, the cryptocurrency domain is chosen, instead of the traditional stock market.
 Furthermore, while the previously mentioned work of Kearns et al. had success in using pre-processed market data as features, we believe that raw market data in combination with deep reinforcement learning can be equally successful.
 Hence, our ambition is to determine if deep reinforcement learning is perhaps an even more suitable choice in order to deal with unexpected market situations.
+Therefore we formulate the following research question to be answered with this thesis:
+\\
+\\
+\textbf{RQ 1 (A):} How can the application of deep reinforcement learning mitigate the impact of the order placement problem?
+\\
+\textbf{RQ 1 (B):} Which events, occurring in cryptocurrency markets, allow to foresee opportunities to place limit orders to a favorable price with the use of deep reinforcement learning?
+\\
+\\
+\textit{We choose to divide the research question into sub-questions as this follows the logical structure of this document and provides an intuition of the steps taken in order to give answer to the main research question.}
 
-The research proceeded and presented with this thesis is as follows.
-To simulate and understand the outcome of order placement and more importantly build a reinforcement learning environment that allows interaction with agents, we are required to build a framework.
-The framework should provide collection and market data processing capabilities in order to reproduce a historical order book that serves as a data source.
-Further, we require that the framework provides the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to the historical order book.
-Ultimately, a reinforcement learning environment should be built which allows to simulate and evaluate order placement.
-The environment should allow direct user interaction, in order to place orders on demand, and interaction with agents which act as intelligent traders.
-However, the first use of the environment will be to simulate the behaviour of order placement in a historical USD/BTC market and try to find properties which may be beneficial for optimization with deep reinforcement learning.
-With this knowledge, we then build two reinforcement learners whereas both act as an intelligent trader and place limit orders that provide an incentive to buy or sell an asset at a favorable price.
-Both agents are driven by an end-to-end learning process by which the agent improves based on the outcome of the placed orders and ultimately learns a strategy that allows to buy and sell shares at favorable prices.
-The former agent is an adaption of the well known Q-Learning algorithm and optimizes based on the amount of assets to buy or sell and a given time horizon only.
-The latter is a deep reinforcement learning agent that makes use of a convolutional neural network in order to detect patterns in market data.
-Therefore, we have to determine how to shape the data such that an agent can detect patterns which allow to learn how to place orders at the most optimal price.
-Finally, the main objective of this research can be formulated in one sentence:
 \begin{quote}
-    How should one design a deep reinforcement learning environment and construct features, which are derived from a limit order book, such that an agent can detect patterns to mitigate the impact of the important problem of limit order placement?
-\end{quote}
-Clearly, included in the study are the limitations of this setup that we have considered here.
+\begin{description}
+    \item[RQ 1.1:] Which patterns in a historical market data can be found that drive market participants to buy or sell assets, and how can these patters be incorporated into features to be used by a deep reinforcement learning agent?
+\end{description}
+    Traders participating in financial markets, including cryptocurrency markets, can submit and cancel orders to trade shares.
+    Those events are recorded by the cryptocurrency exchange and are publicly accessible as raw market data.
+    Therefore, we intend to find patterns in the data which reflect the behaviour of these market participants.
+    We take the found patterns as a basis in order to formulate hypotheses suggesting that some behavioural pattern might lead traders to become more likely to either buy or sell the asset in the short term.
+    In case of a hypothesis being true, one would be able to determine a favorable price to either buy or sell the asset, and hence, mitigate the impact of the order placement problem.
+    Thus, we have to determine how to shape historical market data and construct features with the found patterns incorporated in order to allow deep reinforcement learning agents to learn an order placement strategy.
 
-\section{Contributions}
-
-This thesis makes use of concepts from various research communities in order to work towards the above-mentioned objectives.
-The particular contributions made throughout the project are:
-\begin{itemize}
-    \item Information retrieval techniques are applied in order to collect and process financial data sets.
-    We analyze the data and find patterns which might be beneficial for the process of limit order placement optimization.
-    Feature sets are then constructed which incorporate the patterns found and allow deep reinforcement learning agents to learn an order placement strategy.
-    \item We study how to translate the problem of limit order placement into a reinforcement learning context.
-    With the use of software engineering techniques we then build an environment which simulates a rudimentary stock exchange and allows an agent to mitigate the impact of the given problem.
+\begin{description}
+    \item[RQ 1.2:] How should one to design a reinforcement learning environment and agents in the context of order placement?
+\end{description}
+    In order to simulate and understand the outcome of order placement and more importantly build a reinforcement learning environment that allows interaction with agents, this work suggests how to translate the given problem into a reinforcement learning context.
+    Consequently, we are required to build a framework which should provide collection and market data processing capabilities in order to reproduce a historical order book that serves as a data source.
+    Further, we require that the framework provides the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to the historical order book.
+    Ultimately, a reinforcement learning environment should be built which allows to simulate and evaluate order placement.
+    The environment should allow direct user interaction, in order to place orders on demand, and allow interaction with agents which act as intelligent traders.
     Therefore, we make use of the OpenAI Gym\footnote{https://github.com/openai/gym} library and contribute our work to the community to enable further investigations to proceed.
-    \item Investigations of reinforcement learning agents applied to the process of \textit{order placement} (and the closely related process known as "market making") will unveil the capabilities of deep reinforcement learning on a continuously changing state space derived from a multivariate time series.
-    Under these circumstances, we determine the possible benefits and limitations of deep reinforcement learning, when applied to noisy environments.
-\end{itemize}
+    
+    Further, we shall then build two reinforcement learners whereas both act as an intelligent trader and place limit orders that provide an incentive to buy or sell an asset at a favorable price.
+    Both agents should be driven by an end-to-end learning process by which the agent improves based on the outcome of the placed orders and ultimately learns a strategy that allows to buy and sell shares at favorable prices.
+    The former agent is an adaption of the well known Q-Learning algorithm and optimizes based on the amount of assets to buy or sell and a given time horizon only.
+    The latter is a deep reinforcement learning agent that makes use of a convolutional neural network in order to detect patterns in market data.
+
+\begin{description}
+    \item[RQ 1.3:] How can one evaluate a reinforcement learning agent in the context of order placement?
+\end{description}
+    The ability to quantify the capabilities of a limit order placement strategy learned by a reinforcement learning agent is of significant importance when answering the main research question of this thesis.
+    Since there is no literature available which states results for the exact same data set, nor for any data set within the crypto currency domain, a procedure has to be introduced with which different learning approaches and features considered can be evaluated.
+    Therefore a measure is to be taken that is well-suited to determine and compare the capabilities of a reinforcement learning agent in the order placement context.
+    Furthermore, the evaluation procedure should identify to which extent a limit order placement can be optimized in a given historical data set.
+    As a result, the evaluation shall serve as a reliable measure of how well a learned order placement strategy performs.
+    
+\begin{description}
+    \item[RQ 1.4:] In which way do the previously constructed features enable a reinforcement learning agent to improve the way it places orders?
+\end{description}
+
+    The significance of deep reinforcement learning and the use of features derived from market data has to be determined in the application of order placement.
+    The findings shall be compared to the performance achieved by a learner which has less information available, as well as the previously identified limitations of the market data available.
+    Finally, the limitations of a learned strategy are to be identified.
+\end{quote}
 
 \section{Document structure}
 
@@ -133,6 +153,6 @@ In Chapter \ref{chap:preliminaries} we first provide background information to t
 Further, we make the reader familiar with (Deep) Reinforcement Learning.
 In Chapter \ref{chap:related-work}, we elaborate on the behavior of order execution followed by approaches of both statistical and machine learning nature.
 Chapter \ref{chap:data} explains the process of data collection and preparation which was carried out prior to its use in the subsequent chapters.
-Chapter \ref{chap:setup} explains the experimental setup of the Reinforcement Learning environments, the agents and the features processed and used.
+Chapter \ref{chap:setup} explains the experimental setup of the reinforcement learning environment, the agents and the way processed features are used.
 In Chapter \ref{chap:analysis}, we analyze the data, carry out execution placement, and include reasons for our findings.
 Finally, in Chapter \ref{chap:conclusion}, we formulate a conclusion of our findings and state a future research direction.
