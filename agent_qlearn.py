@@ -1,3 +1,4 @@
+import pickle
 import logging
 import numpy as np
 from ctc_executioner.action_space_env import ActionSpace
@@ -12,16 +13,21 @@ class AgentQlearn:
         self.env = env
         self.levels = levels
         self.ai = QLearn(self.levels)
+        self.orderbookIndex = None
+        self.logRewards = []
+        self.logActions = []
 
     def update(self, t, i, force_execution=False):
         aiState = ActionState(t, i)
         a = self.ai.chooseAction(aiState)
+        self.logActions.append(a)
         # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
-        action = self.env.createAction(level=a, state=aiState, force_execution=force_execution)
+        action = self.env.createAction(level=a, state=aiState, force_execution=force_execution, orderbookIndex=self.orderbookIndex)
         action.run(self.env.orderbook)
         i_next = self.env.determineNextInventory(action)
         t_next = self.env.determineNextTime(t)
         reward = action.getReward()
+        self.logRewards.append(reward)
         state_next = ActionState(action.getState().getT(), action.getState().getI(), action.getState().getMarket())
         state_next.setT(t_next)
         state_next.setI(i_next)
@@ -36,10 +42,14 @@ class AgentQlearn:
 
 
     def train(self, episodes=1, force_execution=False):
+        self.logRewards = []
+        self.logActions = []
         for episode in range(int(episodes)):
+            _, self.orderbookIndex = self.env.getRandomOrderbookState()
             for t in self.env.T:
                 logging.info("\n"+"t=="+str(t))
                 for i in self.env.I:
+                    self.orderbookIndex = self.orderbookIndex + 1
                     logging.info("     i=="+str(i))
                     logging.info("Action run " + str((t, i)))
                     (t_next, i_next) = self.update(t, i, force_execution)
@@ -49,83 +59,55 @@ class AgentQlearn:
                         logging.info("Action transition " + str((t, i)) + " -> " + str((t_next, i_next)))
                         (t_next, i_next) = self.update(t_next, i_next, force_execution)
 
-
     def backtest(self, q=None, episodes=10, average=False, fixed_a=None):
-        if q is None:
-            q = self.ai.q
-        else:
-            self.ai.q = q
-
-        if not q:
-            raise Exception('Q-Table is empty, please train first.')
-
         Ms = []
-        #T = self.T[1:len(self.T)]
-        for t in [self.env.T[-1]]:
-            logging.info("\n"+"t=="+str(t))
-            for i in [self.env.I[-1]]:
-                logging.info("     i=="+str(i))
-                actions = []
-                state = ActionState(t, i, {})
-                #print(state)
-                if fixed_a is not None:
-                    a = fixed_a
-                else:
-                    try:
-                        a = self.ai.getQAction(state, 0)
-                        print("t: " + str(t))
-                        print("i: " + str(i))
-                        print("Action: " + str(a))
-                        # print("Q action for state " + str(state) + ": " + str(a))
-                    except:
-                        # State might not be in Q-Table yet, more training requried.
-                        logging.info("State " + str(state) + " not in Q-Table.")
-                        break
-                actions.append(a)
-                action = self.env.createAction(level=a, state=state, force_execution=False)
-                midPrice = action.getReferencePrice()
+        for _ in range(episodes):
+            actions = []
+            t = self.env.T[-1]
+            i = self.env.I[-1]
+            state = ActionState(t, i, {})
+            #print(state)
+            if fixed_a is not None:
+                a = fixed_a
+            else:
+                a = self.ai.getQAction(state, 0)
 
-                #print("before...")
-                #print(action)
+            actions.append(a)
+            action = self.env.createAction(level=a, state=state, force_execution=True)
+            midPrice = action.getReferencePrice()
+
+            #print("before...")
+            #print(action)
+            action.run(self.env.orderbook)
+            #print("after...")
+            #print(action)
+            i_next = self.env.determineNextInventory(action)
+            t_next = self.env.determineNextTime(t)
+            # print("i_next: " + str(i_next))
+            while i_next != 0:
+                state_next = ActionState(t_next, i_next, {})
+                if fixed_a is not None:
+                    a_next = fixed_a
+                else:
+                    a_next = self.ai.getQAction(state_next, 0)
+
+                actions.append(a_next)
+                #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
+
+                runtime_next = self.env.determineRuntime(t_next)
+                action.setState(state_next)
+                action.update(a_next, runtime_next)
                 action.run(self.env.orderbook)
-                #print("after...")
                 #print(action)
                 i_next = self.env.determineNextInventory(action)
-                t_next = self.env.determineNextTime(t)
-                # print("i_next: " + str(i_next))
-                while i_next != 0:
-                    state_next = ActionState(t_next, i_next, {})
-                    if fixed_a is not None:
-                        a_next = fixed_a
-                    else:
-                        try:
-                            a_next = self.ai.getQAction(state_next, 0)
-                            print("t: " + str(t_next))
-                            print("i: " + str(i_next))
-                            print("Action: " + str(a_next))
-                            # print("Q action for next state " + str(state_next) + ": " + str(a_next))
-                        except:
-                            # State might not be in Q-Table yet, more training requried.
-                            # print("State " + str(state_next) + " not in Q-Table.")
-                            break
-                    actions.append(a_next)
-                    #print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
+                t_next = self.env.determineNextTime(t_next)
 
-                    runtime_next = self.env.determineRuntime(t_next)
-                    action.setState(state_next)
-                    action.update(a_next, runtime_next)
-                    action.run(self.env.orderbook)
-                    #print(action)
-                    i_next = self.env.determineNextInventory(action)
-                    t_next = self.env.determineNextTime(t_next)
-
-                price = action.getAvgPrice()
-                # TODO: last column is for for the BUY scenario only
-                if action.getOrder().getSide() == OrderSide.BUY:
-                    profit = midPrice - price
-                else:
-                    profit = price - midPrice
-                Ms.append([state, midPrice, actions, price, profit])
+            price = action.getAvgPrice()
+            if action.getOrder().getSide() == OrderSide.BUY:
+                profit = midPrice - price
+            else:
+                profit = price - midPrice
+            Ms.append([state, midPrice, actions, price, profit])
         if not average:
             return Ms
         return self.averageBacktest(Ms)
@@ -151,37 +133,115 @@ class AgentQlearn:
     def run(self, epochs_train=1, epochs_test=10):
         if epochs_train > 0:
             agent.train(episodes=epochs_train)
-        M = agent.backtest(episodes=epochs_test, average=False)
-        M = np.array(M)
-        return np.mean(M[0:, 4])
+            rewards = agent.logRewards
+            actions = agent.logActions
+            #print(actions)
+            return np.mean(rewards)
+
+        if epochs_test > 0:
+            M = agent.backtest(episodes=epochs_test, average=False)
+            M = np.array(M)
+            return np.mean(M[0:, 4])
 
     def simulate(self, epochs_train=1, epochs_test=10, interval=100):
-        UI.animate(lambda : self.run(epochs_train, epochs_test), interval=interval)
+        UI.animate(lambda : self.run(epochs_train, epochs_test), interval=interval, title="Mean backtest reward")
+
+
+def _generate_Sequence(min, max, step):
+    """ Generate sequence (that unlike xrange supports float)
+
+    max: defines the sequence maximum
+    step: defines the interval
+    """
+    i = min
+    I = []
+    while i <= max:
+        I.append(i)
+        i = i + step
+    return I
 
 
 side = OrderSide.SELL
-levels = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -9]
+dataset = "2"
+name = "experiments/q_"+dataset+"_10000_" + str(side)
+levels = _generate_Sequence(min=-50, max=50, step=1)
 ai = None
-T = [0, 10, 20, 40, 60, 80, 100] #, 120, 240]
-T_test = [0, 10, 20, 40, 60, 80, 100]# 120, 240]
-I = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+T = _generate_Sequence(min=0, max=100, step=10)
+T_test = _generate_Sequence(min=0, max=100, step=10)
+I = _generate_Sequence(min=0, max=1, step=0.1)
 
 # Load orderbook
 cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"]
 import pandas as pd
-events = pd.read_table('data/events/ob-1-small.tsv', sep='\t', names=cols, index_col="seq")
+events = pd.read_table('data/events/ob-'+dataset+'-small-train.tsv', sep='\t', names=cols, index_col="seq")
 d = Orderbook.generateDictFromEvents(events)
 orderbook = Orderbook()
 orderbook.loadFromDict(d)
 # clean first n states (due to lack of bids and asks)
 print("#States: " + str(len(orderbook.states)))
-for i in range(100):
+
+
+events_test = pd.read_table('data/events/ob-'+dataset+'-small-test.tsv', sep='\t', names=cols, index_col="seq")
+d_test = Orderbook.generateDictFromEvents(events_test)
+orderbook_test = Orderbook()
+orderbook_test.loadFromDict(d_test)
+
+for i in range(25):
     orderbook.states.pop(0)
+    orderbook_test.states.pop(0)
     del d[list(d.keys())[0]]
-orderbook_test = orderbook
+    del d_test[list(d_test.keys())[0]]
+
 #orderbook.plot()
+#orderbook_test.plot()
 
 actionSpace = ActionSpace(orderbook, side, T, I, levels=levels)
 actionSpace_test = ActionSpace(orderbook_test, side, T_test, I, levels=levels)
 agent = AgentQlearn(actionSpace)
-agent.simulate()
+
+# TRAIN
+# actions = []
+# rewards = []
+# print("Learn " + name)
+# for i in range(6000):
+#     print("Epoch: " + str(i))
+#     try:
+#         agent.train(episodes=1)
+#         actions.append(agent.logActions)
+#         rewards.append(agent.logRewards)
+#     except:
+#         print("Index error")
+#
+# np.save(name+'.npy', agent.ai.q)
+#
+# with open(name + '_actions', 'wb') as fp:
+#     pickle.dump(actions, fp)
+# with open(name  + '_rewards', 'wb') as fp:
+#     pickle.dump(rewards, fp)
+
+
+#agent.simulate(epochs_train=1, epochs_test=0)
+
+# TEST
+agent_test = AgentQlearn(actionSpace_test)
+q = np.load(name+'.npy').item()
+agent_test.ai.q = q
+
+print("Test " + name)
+backtest = []
+for i in range(1000):
+    print("Test: " + str(i))
+    #try:
+    M = agent.backtest(episodes=1, average=False, fixed_a=0)
+    M = np.array(M)
+    reward = np.mean(M[0:, 4])
+    #print(reward)
+    backtest.append(reward)
+    #except:
+    #    print("Index error")
+
+print(np.mean(backtest))
+with open(name  + '_backtest', 'wb') as fp:
+    pickle.dump(backtest, fp)
+
+#agent_test.simulate(epochs_train=0, epochs_test=10)
