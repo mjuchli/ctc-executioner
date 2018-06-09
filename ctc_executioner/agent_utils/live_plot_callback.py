@@ -11,6 +11,7 @@ class LivePlotCallback(Callback):
         self.rewardbuf = []
         self.episode = 0
         self.nb_episodes = nb_episodes
+        self.filename = "liveplot"
         plt.ion()
         self.fig = plt.figure()
         self.grphinst = plt.plot(self.X, self.rewards, color='b')[0]
@@ -36,8 +37,10 @@ class LivePlotCallback(Callback):
         self.avgrewards[self.episode] = np.mean(self.rewardbuf)
         self.plot()
         self.episode += 1
+
     def plot(self):
         self.grphinst.set_ydata(self.rewards)
         self.grphavg.set_ydata(self.avgrewards)
         plt.draw()
+        #if self.episode == 0:
         plt.pause(0.01)

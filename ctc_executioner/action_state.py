@@ -1,4 +1,5 @@
 import numpy as np
+from ctc_executioner.feature_type import FeatureType
 
 class ActionState(object):
 
@@ -25,14 +26,24 @@ class ActionState(object):
         return self.__str__()
 
     def toArray(self):
-        # arr = [np.array([self.getT()]), np.array([self.getI()])]
-        # for k, v in self.getMarket().items():
-        #     arr.append(v)
-        # return np.array([arr])
-        features = self.market['bidask']
-        return features.reshape((1, features.shape[0], features.shape[1], features.shape[2])) # required for custom DQN
-        return features # (2*lookback, levels, count(features))
-
+        if FeatureType.ORDERS.value in self.market:
+            # arr = [np.array([self.getT()]), np.array([self.getI()])]
+            # for k, v in self.getMarket().items():
+            #     arr.append(v)
+            # return np.array([arr])
+            features = self.market[FeatureType.ORDERS.value]
+            arr = np.zeros(shape=(1,features.shape[1],2), dtype=float)
+            arr[0,0] = np.array([self.t, self.i])
+            features = np.vstack((arr, features))
+            #return features.reshape((1, features.shape[0], features.shape[1], features.shape[2])) # required for custom DQN
+            return features.reshape((features.shape[0], features.shape[1], features.shape[2])) # required for baseline DQN
+            #return features # (2*lookback, levels, count(features))
+        elif FeatureType.TRADES.value in self.market:
+            features = self.market[FeatureType.TRADES.value]
+            features = np.vstack((np.array([self.t, self.i, 0]), features))
+            return features
+        else:
+            Exception("Feature not known to ActionState.")
 
     def getT(self):
         return self.t

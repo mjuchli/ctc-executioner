@@ -63,7 +63,7 @@ class ActionSpace(object):
             action.setOrderbookState(orderbookState)
             action.setOrderbookIndex(orderbookIndex)
 
-        if runtime <= 0.0 or level is None:
+        if runtime <= 0 or level is None:
             price = None
             ot = OrderType.MARKET
         else:

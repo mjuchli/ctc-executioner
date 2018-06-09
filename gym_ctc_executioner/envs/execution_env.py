@@ -10,6 +10,8 @@ from ctc_executioner.action_state import ActionState
 from ctc_executioner.order import Order
 from ctc_executioner.order_type import OrderType
 from ctc_executioner.order_side import OrderSide
+from ctc_executioner.feature_type import FeatureType
+from ctc_executioner.agent_utils.live_plot_callback import LivePlotCallback
 
 #logging.basicConfig(level=logging.INFO)
 
@@ -19,6 +21,7 @@ class ExecutionEnv(gym.Env):
         self.orderbookIndex = None
         self.actionState = None
         self.execution = None
+        self.episode = 0
         self._configure()
 
     def _generate_Sequence(self, min, max, step):
@@ -41,17 +44,25 @@ class ExecutionEnv(gym.Env):
                    T=(0, 100, 10),
                    I=(0, 1, 0.1),
                    lookback=25,
-                   bookSize=10
+                   bookSize=10,
+                   featureType=FeatureType.ORDERS,
+                   callbacks = []
                    ):
         self.orderbook = orderbook
-        self.side = OrderSide.SELL
+        self.side = side
         self.levels = self._generate_Sequence(min=levels[0], max=levels[1], step=levels[2])
+        self.action_space = spaces.Discrete(len(self.levels))
         self.T = self._generate_Sequence(min=T[0], max=T[1], step=T[2])
         self.I = self._generate_Sequence(min=I[0], max=I[1], step=I[2])
         self.lookback = lookback # results in (bid|size, ask|size) -> 4*5
         self.bookSize = bookSize
-        self.action_space = spaces.Discrete(len(self.levels))
-        self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback, self.bookSize, 2))
+        self.featureType = featureType
+        if self.featureType == FeatureType.ORDERS:
+            self.observation_space = spaces.Box(low=0.0, high=10.0, shape=(2*self.lookback+1, self.bookSize, 2))
+        else:
+            self.observation_space = spaces.Box(low=0.0, high=100.0, shape=(self.lookback+1, 3))
+        self.callbacks = callbacks
+        self.episodeActions = []
 
     def setOrderbook(self, orderbook):
         self.orderbook = orderbook
@@ -165,19 +176,31 @@ class ExecutionEnv(gym.Env):
         execution.setOrderbookIndex(self.orderbookIndex)
         return execution
 
-    def _makeFeature(self, orderbookIndex):
-        return self.orderbook.getBidAskFeatures(
-            state_index=orderbookIndex,
-            lookback=self.lookback,
-            qty=self.I[-1],#i_next+0.0001,
-            normalize=True,
-            price=True,
-            size=True,
-            levels = self.bookSize
-        )
+    def _makeFeature(self, orderbookIndex, qty):
+        if self.featureType == FeatureType.ORDERS:
+            return self.orderbook.getBidAskFeatures(
+                state_index=orderbookIndex,
+                lookback=self.lookback,
+                qty=self.I[-1],#i_next+0.0001,
+                normalize=True,
+                price=True,
+                size=True,
+                levels = self.bookSize
+            )
+        else:
+            state = self.orderbook.getState(orderbookIndex)
+            return self.orderbook.getHistTradesFeature(
+                ts=state.getUnixTimestamp(),
+                lookback=self.lookback,
+                normalize=False,
+                norm_size=qty,
+                norm_price=state.getBidAskMid()
+            )
 
     def step(self, action):
+        self.episode += 1
         action = self.levels[action]
+        self.episodeActions.append(action)
         if self.execution is None:
             self.execution = self._create_execution(action)
         else:
@@ -195,14 +218,18 @@ class ExecutionEnv(gym.Env):
         i_next = self._determine_next_inventory(self.execution)
         t_next = self._determine_next_time(self.execution.getState().getT())
 
-        bidAskFeature = self._makeFeature(orderbookIndex=self.execution.getOrderbookIndex())
-        state_next = ActionState(t_next, i_next, {'bidask': bidAskFeature})
+        feature = self._makeFeature(orderbookIndex=self.execution.getOrderbookIndex(), qty=i_next)
+        state_next = ActionState(t_next, i_next, {self.featureType.value: feature})
         done = self.execution.isFilled() or state_next.getI() == 0
-        # if done == True:
-        #     #reward = self.execution.getReward()
-        #     #volumeRatio = 1.0
-        # else:
-        reward, volumeRatio = self.execution.calculateRewardWeighted(counterTrades, self.I[-1])
+        if done:
+            reward = self.execution.getReward()
+            volumeRatio = 1.0
+            if self.callbacks is not []:
+                for cb in self.callbacks:
+                    cb.on_episode_end(self.episode, {'episode_reward': reward, 'episode_actions': self.episodeActions})
+            self.episodeActions = []
+        else:
+            reward, volumeRatio = self.execution.calculateRewardWeighted(counterTrades, self.I[-1])
 
         logging.info(
             'Run execution.' +
@@ -219,8 +246,8 @@ class ExecutionEnv(gym.Env):
 
     def _reset(self, t, i):
         orderbookState, orderbookIndex = self._get_random_orderbook_state()
-        bidAskFeature = self._makeFeature(orderbookIndex=orderbookIndex)
-        state = ActionState(t, i, {'bidask': bidAskFeature}) #np.array([[t, i]])
+        feature = self._makeFeature(orderbookIndex=orderbookIndex, qty=i)
+        state = ActionState(t, i, {self.featureType.value: feature}) #np.array([[t, i]])
         self.execution = None
         self.orderbookIndex = orderbookIndex
         self.actionState = state

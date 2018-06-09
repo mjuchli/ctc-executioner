@@ -145,7 +145,7 @@ class ActionSpace(object):
         a = self.ai.chooseAction(aiState)
         # print('Random action: ' + str(level) + ' for state: ' + str(aiState))
         action = self.createAction(level=a, state=aiState, force_execution=force_execution)
-        action.run(self.orderbook)
+        action, counterTrades = action.run(self.orderbook)
         i_next = self.determineNextInventory(action)
         t_next = self.determineNextTime(t)
         reward = action.getReward()
@@ -226,9 +226,9 @@ class ActionSpace(object):
                     else:
                         try:
                             a_next = self.ai.getQAction(state_next, 0)
-                            print("t: " + str(t_next))
-                            print("i: " + str(i_next))
-                            print("Action: " + str(a_next))
+                            # print("t: " + str(t_next))
+                            # print("i: " + str(i_next))
+                            # print("Action: " + str(a_next))
                             # print("Q action for next state " + str(state_next) + ": " + str(a_next))
                         except:
                             # State might not be in Q-Table yet, more training requried.

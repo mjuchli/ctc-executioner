@@ -12,13 +12,15 @@ class MatchEngine(object):
         self.orderbook = orderbook
         self.index = index
         self.maxRuntime = maxRuntime
-        self.matched = set()
+        self.matches = set()
+        self.recordMatches = False
 
     def _removePosition(self, side, price, qty):
-        self.matched.add((side, price, qty))
+        if self.recordMatches == True:
+            self.matches.add((side, price, qty))
 
     def _isRemoved(self, side, price, qty):
-        return (side, price, qty) in self.matched
+        return (side, price, qty) in self.matches
 
     def setIndex(self, index):
         self.index = index
@@ -65,13 +67,13 @@ class MatchEngine(object):
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
                 t = Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())
-                self._removePosition(side=order.getSide(), price=price, qty=qty)
+                #self._removePosition(side=order.getSide(), price=price, qty=qty)
                 return [t]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
                 t = Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price, timestamp=orderbookState.getTimestamp())
                 partialTrades.append(t)
-                self._removePosition(side=order.getSide(), price=price, qty=qty)
+                #self._removePosition(side=order.getSide(), price=price, qty=qty)
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
 

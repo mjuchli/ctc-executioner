@@ -174,7 +174,8 @@ class Action(object):
         """
         matchEngine = self.getMatchEngine(orderbook)
         counterTrades, qtyRemain, index = matchEngine.matchOrder(self.getOrder(), self.getRuntime())
-        self.setTrades(self.getTrades() + counterTrades)
+        self.setTrades(self.getTrades() + counterTrades) # appends trades!
+        #self.setTrades(counterTrades) # only current trades!
         self.setOrderbookIndex(index=index)
         self.setOrderbookState(orderbook.getState(index))
         return self, counterTrades

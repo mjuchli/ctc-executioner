@@ -4,25 +4,26 @@ from ctc_executioner.action_state import ActionState
 class QLearn:
     """Qlearner."""
 
-    def __init__(self, actions, epsilon=0.1, alpha=0.2, gamma=0.9):
+    def __init__(self, actions, epsilon=0.1, alpha=0.1, gamma=0.1, exploration_decay=1.000001):
         """Initialize Q-table and assign parameters."""
         self.q = {}
         self.epsilon = epsilon
         self.alpha = alpha
         self.gamma = gamma
+        self.exploration_decay = exploration_decay
         self.actions = actions
 
     def getQ(self, state, action, default=0.0):
         """Q-value lookup for state and action,  or else returns default."""
         return self.q.get((state, action), default)
 
-    def getQAction(self, state, default=None):
+    def getQAction(self, state, default=0.0):
         """Best action based on Q-Table for given state."""
         values = []
         for x in list(reversed(self.actions)):
-            q_value = self.q.get((state, x), None)
-            if q_value is not None:
-                values.append(q_value)
+            q_value = self.q.get((state, x), 0.0)
+            #if q_value is not 0.0:
+            values.append(q_value)
             # else:
             #    raise Exception("Q-Table does not contain: " + str((state, x)))
 
@@ -34,8 +35,8 @@ class QLearn:
         return a
 
     def learnQ(self, state, action, reward, value):
-        oldv = self.q.get((state, action), None)
-        if oldv is None:
+        oldv = self.q.get((state, action), 0.0)
+        if oldv is 0.0:
             self.q[(state, action)] = reward
         else:
             self.q[(state, action)] = oldv + self.alpha * (value - oldv)
@@ -46,7 +47,9 @@ class QLearn:
 
     def chooseAction(self, state, return_q=False):
         """Chooses most rewarding action."""
-        if random.random() < self.epsilon:
+        self.epsilon = self.exploration_decay * self.epsilon
+
+        if random.random() > self.epsilon:
             action = random.choice(self.actions)
         else:
             q = [self.getQ(state, a) for a in self.actions]

@@ -4,9 +4,12 @@ import matplotlib.animation as animation
 class UI:
 
     @staticmethod
-    def animate(f, interval=5000, axis=[0, 100, -50, 50], frames=None):
-        fig = plt.figure()
+    def animate(f, interval=5000, axis=[0, 100, -50, 50], frames=None, title=""):
+        fig = plt.figure()#(figsize=(24, 18))
         ax1 = fig.add_subplot(1, 1, 1)
+        ax1.tick_params(axis='both', which='major', labelsize=25)
+
+        ax1.tick_params(axis='both', which='minor', labelsize=25)
         ax1.axis(axis)
         ax1.autoscale(True)
         xs = []
@@ -21,6 +24,8 @@ class UI:
             ys.append(y)
             ax1.clear()
             ax1.plot(xs, ys)
+            ax1.grid(linestyle='-', linewidth=2)
+            ax1.legend([title], prop={'size': 30})
 
         ani = animation.FuncAnimation(
             fig,

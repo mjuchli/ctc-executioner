@@ -1,5 +1,6 @@
 from dateutil import parser
 from ctc_executioner.order_side import OrderSide
+#from order_side import OrderSide
 import numpy as np
 import random
 from sklearn.preprocessing import MinMaxScaler
@@ -7,6 +8,7 @@ from collections import OrderedDict
 import pandas as pd
 from diskcache import Cache
 from datetime import datetime
+import time
 
 class OrderbookEntry(object):
 
@@ -96,6 +98,9 @@ class OrderbookState(object):
     def getTimestamp(self):
         return self.timestamp
 
+    def getUnixTimestamp(self):
+        return time.mktime(self.getTimestamp().timetuple())
+
     def getBidAskMid(self):
         firstBuy = self.getBuyers()[0]
         firstSell = self.getSellers()[0]
@@ -143,11 +148,13 @@ class OrderbookState(object):
         # priceEstimated = priceEnd + missingLevels * derivative_price
         # return priceEstimated
 
+
 class Orderbook(object):
 
     def __init__(self, extraFeatures=False):
         self.cache = Cache('/tmp/ctc-executioner')
         self.dictBook = None
+        self.trades = {}
         self.states = []
         self.extraFeatures = extraFeatures
         self.tmp = {}
@@ -472,12 +479,15 @@ class Orderbook(object):
         from datetime import datetime
 
         # skip states until at least 1 bid and 1 ask is available
+        skip = 0
         while True:
             head_key = next(iter(d))
             head = d[head_key]
             if len(head["bids"]) > 0 and len(head["asks"]) > 0:
                 break
             del d[head_key]
+            skip = skip + 1
+        print("Skipped dict entries: " + str(skip))
 
         for ts in iter(d.keys()):
             state = d[ts]
@@ -498,6 +508,28 @@ class Orderbook(object):
     def loadFromEventsFrame(self, events_pd):
         self.dictBook = Orderbook.generateDictFromEvents(events_pd)
         self.loadFromDict(self.dictBook)
+        self.trades = Orderbook.generateTradesFromEvents(events_pd)
+
+    @staticmethod
+    def generateTradesFromEvents(events_pd):
+        """ Generates dictionary based on historical trades.
+
+        dict :: {timestamp: trade}
+        state :: {'price': float, 'size': float, side: OrderSide}
+        """
+        import copy
+        trades = {}
+        for e in events_pd.itertuples():
+            if e.is_trade:
+                if e.is_bid:
+                    #side = OrderSide.BUY
+                    side = 0
+                else:
+                    #side = OrderSide.SELL
+                    side = 1
+                trades[e.ts] = {'price': e.price, 'size': e.size, 'side': side}
+        return trades
+
 
     def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"], clean=50):
         print('Attempt to load from cache.')
@@ -506,6 +538,7 @@ class Orderbook(object):
             print('Order book in cache. Load...')
             self.states = o.states
             self.dictBook = o.dictBook
+            self.trades = o.trades
         else:
             print('Order book not in cache. Read from file...')
             import pandas as pd
@@ -521,6 +554,9 @@ class Orderbook(object):
 
     def plot(self, show_bidask=False, max_level=-1, show=True):
         import matplotlib.pyplot as plt
+        plt.figure(figsize=(24, 18))
+        plt.tick_params(axis='both', which='major', labelsize=25)
+        plt.tick_params(axis='both', which='minor', labelsize=25)
         price = [x.getBidAskMid() for x in self.getStates()]
         times = [x.getTimestamp() for x in self.getStates()]
         plt.plot(times, price)
@@ -633,13 +669,37 @@ class Orderbook(object):
                 features = np.vstack((features, features_next))
             i = i + 1
         return features
-#
 
-#o = Orderbook()
-#o.loadFromEvents('ob-1-small.tsv')
+    def get_hist_trades(self, ts, lookback=20):
+        ts -= 3600
+        acc_trades = {}
+        for ts_tmp, trade_tmp in sorted(list(self.trades.items()), reverse=True):
+            if ts_tmp <= ts:
+                acc_trades[ts_tmp] = trade_tmp
+                if len(acc_trades) == lookback:
+                    break
+        return acc_trades
+
+    def getHistTradesFeature(self, ts, lookback=20, normalize=True, norm_price=None, norm_size=None):
+        trades = self.get_hist_trades(ts, lookback=lookback)
+        trades = list(map(lambda v: [v['price'], v['size'], v['side']], trades.values()))
+        arr = np.array(trades)
+        if normalize:
+            arr = np.column_stack((arr[:,0]/norm_price, arr[:,1]/norm_size, arr[:,2]))
+        return arr
+
+
+# o = Orderbook()
+# o.loadFromEvents('data/events/ob-1-small.tsv')
+# ts = o.getStates()[100].getUnixTimestamp()
+# print(ts)
+# o.getHistTradesFeature(ts, normalize=True, norm_price=2.0, norm_size=2.0)
+#trades = o.getHistTradesFeature(ts)
+# print(trades[0:1])
+
+
 #o.generateDict()
 #print(o.dictBook[list(o.dictBook.keys())[0]])
-
 #o.plot()
 
 #o = Orderbook()
