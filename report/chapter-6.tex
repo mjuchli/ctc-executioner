@@ -280,12 +280,10 @@ During training, the mean rewards given and average action chosen for each epoch
 Using the training model, a backtest is run on the test data sets, whereas the agent executes orders and chooses the learned optimal action to take.
 The result of which is shown as the average reward received while doing so.
 The difference to the occurring costs of a market order then serves as the guideline of how well the algorithm performs.
-\vfill
-\newpage
 
 \subsection{Results of training and testing on data set I and II}
 
-\begin{figure}[H]
+\begin{figure}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{q_1_10000_BUY_rewards.png}
@@ -294,7 +292,7 @@ The difference to the occurring costs of a market order then serves as the guide
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{q_1_10000_BUY_mean_actions.png}
-        \caption{Mean actions per epoch (buy)}
+        \caption{Mean of actions per epoch (buy)}
         \label{fig:analysis-q-learn-1-action-buy}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
@@ -304,7 +302,7 @@ The difference to the occurring costs of a market order then serves as the guide
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{q_1_10000_SELL_mean_actions.png}
-        \caption{Mean actions per epoch (sell)}
+        \caption{Mean of actions per epoch (sell)}
         \label{fig:analysis-q-learn-1-action-sell}
     \end{subfigure}
     \caption{Mean rewards and actions for buying and selling on training data set I.}
@@ -329,7 +327,7 @@ The backtest resulted in an average reward of -21.34 achieved by the agent.
 The reward received for placing market orders on the test set account to a negative reward of -27.70.
 Hence, the agent is able to save \$6.36 when selling 1.0 BTC.
 
-\begin{figure}[H]
+\begin{figure}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{q_2_10000_BUY_rewards.png}
@@ -338,7 +336,7 @@ Hence, the agent is able to save \$6.36 when selling 1.0 BTC.
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{q_2_10000_BUY_mean_actions.png}
-        \caption{Mean actions per epoch (buy)}
+        \caption{Mean of actions per epoch (buy)}
         \label{fig:analysis-q-learn-2-action-buy}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
@@ -348,7 +346,7 @@ Hence, the agent is able to save \$6.36 when selling 1.0 BTC.
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{q_2_10000_SELL_mean_actions.png}
-        \caption{Mean actions per epoch (sell)}
+        \caption{Mean of actions per epoch (sell)}
         \label{fig:analysis-q-learn-2-action-sell}
     \end{subfigure}
     \caption{Mean rewards and actions for buying and selling on training data set II.}
@@ -410,15 +408,69 @@ Finally, we conclude our findings and reason about the capabilities of the DQN a
 
 \subsection{Application of historical order feature}
 
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_buy_rewards.png}
+        \caption{Reward per epoch (buy)}
+        \label{fig:analysis-dqn-1-reward-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_buy_mean_actions.png}
+        \caption{Mean of actions per epoch (buy)}
+        \label{fig:analysis-dqn-1-action-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_sell_rewards.png}
+        \caption{Mean rewards per epoch (sell)}
+        \label{fig:analysis-dqn-1-reward-sell}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_sell_mean_actions.png}
+        \caption{Mean of actions per epoch (sell)}
+        \label{fig:analysis-dqn-1-action-sell}
+    \end{subfigure}
+    \caption{DQN agent rewards and mean of actions for buying and selling on training data set I using feature I.}
+    \label{fig:analysis-dqn-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_buy_rewards.png}
+        \caption{Reward per epoch (buy)}
+        \label{fig:analysis-dqn-1-reward-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_buy_mean_actions.png}
+        \caption{Mean of actions per epoch (buy)}
+        \label{fig:analysis-dqn-1-action-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_sell_rewards.png}
+        \caption{Mean rewards per epoch (sell)}
+        \label{fig:analysis-dqn-1-reward-sell}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_sell_mean_actions.png}
+        \caption{Mean of actions per epoch (sell)}
+        \label{fig:analysis-dqn-1-action-sell}
+    \end{subfigure}
+    \caption{DQN agent rewards and mean of actions for buying and selling on training data set II using feature I.}
+    \label{fig:analysis-dqn-2}
+\end{figure}
+
+
 \begin{table}[H]
 \centering
 \begin{tabular}{l|l|l|}
 \cline{2-3}
 & \textbf{DQN (Feature I)} & \textbf{\begin{tabular}[c]{@{}l@{}}Market\\ Order\end{tabular}} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 22.06          & -0.05                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -54.56         & -27.70                                                          \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -49.26         & -27.70                                                          \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -2.26          & -1.06                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (II)}} & ?          & -1.72                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & 0.84          & -1.72                                                           \\ \hline
 \end{tabular}
 \caption{Summary of rewards for the Q-Learning agent and market orders.}
 \label{tbl:analysis-dqn-orderfeature-summary}
@@ -426,6 +478,58 @@ Finally, we conclude our findings and reason about the capabilities of the DQN a
 
 \subsection{Application of historical trade feature}
 
-\subsection{Evaluation of limitations using artificial market data}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_buy_trades_rewards.png}
+        \caption{Reward per epoch (buy)}
+        \label{fig:analysis-dqn-1-trades-reward-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_buy_trades_mean_actions.png}
+        \caption{Mean of actions per epoch (buy)}
+        \label{fig:analysis-dqn-1-trades-action-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_sell_trades_rewards.png}
+        \caption{Mean rewards per epoch (sell)}
+        \label{fig:analysis-dqn-1-trades-reward-sell}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_1_sell_trades_mean_actions.png}
+        \caption{Mean of actions per epoch (sell)}
+        \label{fig:analysis-dqn-1-trades-action-sell}
+    \end{subfigure}
+    \caption{DQN agent rewards and mean of actions for buying and selling on training data set I using feature II.}
+    \label{fig:analysis-dqn-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_buy_trades_rewards.png}
+        \caption{Reward per epoch (buy)}
+        \label{fig:analysis-dqn-1-trades-reward-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_buy_trades_mean_actions.png}
+        \caption{Mean of actions per epoch (buy)}
+        \label{fig:analysis-dqn-1-trades-action-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_sell_trades_rewards.png}
+        \caption{Mean rewards per epoch (sell)}
+        \label{fig:analysis-dqn-1-trades-reward-sell}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{cnn_2_sell_trades_mean_actions.png}
+        \caption{Mean of actions per epoch (sell)}
+        \label{fig:analysis-dqn-1-trades-action-sell}
+    \end{subfigure}
+    \caption{DQN agent rewards and mean of actions for buying and selling on training data set II using feature II.}
+    \label{fig:analysis-dqn-2}
+\end{figure}
+
+\subsection{Determining the limitations of the DQN agent}
 
 \subsection{Conclusion of DQN approach}

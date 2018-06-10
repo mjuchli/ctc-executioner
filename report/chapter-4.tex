@@ -1,11 +1,11 @@
 \chapter{Data curation}
 \label{chap:data}
 
-In the crypto-currency domain, real-time price data is, for most exchanges, freely available. 
-Historical data is oftentimes limited with respect to how far back into past the data is being provided.
-However, continuously recording real-time data results in a complete historical data set from the time when recording was started and provides the desired data set for this research.
+In most exchanges in the crypto-currency domain, real-time price data is freely available. 
+There is often a limit as to how far into the past historical data is retained.
+However, continuously recording real-time data results in a historical data set which is complete from the time when recording was started and has provided the desired data set for this research.
 A historical limit order book consisting of states which store every bid and ask posted by traders is commonly referred to as a \textit{complete order book}.
-The process to accumulate the data and build the order book is illustrated in a high level pipeline in Figure \ref{fig:data-pipeline} below.
+The process of accumulating the data and building the order book is illustrated in a high level pipeline in Figure \ref{fig:data-pipeline} below.
 Raw event data is collected from an exchange (Bittrex in our case) and processed in order to form a historical limit order book.
 \begin{figure}[H]
     \centering
@@ -16,21 +16,21 @@ Raw event data is collected from an exchange (Bittrex in our case) and processed
     \label{fig:data-pipeline}
 \end{figure}
 
-In this chapter we explain the details of the collection process process and subsequently how a historical order book can be formed thereof, such that it can serve as the historical data source for the match engine.
-A sample period of the collected data set is then being investigated in order to find and visualize properties of the market situation and behaviour of the market participants.
+In this chapter, we will outline the details of the data collection process, and how this data can subsequently form a historical order book in order to serve as the historical data source for the match engine.
+A sample period from the data set collected will then be investigated in order to find and visualize the properties of the market situation and behavior of the market participants.
 The goal of the investigation is to find hypotheses which state why certain occurrences might be beneficial to consider for the purpose of limit order placement.
 Thus, the findings serve as the basis for the feature construction process which determines the input for the learner.
-Therefore, as a last section of this chapter, we construct features which cover the stated hypotheses.
+Therefore, in the last section of this chapter, we will construct features which cover the stated hypotheses.
 As a result, the features serve as the observed state that is to be evaluated by the reinforcement learning agents described in Chapter \ref{chap:setup}.
 
 \section{Collection}
 \label{sec:data-collection}
 
-There are various ways in order to build a copy of a historical limit order book. However, the only way to rebuild a complete order book is by processing market \textit{events}, that is, every market update for a given ticker (trading pair, in our case USD/BTC).
-There are three common types of events, all of which are initiated by a market participant (trader): \textit{order created}, \textit{order cancelled} or \textit{order filled} in case a market order crosses the spread and initiates a trade.
+There are various ways to build a copy of a historical limit order book. However, the only way to rebuild a complete order book is by processing market \textit{events}, that is, every market update for a given ticker (trading pair, in our case USD/BTC).
+There are three common types of events, all of which are initiated by a market participant (trader): \textit{order created}, \textit{order cancelled} or \textit{order filled} in the event that a market order crosses the spread and initiates a trade.
 
 Our exchange of choice for collecting data is Bittrex\footnote{https://bittrex.com/} as the exchange provides a \textit{SignalR}\footnote{https://docs.microsoft.com/en-us/aspnet/signalr/overview/getting-started/introduction-to-signalr} (a library that abstracts \textit{HTTP} and \textit{WebSocket}) interface from which one can extract all status updates (events) from the market.
-More specifically, an event in this either a buy- or sell order, or a fill (e.g. trade).
+More specifically, an event in this either a buy or sell order, or a fill (e.g. trade).
 Thus, we subscribe to \texttt{https://socket.bittrex.com/signalr} and filter the data field \texttt{M} for \texttt{updateExchangeState}.
 The data type of the message contains the name of the trading pair and a nonce to identify the unique status update in up-counting order.
 That is,
@@ -38,10 +38,10 @@ That is,
     StatusUpdate = \{name, nonce, buy_1,...buy_n, sell_1,...sell_n, fill_1,...fill_n\}
 \end{equation}
 , whereas $buy \in Order_{Limit}$, $sell \in Order_{Limit}$ (see Eq. \ref{eq:order-limit}) and $fill \in Trade$ (see Eq. \ref{eq:trade}).
-With that said, the orders hold an additional field $type \in \{0,1,2\}$ which specifies whether it was a \textit{create}, \textit{cancel} or \textit{change} in the order.
+With that said, the orders hold an additional field $type \in \{0,1,2\}$ which specifies whether it was a \textit{create}, \textit{cancel} or \textit{change} in the order, whereby the changes of orders are neglected in our setup as this function is rarely used by traders.
 
-As is evident, multiple events can be sent within one status update message. 
-We segment the status update into separate events with the same nonce, whereas each event expresses either a limit order of side bid or ask or a filled order resulting in a trade,
+It is evident that multiple events can be sent within one status update message. 
+We segment the status update into separate events with the same nonce, whereas each event expresses either a limit order of a side bid or ask or a filled order resulting in a trade,
 \begin{equation}\label{eq:event-update}
     Event = \{name, nonce, type, isTrade, trade, isBid, order\}
 \end{equation}
@@ -51,33 +51,32 @@ Consequently, $order \in Order_{Limit}$ and $trade \in Trade$.
 \section{Order book generation}
 \label{sec:data-generation}
 
-The next step is to transform the collected events into an order book structure.
+The next step is to transform the events collected into an order book structure.
 By chronologically iterating over the processed events (Eq. \ref{eq:event-update}), we create a new order book state (Eq. \ref{eq:order-book-state}) for each such event that has a consecutive time stamp.
-During this iterative process we follow the rules below, which ensure that the correct order book entries remain in future order book states.
+During this iterative process, we follow the rules below, which ensure that the correct order book entries remain in future order book states.
 Given the observed event, we act according to the type of the event:
 \begin{description}
-    \item[Order created:] order book entry is added to the current state.
-    \item[Order cancelled:] the amount of shares of the cancelled order is subtracted from the entry in the current state with the corresponding price level.
-    \item[Order filled:] the amount of the shares which were traded is subtracted from the entry in the current state with the corresponding price level.
+    \item[Order created:] an order book entry is added to the current state.
+    \item[Order cancelled:] the amount of shares of the canceled order is subtracted from the entry in the current state with the corresponding price level.
+    \item[Order filled:] the amount of shares traded is subtracted from the entry in the current state with the corresponding price level.
 \end{description}
 \hfill
 \\
-As a result, a \textit{list} of order book states is formed which represent a historical order book (Eq. \ref{eq:order-book}).
-\textit{We acknowledge that a list representation is by no means the most performing implementation of an order book, but for our purposes it is sufficient.}
+As a result, a \textit{list} of order book states is formed which constitutes a historical order book (Eq. \ref{eq:order-book}).
+\textit{We acknowledge that a list representation is by no means the highest-performing method of implementing an order book, but for our purposes it is sufficient.}
 
 \vfill
 
 \section{Understanding the data set}
 \label{sec:data-hypotheses}
 
-We take a random period of the recorded data set, representing \textasciitilde10 minutes worth of event data, and try to extract essential information from either raw events or the generated order book.
-We first obtain an insight into the market situation with regards to some of the properties mentioned in Section \ref{sec:ob-characteristics} and understand how market participants place orders.
+We take a random period of the recorded data set, representing \textasciitilde10 minutes worth of event data, and try to extract essential information from either raw events or the order book that has been generated.
+We first obtain an insight into the market situation with regard to some of the properties mentioned in Section \ref{sec:ob-characteristics} and understand how market participants place orders.
 Our aim is then to find patterns of how market participants behave and how this may affect the market.
-Subsequently, we formulate \textit{hypotheses} which concern why certain properties might be beneficial for the order placement process.
-Being aware that the following observations are taken from a random sample of a historical data set, the intention is to make a suggestion which properties might be worth to consider in the feature construction process.
-This is by no means a guarantee that the same observations are true for any order book.
+Subsequently, we formulate \textit{hypotheses} which propose why certain properties might be beneficial to the order placement process. The aim is to suggest which properties might be worth considering in the feature construction process.  However, we acknowledge that the observations gleaned are based on a random sample of a historical data set,
+By no means does this method guarantee that the same observations are true for any order book.
 
-Figure \ref{fig:data-price-movement} below shows the price movement of the sample period, indicating a movement from \$10'100 to \$10'030 and back within 10 minutes.
+Figure \ref{fig:data-price-movement} below shows the price movement of the sample period, indicating a movement from \$10,100 to \$10,030 and back within 10 minutes.
 
 \begin{figure}[H]
     \centering
@@ -108,24 +107,24 @@ Figure \ref{fig:data-price-movement} below shows the price movement of the sampl
     \caption{USD/BTC price and bid/ask positions}\label{fig:animals}
 \end{figure}
 
-Next we show the same price movement (cyan) but with the best bid (yellow) and ask (violet) (Figure \ref{fig:ob-ba-min}) and the deepest level of bid and ask (Figure \ref{fig:ob-ba-max}).
-It is evident that the best bid and ask are close to the price before and after the price dip, meaning the spread is narrow.
+Next, we show the same price movement (cyan) but with the best bid (yellow) and ask (violet) (Figure \ref{fig:ob-ba-min}) and the deepest level of bid and ask (Figure \ref{fig:ob-ba-max}).
+It is evident that the best bid and ask are close to the prices before and after the price dip, meaning the spread is narrow.
 During the dip, the spread widens and is at times as large as \$25.
 \\
 \\
 \textit{\textbf{Hypothesis:} participants post offerings close to the spread when the price is stable and start offering with a certain threshold from the spread during a price fall or rise.}
 \\
 \\
-The orders placed on the deepest level on the buyer and seller side undergo a very interesting change.
+The orders placed at the deepest level on the buyer and seller side undergo a very interesting change.
 Immediately before the the price dip, ask prices start to fluctuate as some participants cancel their listings and possibly others (trader cannot be associated as this is hidden information).
 On the contrary, bid prices remain much more stable.
-Likewise, during the fall and rise of the price, the ask price starts to increase on the deepest level of the seller side. 
-This phenomenon is at first at a first glimpse unexpected as one would expect the sell offers to be lowered as the price falls.
-Knowing that the price rises shortly after, it becomes more evident that some sellers ambition was to allure buyers by threatening with higher sell listings.
+Likewise, during the fall and rise of the price, the ask price starts to increase at the deepest level of the seller side. 
+This phenomenon is, at first glance, unexpected as one would expect the sell offers to be lowered as the price falls.
+Knowing that the price rises shortly after, it becomes more evident that some sellers' intentions were to lure buyers by threatening them with higher sell listings.
 The ask prices return to the level before the dip as soon as the price starts rising again.
 \\
 \\
-\textit{\textbf{Hypothesis:} sellers allure buyers with higher listings during a price fall.}
+\textit{\textbf{Hypothesis:} sellers lure buyers with higher listings during a price fall.}
 %\\
 %\begin{figure}[H]
 %    \centering
@@ -158,35 +157,44 @@ The ask prices return to the level before the dip as soon as the price starts ri
 It was shown that market participants position their offerings at different price levels as the asset price is moving due to trading.
 The second variable in posting orders is the volume and we aim to determine whether or not this is a factor which is affected during the previously introduced price movement.
 
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{images/ob-ba-pie-all}
-        \caption{All events}
-        \label{fig:data-imbalance-events}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{images/ob-ba-pie-trades}
-        \caption{Trades only}
-        \label{fig:data-imbalance-trades}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{images/ob-ba-pie-created}
-        \caption{Create order only}
-        \label{fig:data-imbalance-creates}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{images/ob-ba-pie-cancelled}
-        \caption{Cancel orders only}
-        \label{fig:data-imbalance-cancels}
-    \end{subfigure}
-    \caption{Bid / Ask volume imbalance}\label{fig:data-imbalance}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/ob-ba-pie-all}
+%         \caption{All events}
+%         \label{fig:data-imbalance-events}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/ob-ba-pie-trades}
+%         \caption{Trades only}
+%         \label{fig:data-imbalance-trades}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/ob-ba-pie-created}
+%         \caption{Create order only}
+%         \label{fig:data-imbalance-creates}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/ob-ba-pie-cancelled}
+%         \caption{Cancel orders only}
+%         \label{fig:data-imbalance-cancels}
+%     \end{subfigure}
+%     \caption{Bid / Ask volume imbalance}\label{fig:data-imbalance}
+% \end{figure}
 
-Figure \ref{fig:data-imbalance} shows the (im-)balance of the volumes of bid and ask orders segmented as follows.
-Figure \ref{fig:data-imbalance-events} shows the ratio of bids and asks of all events, including trades, creations and cancellations. 
-Figure \ref{fig:data-imbalance-trades} show the ratio of trades being initiated by either a bid or ask order.
-Figure \ref{fig:data-imbalance-creates} demonstrates the ratio of created orders and Figure \ref{fig:data-imbalance-cancels} cancellation orders, again distinguishing between bid and ask.
+\begin{table}[H]
+\centering
+\begin{tabular}{l|l|l|l|l|}
+\cline{2-5}
+& \textbf{All events} & \textbf{Trades only} & \textbf{Orders created} & \textbf{Orders cancelled} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Bids}} & 51\%                & 41\%                 & 54\%                    & 57\%                      \\ \hline
+\multicolumn{1}{|l|}{\textbf{Asks}} & 49\%                & 59\%                 & 46\%                    & 43\%                      \\ \hline
+\end{tabular}
+\caption{Bid / Ask volume imbalance}
+\label{tbl:data-imbalance}
+\end{table}
+
+Table \ref{tbl:data-imbalance} shows the (im-)balance of the volumes of bid and ask orders segmented into bids and asks of all events, including trades, creations and cancellations. 
 It is evident that, even though the price moved significantly within the recorded time range, the entirety of the orders is well balanced between trades or orders on the bid side and the ask side.
 For trades however, clearly more shares were sold than bought.
 It is then evident that the market participants reacted on the sale of the asset by not only creating but also cancelling more buy than sell orders.
@@ -418,11 +426,11 @@ This indicates that traders choose a broad range of order sizes.
 As a result, a window size of order book states $m$ greater than 40 states is suggested to benefit from price differences within the feature.
 
 \subsection{Feature: price and size of historical trades}
-The previously worked out a feature provides information to the learner in order to reason about the hypotheses which are derived from order placed and cancelled.
-In order to reason about whether or not trade events can serve as appropriate input for a learner to optimize order placement, we construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time} as follows.
+The previous feature provides information to the learner in order to reason about the hypotheses which are derived from order placed and cancelled.
+In order to reason about whether or not trade events can provide a positive learning effect to the agent to optimize order placement, we construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time} as follows.
 A $Trade$ (Eq. \ref{eq:trade}) carries an order side $os$, a quantity $q$ and a price $p$.
-Similar to the previous feature, we take $n$ trades into consideration which occurred within a time window $m$, measured by the time stamps $ts$ of the trades.
-Since the feature is generated at some time $t$ when an order should be placed, the time stamp of the historical orders must satisfy $ts \leq t$.
+Similar to the previous feature, in this feature we take $n$ trades into consideration, which occurred prior the time of the order placement.
+More precisely, the feature is generated at some time $t$, when an order is placed, and therefore the time stamp $ts$ of the historical trades must satisfy $ts \leq t$.
 \\
 \\
 A straightforward approach would be to construct the feature $s_{trade}$ as,
@@ -436,26 +444,31 @@ A straightforward approach would be to construct the feature $s_{trade}$ as,
     \ \forall \ p, q, os, ts \in Trade
 \end{equation}, whereas $ts_n - ts_1 \leq m$.
 However, trades do not occur in fixed time intervals and therefore causes the length of the vector to vary.
-We therefore calculate the mean price and accumulate the sizes of the trades with equal order side over a fixed amount of time (in seconds) $\Delta{s}$.
+We therefore calculate the time difference $\Delta{ts}$ of each historical trade to the subsequent historical trade.
+For the most recent historical trade, the time difference is measured to the time of the order placement $t$.
 That is,
 \begin{equation}
-    Trade' = (ts', os', \frac{\sum_{i=ts}^{ts+\Delta{s}}p_i}{ts+\Delta{s}}, \sum_{i=ts}^{ts+\Delta{s}}q_i)
-    \ \forall \ p, q, os \in \{Trade \mid os = os'\}
+    \Delta{ts}_i = \begin{cases}
+    t - ts_i &\text{if i = 1}\\
+    ts_{i+1} - ts_i &\text{otherwise}
+    \end{cases}
 \end{equation}
+
 As a result we can redefine the feature $s_{trade}$, that is used by the learner as observation state, as,
 \begin{equation}
     s_{trade} =\begin{pmatrix}
-        p_1 & q_1 & os_1 \\
-        p_2 & q_2 & os_2 \\
-        \vdots & \vdots & \vdots\\
-        p_n & q_n & os_n \\
+        \Delta{ts_1} & p_1 & q_1 & os_1 \\
+        \Delta{ts_2} & p_2 & q_2 & os_2 \\
+        \vdots & \vdots & \vdots & \vdots\\
+        \Delta{ts_n} & p_n & q_n & os_n \\
     \end{pmatrix}
-    \ \forall \ p, q, os, ts \in Trade'
-\end{equation}, whereas $ts_n - ts_1 \leq m \ \land \ ts_i \geq ts_{i-1} + \Delta{s}$.
+    \ \forall \ p, q, os, ts \in Trade
+\end{equation}
 \hfill
 \\
 \\
-As a result we constructed a feature vector of length $n = \frac{m}{\Delta{s}}$ that contains information about the price and quantity of historical trades.
+In addition, the feature is normalized whereby the prices are divided by the market price $p_t$ and the quantities are divided by the size of the order $q_t$ which is about to be placed at time $t$.
+As a result we constructed a feature vector of length $n$ (number of trades) that contains information about the price, order side and quantity of historical trades as well as their order of occurrence.
 
 \section{Conclusion}
 
