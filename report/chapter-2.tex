@@ -188,16 +188,13 @@ That said, the following limitations have to be taken into consideration:
     Participants who would enter the market would likely be favorable to us as they would act as potential buyers and sellers and therefore provide liquidity.
     Participants who leave the market would introduce a slight disadvantage as there would be less liquidity.
     Since both parties are absent, we consider our implementation as a good approximation without any major advantage or disadvantage.
-    
     \item[Ordering] this match engine is restricted to simulating the matching of only one order from one participant at a time.
     Hence, any type of ordered processing of incoming orders (typically solved with a queuing system) is not supported.
     However, this functionality is also not required for our purposes.
-    
     \item[Timing inaccuracy:] occurs when submitting an order with a time horizon (see Section \ref{sec:match-engine-interface}).
     The fact that we are relying on historical data and the time stamps of the orders submitted from participants in the past is a limitation when submitting an order throughout a certain period of time (GTT).
     It can occur that, at the end of the period, the order would have some time $t$ left (e.g. a few seconds) but the following order book state is nearer to the future than $t$ would allow.
     We will therefore have to abort the matching process early.
-    
 \end{description}
 
 \section{Order execution and placement}
@@ -220,73 +217,73 @@ That is,
 \end{equation}
 , whereas $p$ is the price paid for $v_p$ shares and $V$ represents the total volume of shares.
 
-\section{Time series}
-
-According to the efficient market hypothesis\cite{malkiel1989efficient}, the price of an asset reflects all the information available to the market participants at any give time. 
-The natural consequence of this vast flow of information is that the price of such an asset changes over time.
-As we saw in the previous section \ref{sec:order-book}, the price of an asset is determined by actions taken by traders.
-Therefore, financial markets and particularly the order book are best described over time, namely as a \textit{time series}. 
-More precisely, the definition of a time series is an ordered sequence of values of a variable at equally-spaced time intervals \cite{intro-timeseries}.
-The applications of time series data are generally known as Time Series Analysis and Time Series Forecasting, both of which have played important roles throughout this project, and therefore a brief background is provided in this section.
-
-\subsection{Time series analysis}
-
-The analysis of data observed at different points in time leads to problems in statistical modeling and inference. 
-More specifically, the correlation of adjacent points in time can restrict the applicability of conventional statistical methods which traditionally depend on the assumption that these adjacent observations are independent and identically distributed. 
-A systematic approach, by which one attempts to answer the mathematical and statistical questions posed by these time correlations, is commonly referred to as time series analysis. 
-Therefore, mathematical models are developed with the primary objective of providing plausible descriptions for sample data. \cite{shumway2000time}
-\\
-\\
-Some of the time series behaviors which will be presented within this work may hint at a sort of regularity over time.
-We will refer to the notion of regularity using a concept called \textit{stationarity}, as introduced in \cite{shumway2000time}.
-\\
-\\
-A \textbf{strictly stationary} time series is one for which the probabilistic behavior of every collection of values
-${x_{t_1}, x_{t_2}, ..., x_{t_k}}$
-is identical to that of the time shifted set
-${x_{t_1+h}, x_{t_2+h}, ..., x_{t_k+h}}$
-for all time shifts $h=0,\pm1,\pm2,...$
-\\
-\\
-A \textbf{weakly stationary} time series, $x_t$, is a finite variance process such that
-\begin{itemize}
-    \item the mean value function $\mu_t$ is constant and does not depend on time $t$, and
-    \item the autocovariance function $\gamma(s, t)$, depends on $s$ and $t$ only through their difference $|s-t|$.
-\end{itemize}
-
-Whereas $\mu_t$ is defined as
-
-\begin{equation}
-    \mu_{t}=\mathbb{E}(x_t)=\int_{-\infty}^{\infty} x f_t(x) dx
-\end{equation}
-
-with $f_t$ being the \textit{marginal density function} \cite{shumway2000time}.
-And $\gamma(s, t)$ is defined as
-\begin{equation}
-    \gamma(s, t)=cov(x_s, x_t)=\mathbb{E}[(x_s-\mu_s)(x_t-\mu_t)]
-\end{equation}
-
-for all time points $s$ and $t$.
-\\
-\\
-\textit{Henceforth, we will use the term stationary to mean weakly stationary; if a process is stationary in the strict sense, we will use the term strictly stationary.}
-
-\subsection{Time series forecasting}
-
-In statistics, prediction is a part of statistical inference. 
-Providing a means for the transfer of knowledge about a sample of a population to the whole population, and to other related populations, is one definition of statistics. 
-However, this is not necessarily equivalent to the process of predicting over time. 
-This process is known rather as forecasting and describes the transfer of information across time and often to very specific point in time. \cite{wiki-timeseries}.
-Hence the problem is defined in \cite{ito1993encyclopedic} as: \textit{forecasting future values $X_{t+h}$ where $h > 0$ of a weakly stationary process ${X_t}$ from the known values $X_s$ where $s \leq t$}. 
-The integer $h$ is called lead time or forecasting horizon, whereas $h$ stands for horizon.
-\\
-\\
-Forecasting methods can be classified, according to \cite{chatfield2000time}, into three types: \textit{Judgemental forecasts} produce projections based on intuition, inside knowledge, and any other relevant information.
-\textit{Univariate methods} forecasts depend on present or past values of the time series on which the forecast is projected.
-Finally, \textit{multivariate methods} forecasts depend on one or more additional time series variables or multivariate models.
-\\
-\\
-\textit{Over the course of this work, we make use of univariate and multivariate methods.}
+%\section{Time series}
+%
+%According to the efficient market hypothesis\cite{malkiel1989efficient}, the price of an asset reflects all the information available to the market participants at any give time. 
+%The natural consequence of this vast flow of information is that the price of such an asset changes over time.
+%As we saw in the previous section \ref{sec:order-book}, the price of an asset is determined by actions taken by traders.
+%Therefore, financial markets and particularly the order book are best described over time, namely as a \textit{time series}. 
+%More precisely, the definition of a time series is an ordered sequence of values of a variable at equally-spaced time intervals \cite{intro-timeseries}.
+%The applications of time series data are generally known as Time Series Analysis and Time Series Forecasting, both of which have played important roles throughout this project, and therefore a brief background is provided in this section.
+%
+%\subsection{Time series analysis}
+%
+%The analysis of data observed at different points in time leads to problems in statistical modeling and inference. 
+%More specifically, the correlation of adjacent points in time can restrict the applicability of conventional statistical methods which traditionally depend on the assumption that these adjacent observations are independent and identically distributed. 
+%A systematic approach, by which one attempts to answer the mathematical and statistical questions posed by these time correlations, is commonly referred to as time series analysis. 
+%Therefore, mathematical models are developed with the primary objective of providing plausible descriptions for sample data. \cite{shumway2000time}
+%\\
+%\\
+%Some of the time series behaviors which will be presented within this work may hint at a sort of regularity over time.
+%We will refer to the notion of regularity using a concept called \textit{stationarity}, as introduced in \cite{shumway2000time}.
+%\\
+%\\
+%A \textbf{strictly stationary} time series is one for which the probabilistic behavior of every collection of values
+%${x_{t_1}, x_{t_2}, ..., x_{t_k}}$
+%is identical to that of the time shifted set
+%${x_{t_1+h}, x_{t_2+h}, ..., x_{t_k+h}}$
+%for all time shifts $h=0,\pm1,\pm2,...$
+%\\
+%\\
+%A \textbf{weakly stationary} time series, $x_t$, is a finite variance process such that
+%\begin{itemize}
+%    \item the mean value function $\mu_t$ is constant and does not depend on time $t$, and
+%    \item the autocovariance function $\gamma(s, t)$, depends on $s$ and $t$ only through their difference $|s-t|$.
+%\end{itemize}
+%
+%Whereas $\mu_t$ is defined as
+%
+%\begin{equation}
+%    \mu_{t}=\mathbb{E}(x_t)=\int_{-\infty}^{\infty} x f_t(x) dx
+%\end{equation}
+%
+%with $f_t$ being the \textit{marginal density function} \cite{shumway2000time}.
+%And $\gamma(s, t)$ is defined as
+%\begin{equation}
+%    \gamma(s, t)=cov(x_s, x_t)=\mathbb{E}[(x_s-\mu_s)(x_t-\mu_t)]
+%\end{equation}
+%
+%for all time points $s$ and $t$.
+%\\
+%\\
+%\textit{Henceforth, we will use the term stationary to mean weakly stationary; if a process is stationary in the strict sense, we will use the term strictly stationary.}
+%
+%\subsection{Time series forecasting}
+%
+%In statistics, prediction is a part of statistical inference. 
+%Providing a means for the transfer of knowledge about a sample of a population to the whole population, and to other related populations, is one definition of statistics. 
+%However, this is not necessarily equivalent to the process of predicting over time. 
+%This process is known rather as forecasting and describes the transfer of information across time and often to very specific point in time. \cite{wiki-timeseries}.
+%Hence the problem is defined in \cite{ito1993encyclopedic} as: \textit{forecasting future values $X_{t+h}$ where $h > 0$ of a weakly stationary process ${X_t}$ from the known values $X_s$ where $s \leq t$}. 
+%The integer $h$ is called lead time or forecasting horizon, whereas $h$ stands for horizon.
+%\\
+%\\
+%Forecasting methods can be classified, according to \cite{chatfield2000time}, into three types: \textit{Judgemental forecasts} produce projections based on intuition, inside knowledge, and any other relevant information.
+%\textit{Univariate methods} forecasts depend on present or past values of the time series on which the forecast is projected.
+%Finally, \textit{multivariate methods} forecasts depend on one or more additional time series variables or multivariate models.
+%\\
+%\\
+%\textit{Over the course of this work, we make use of univariate and multivariate methods.}
 
 \section{Reinforcement Learning}
 \label{sec:reinforcement-learning}

@@ -112,7 +112,7 @@ As a result, the trade-off between profit and risk is defined as,
 
 \section{Supervised Learning approach}
 
-Fletcher et al. \cite{fletcher2010multiple} investigates order books to find patterns which can be exploited with the aim of forecasting the movements of bid and ask prices at time $t+\Delta{t}$.
+Fletcher et al. \cite{fletcher2010multiple} investigated order books to find patterns which can be exploited with the aim of forecasting the movements of bid and ask prices at time $t+\Delta{t}$.
 Although this is not directly applied to the optimization of order placement, the prediction can certainly be used as the limit price to be set while placing an order.
 
 SVM classification techniques with different kernels along with two Multiple Kernel Learning (MKL) techniques, SimpleMKL, were used.
@@ -126,24 +126,24 @@ An increased time delta results in significantly worse prediction accuracy.
 
 \section{Reinforcement Learning approach}
 
-A large-scale empirical application of reinforcement learning to optimize trade execution is presented by Kearns et al. \cite{nevmyvaka2006reinforcement}.
+A large-scale empirical application of reinforcement learning to optimize trade execution has been presented by Kearns et al. \cite{nevmyvaka2006reinforcement}.
 Although the title of their research suggests otherwise, according to our definition in Section \ref{sec:execution-placement}, their work is related to order placement with a larger time horizon $H$ (2 minutes and 8 minutes).
 Hence, their research objective is defined as:
 \begin{quote}
-    The goal is to sell (respectively, buy) V shares of a given stock within a fixed time period (or horizon) H, in a manner that maximizes the revenue received (respectively, minimizes the capital spent).
+    to sell (or buy) V shares of a given stock within a fixed time period (or horizon) H, in a manner that maximizes the revenue received (or minimizes the capital spent).
 \end{quote}
 They built a reinforcement learning based on 1.5 years of millisecond time-scale limit order data from NASDAQ.
-The investigation included three stocks: AMZN, NVDA, and QCOM; each with an inventory $I$ of 5000 shares.
-The achieved relative improvement over a submit-and-leave strategy ranges from 27.16\% to 35.50\%.
-An additional improvement of 12.85\% was achieved by considering the following market variables: Spread, Immediate Cost, Signed Volume.
+The investigation included three stocks, AMZN, NVDA, and QCOM; each with an inventory $I$ of 5,000 shares.
+The relative improvement over a submit-and-leave strategy ranged from 27.16\% to 35.50\%.
+An additional improvement of 12.85\% was achieved by considering the following market variables: Spread, Immediate Cost, and Signed Volume.
 \\
 \\
 The architecture developed is as follows.
 \textit{States} are represented by a vector $x \in X$ and correspond to the observation state, whereas the partially observable environment is then treated to be fully observable.
 \textit{Actions} ($a \in A$) represent the limit price relative to the current ask price, $ask - a$. 
-That is, action $a = 0$ is the ask price, $a < 0$ is a limit price deep in the book and $a > 0$ is a limit order on the opposing side of the book.
+That is, action $a = 0$ is the ask price, $a < 0$ is a limit price deep in the book, and $a > 0$ is a limit order on the opposing side of the book.
 The \textit{reward} represent the VWAP (Eq. \ref{eq:vwap}) of the executed order relative to the bid-ask mid price ($(ask + bid) / 2$).
-In case the order was not filled completely at the end of the time horizon H, then a market order follows.
-The chosen \textit{algorithm} is a slightly adapted version of the Q-Learning algorithm was developed by the authors which explores the state space inductively.
+If the order was not filled completely at the end of the time horizon H, then a market order follows.
+The chosen \textit{algorithm} is a slightly adapted version of the Q-Learning algorithm developed by the authors, which explores the state space inductively.
 Starting from $t=T...0$ the algorithm explores the inventories $i=0...I$.
-For each such step, all possible actions in this state are evaluated, leading to the most rewarding strategy for $t=0$.
+At each step, all possible actions in this state are evaluated, leading to the most rewarding strategy for $t=0$.
