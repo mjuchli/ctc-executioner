@@ -92,7 +92,7 @@ By no means does this method guarantees that the same observations are true for 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{ob-ba-min}
+        \includegraphics[width=\textwidth]{images/ob-ba-min.png}
         \caption{Best bid and best ask}
         \label{fig:ob-ba-min}
     \end{subfigure}
@@ -106,7 +106,7 @@ By no means does this method guarantees that the same observations are true for 
     \caption{USD/BTC price and bid/ask positions}\label{fig:animals}
 \end{figure}
 
-In Figure \ref{fig:ob-ba-min} we show the same price movement (cyan) but with the best bid (yellow) and ask (violet).
+In Figure \ref{fig:ob-ba-min} we show the same price movement including the best bid and ask price.
 Furthermore, the deepest level of the bid and ask ask side is shown in Figure \ref{fig:ob-ba-max}.
 It is evident that the best bid and ask are close to the market price before and after the price dip, meaning the spread is narrow.
 During the dip, the spread widens and is, at times, as large as \$25.
@@ -195,7 +195,7 @@ The second variable in posting orders is the volume and we aim to determine whet
 
 Table \ref{tbl:data-imbalance} shows the (im-)balance of the volumes of bid and ask orders segmented into bids and asks of all events, trade events only, order creations and order cancellations.
 It is evident that, even though the price moved significantly within the recorded time range, the entirety of the events is well balanced between the bid and ask side.
-And this is true for trade events only.
+And this is also true for trade events only.
 Further, it is evident that the market participants reacted on the sale of the asset by not only creating but also cancelling more buy than sell orders.
 We take the last statement as an indication that the market participants may have responded to the price dip by cancelling their current buy orders and posting them to a lower price in the book.
 Interestingly, even though the price rose after the dip, not as much volume was used on creations and cancellations of orders on the seller side.
@@ -206,13 +206,11 @@ Interestingly, even though the price rose after the dip, not as much volume was 
 \subsection{Importance of volume of orders and trades over time}
 \label{sec:data-hypthesis-order-trade-volume-time}
 
-So far, the volume was investigated as a sum of events over time.
-In order to understand the behaviour of the participants in greater detail, a \textit{volume map} shall provide better insight into the single events occurred over time.
-
-Figure \ref{fig:data-volmap-crated} shows the volume map of the orders which were created over the time span of the data set.
-Hence, the x-axis represents the time stamp and the y-axis is the volume of the placed order.
+The volume has been investigated as a sum of events over time.
+In order to understand the behaviour of the participants in greater detail, a \textit{volume map} will provide better insight into the single events occurred over time, as shown in Figure \ref{fig:data-volmap-crated}.
+The x-axis represents the time stamp and the y-axis is the volume of the placed order.
 For visibility reasons and since the majority of the orders have a small volume and fewer have large volume, the y-axis follows a log-scale.
-Participants cannot be assigned to such an order, as the trader id is non-public information.
+Participants cannot be assigned to such an order, as the trader "id" is non-public information.
 However, as we will see, one can determine some participants according to their behaviour.
 
 \begin{figure}[H]
@@ -224,8 +222,8 @@ However, as we will see, one can determine some participants according to their 
     \label{fig:data-volmap-crated}
 \end{figure}
 
-What might not be obvious due to the log scaling is the fact that most of the orders were placed with volume between >0 and <0.5 and significantly less with larger volume.
-Only a few orders had a volume greater than 10 BTC, meaning that most of the participants either are willing to buy and sell only small quantities or split their orders to minimize the market impact.
+Most of the orders were placed with volume between >0 and <0.5 and significantly less orders had a larger volume.
+Only a few orders had a volume greater than 10 BTC, meaning that most of the participants are either willing to buy and sell only small quantities, or split their orders to minimize the market impact.
 
 From a horizontal perspective, one can detect some orders of both sides, bids and asks, being listed with the same time interval.
 Particularly evident is such a behaviour at the volume just below $10^0$.
@@ -233,10 +231,10 @@ This is likely one or multiple bots posting orders with the same volume and perh
 Examples of this behaviour is marked with a red-dashed horizontal box.
 A similar behaviour can be seen from a vertical perspective where one or more traders post orders at different price levels, with the same price segmentation.
 This is market with a red-dashed vertical box.
-Furthermore, a very distinctive pattern is when a trader posts orders within a short period of time but changing volume.
-This might be evidence of someone splitting a larger order into small pieces and is marked with an orange-dashed circle.
-Some refer to such a behaviour as \textit{buy-wall} (\textit{sell-wall} in case of an ask orders) and surprisingly, this behaviour appeared the most when before and during the price started rising again (compare time stamps from Figure \ref{fig:data-price-movement}).
-Last but not least, examples of areas dominated by one particular order side (buy or sell) is marked with a purple box.
+Furthermore, a very distinctive diagonal-shaped pattern occurs when a trader posts orders within a short period of time but changing volume.
+This might be evidence of someone splitting one larger order into small pieces (known as buy or sell wall) and is marked with an orange-dashed circle.
+Surprisingly, this behaviour appeared the most immediately before and during the market price started rising again (compare time stamps from Figure \ref{fig:data-price-movement}).
+Last but not least, examples of areas dominated by one particular order side (buy or sell) is marked with a purple box, indicating that for a certain period of time either buyers or sellers flooded the market with orders with various volume.
 
 \begin{figure}[H]
     \centering
@@ -247,13 +245,13 @@ Last but not least, examples of areas dominated by one particular order side (bu
     \label{fig:data-volmap-cancelled}
 \end{figure}
 
-It is to be expected that at least for some of the orders, which did not result in a trade, a cancellation followed.
-Figure \ref{fig:data-volmap-cancelled} therefore shows the cancel orders posted by traders over time.
+It is to be expected that at least for some of the limit orders, which did not result in a trade, a cancellation followed.
+Figure \ref{fig:data-volmap-cancelled} therefore shows the cancelled orders over time.
 
-Continuous cancellations become especially evident at volume levels just below $10^0$ and $10^{-1}$, correlating with the continuous create orders appeared at the same price level above.
-Hence, there is likely a trader following some strategy.
-A cancellation of one of the created buy-walls is particularly evident at the same time stamp and with equal volumes as previously discovered.
-Hence, making it more even more likely that the wall was created and cancelled by a single trader.
+Continuous cancellations become especially evident at volume levels just below $10^0$ and $10^{-1}$ and correlate with the continuous orders created at the same price level, as shown above.
+Hence, there is likely a trader following some strategy which involves creations and cancellations of orders with equal volume.
+A cancellation of one of the created buy-walls is particularly evident at the same time stamp and with equal volumes as previously discovered during the observation of created orders.
+That makes it likely that the wall was created and cancelled by a single trader.
 \vfill
 \pagebreak
 
@@ -267,18 +265,18 @@ Hence, making it more even more likely that the wall was created and cancelled b
 \end{figure}
 
 So far only posted limit orders or their cancellation where observed.
-Not all of those limit orders might have executed and resulted into a trade as there is always a market order required, initiated by one of the two parties involved in a trade.
-Figure \ref{fig:data-volmap-traded} therefore illustrates the volume map of the actual trades occurred within this sample time range of the data set.
+Not all of those limit orders might have resulted into a trade and therefore
+Figure \ref{fig:data-volmap-traded} illustrates the volume map of the actual trades occurred.
 
 Immediately evident are the trades transacted with volume $10^{-3}$, with oftentimes identical time interval.
 Additionally, an intensive series of consecutive sales occurred at the time when the price dipped.
 After the dip, such sales are not present anymore.
-Furthermore, intensive and immediate purchases are visible with various volume at some distinctive time stamps before and during the price fall.
-We remember that there was one spike towards a higher price during the dip, and the time stamp of which correlates strongly to the purchases visible in this figure.
+Furthermore, intensive and immediate purchases are visible with various volume at time stamps before and during the price fall.
+We remember that there was one spike towards a higher price during the dip, and the time stamp of which correlates strongly with the purchases visible in this figure.
 \\
 \\
 Various behavioural patterns have been observed by investigating events initiated by market participants over time.
-For some, their impact on the market price is immediately obvious, for others it is hard to interpret by hand.
+For some, their impact on the market price is immediately obvious, for others it is hard to interpret by eye.
 However, an attempt to find correlation between the behaviour of the events and the resulted trades with the application of learning techniques seems promising.
 \\
 \\
@@ -288,7 +286,7 @@ However, an attempt to find correlation between the behaviour of the events and 
 \label{sec:data-hypthesis-trade-price-volume}
 
 The price levels and volume of events over time was investigated for each type in the previous subsections.
-Patterns were found and a hypothesis was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which eventually influences the market price and implicitly determines optimal order placement.
+Patterns were found and a hypothesis was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which would eventually influence the market price and allows determines optimal order placement.
 The next logical step is to investigate the sum of traded volume at a given point in time (as shown in Figure \ref{fig:data-volmap-traded}) in combination with the price the asset was traded for.
 
 \begin{figure}[H]
@@ -301,11 +299,11 @@ The next logical step is to investigate the sum of traded volume at a given poin
 \end{figure}
 
 Figure \ref{fig:data-trade-volume} illustrates the volumes of trades on both bid and ask side, which resulted in a buy or sell at a certain price.
-The volume of these trades are illustrated as bubbles according to their size (e.g. traded volume) and price.
+The volume of these trades are illustrated as bubbles with a size that determines traded volume and the position defines the price.
 As is known, a buy appears when one crosses the spread towards the sellers side (ask) and a sell appears when crossing towards the buyer side (bid).
 One can clearly see how buys are listed on the best ask price level and sells are listed on the best buy price level.
-Before and during the dip sells appear consecutively, followed by a series of buy orders with low volume, which caused the short spike.
-Interestingly, a rather large trade caused by a bid appeared shortly before the price started rising again.
+Before and during the dip sells appear consecutively, followed by a series of buy orders with low volume, which caused the minor spike.
+Interestingly, a rather large trade caused by a bid appeared shortly before the price started to rise again.
 Even though sellers confronted the market in the middle of the price rise, participants continued buying shortly after with approximately equal volume.
 Concluding this observation it is evident that few trades with small volume caused a certain noise in the overall trend.
 Multiple consecutive trades initiated one side or a single large the like, however, led the market price to move for substantially longer period of time.
@@ -471,9 +469,9 @@ As a result we constructed a feature vector of length $n$ (number of trades) tha
 
 \section{Conclusion}
 
-Event data was collected from a crypto-currency exchange and a limit order book was reconstructed thereof.
+Event data was collected from the Bittrex cryptocurrency exchange and a limit order book was reconstructed thereof.
 The limit order book serves as the historical data set and source for the match engine in order to simulate order placement. 
-Subsequently the price chart as the result of the generated order book was shown and an investigation of the underlying event data was proceeded.
-Patterns were found which give insight in how market participants positioned their offerings with respect to price and size.
+Subsequently the price chart, derived from the generated order book, was shown and an investigation of the underlying event data was proceeded.
+Patterns were found which give insight in how market participants positioned their orders with respect to price and size.
 It was shown that the price movement was likely due to (1) an imbalance in bid and ask orders; (2) a distinctive way of posting or cancelling orders; and (3) consecutive or impulsive trades.
-These findings were incorporated within the feature engineering process, which resulted in two features that can be used by the reinforcement learning agents.
+These findings were incorporated within the two constructed features, and will serve as observation state for the reinforcement learning agents that are described in the following chapter.
