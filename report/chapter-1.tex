@@ -98,34 +98,34 @@ Therefore we have formulated the following research question to be answered in t
 \\
 \textbf{RQ 1 (A):} How can the application of deep reinforcement learning mitigate the impact of the order placement problem?
 \\
-\textbf{RQ 1 (B):} The occurrence of Which events, in cryptocurrency markets, enable us to foresee opportunities to place limit orders at a favorable price with the use of deep reinforcement learning?
+\textbf{RQ 1 (B):} Which cryptocurrency market events enable us to foresee opportunities to place limit orders at a favorable price with the use of deep reinforcement learning?
 \\
 \\
-\textit{We chose to divide the research question into sub-questions as this follows the logical structure of this document and provides an intuition of the steps taken in order to give answer to the main research question.}
+\textit{We chose to divide the research question into sub-questions as this follows the logical structure of this document and provides an understanding of the steps taken in order to give an answer to the main research question.}
 
 \begin{quote}
 \begin{description}
-    \item[RQ 1.1:] Which patterns in a historical market data can be found that drive market participants to buy or sell assets, and how can these patters be incorporated into features to be used by a deep reinforcement learning agent?
+    \item[RQ 1.1:] Which historical market data patterns drive market participants to buy or sell assets, and how can these patterns be incorporated into features used by a deep reinforcement learning agent?
 \end{description}
     Traders participating in financial markets, including cryptocurrency markets, can submit and cancel orders to trade shares.
-    Those events are recorded by the cryptocurrency exchange and are publicly accessible as raw market data.
-    Therefore, we intend to find patterns in the data which reflect the behaviour of these market participants.
-    We take the found patterns as a basis in order to formulate hypotheses suggesting that some behavioural pattern might lead traders to become more likely to either buy or sell the asset in the short term.
-    In case of a hypothesis being true, one would be able to determine a favorable price to either buy or sell the asset, and hence, mitigate the impact of the order placement problem.
-    Thus, we have to determine how to shape historical market data and construct features with the found patterns incorporated in order to allow deep reinforcement learning agents to learn an order placement strategy.
+    These events are recorded by the cryptocurrency exchange and are publicly accessible as raw market data.
+    We intend to find patterns in the data which reflect the behavior of these market participants.
+    The patterns found will form the basis of hypotheses suggesting that some behavioral patterns are more likely to lead traders either to buy or sell an asset in the short term.
+    Whenever a hypothesis is true, one can determine a favorable price at which to buy or sell the asset, and hence, mitigate the impact of the order placement problem.
+    Thus, we have to determine how to shape historical market data and construct features with the patterns found and incorporated that enable deep reinforcement learning agents to learn an order placement strategy.
 
 \begin{description}
-    \item[RQ 1.2:] How should one to design a reinforcement learning environment and agents in the context of order placement?
+    \item[RQ 1.2:] How should one design a reinforcement learning environment and agents, in the context of order placement?
 \end{description}
-    In order to simulate and understand the outcome of order placement and more importantly build a reinforcement learning environment that allows interaction with agents, this work suggests how to translate the given problem into a reinforcement learning context.
+    In order to simulate and understand the outcome of order placement and, more importantly, build a reinforcement learning environment that allows interaction with agents, this work will suggest a way of translating the given problem into a reinforcement learning context.
     Consequently, we are required to build a framework which should provide collection and market data processing capabilities in order to reproduce a historical order book that serves as a data source.
-    Further, we require that the framework provides the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to the historical order book.
-    Ultimately, a reinforcement learning environment should be built which allows to simulate and evaluate order placement.
-    The environment should allow direct user interaction, in order to place orders on demand, and allow interaction with agents which act as intelligent traders.
-    Therefore, we make use of the OpenAI Gym\footnote{https://github.com/openai/gym} library and contribute our work to the community to enable further investigations to proceed.
+    Further, we require that the framework provide the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to the historical order book.
+    Ultimately, a reinforcement learning environment should be built to simulate and evaluate order placement.
+    The environment should allow direct user interaction in order to place orders on demand and allow interaction with agents which act as intelligent traders.
+    Therefore, we have made use of the OpenAI Gym\footnote{https://github.com/openai/gym} library and we contribute our work to the community to enable further investigations to be carried out.
     
-    Further, we shall then build two reinforcement learners whereas both act as an intelligent trader and place limit orders that provide an incentive to buy or sell an asset at a favorable price.
-    Both agents should be driven by an end-to-end learning process by which the agent improves based on the outcome of the placed orders and ultimately learns a strategy that allows to buy and sell shares at favorable prices.
+    Further, we shall then build two reinforcement learners which will both act as intelligent traders and thereby place limit orders that provide an incentive to buy or sell an asset at a favorable price.
+    Both agents should be driven by an end-to-end learning process by which the agent improves based on the outcome of the orders placed and ultimately learns a strategy for  buying and selling shares at favorable prices.
     The former agent is an adaption of the well known Q-Learning algorithm and optimizes based on the amount of assets to buy or sell and a given time horizon only.
     The latter is a deep reinforcement learning agent that makes use of a convolutional neural network in order to detect patterns in market data.
 

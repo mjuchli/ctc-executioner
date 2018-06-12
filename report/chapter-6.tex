@@ -3,22 +3,51 @@
 
 In the previous Chapter we have built a reinforcement learning environment with the use of the components which were described earlier in Chapter \ref{chap:preliminaries}.
 The environment allows to simulate order placement on a historical order book that was described in Chapter \ref{chap:data}.
-Furthermore, two agents were introduced, a Q-Learner which learns on private variables and a Deep Q-Network which learns on market variables.
-The aim of this chapter is to make use of this setup and to run simulations and observe whether or not reinforcement learning is indeed capable of optimizing the placement of limit orders.
-Throughout this chapter we make use of real world order books as well artificially created order books, whereas the latter allow to define distinctive price trends and eliminate the noise present in real market data.
-We first present the data sets chosen for the work to be done and describe the procedure of how we evaluate the capabilities of the reinforcement learning agents.
-As a first step of our evaluation procedure, we investigate the reinforcement learning environment empirically by simulating an agent that places buy and sell orders at a range of limit levels.
-This will provide knowledge about the limitations of the optimization capabilities within the given data set and how well we should expect the reinforcement learners to perform.
-Subsequently, we make an attempt to build an order placement strategy based on the private variables only, by using the Q-Learner.
-This will provide insights of the performance of a naive reinforcement learner and serves as a benchmark for the following simulations proceeded in which we consider market variables.
-While applying market variables to the DQN agent we make use of both features, price and size of historical order as well as the price and size of historical trades, separately.
-Furthermore, we aim to determine the capabilities and limitations of the DQN agent in greater detail.
-As a result, this chapter quantifies how effective deep reinforcement learning and the use of features constructed from raw market data is.
+Furthermore, two agents were introduced: a Q-Learner which learns on private variables; and a Deep Q-Network which learns on market variables.
 
-\section{Data sets and evaluation procedure}
+The aim of this chapter is to make use of this setup and to run simulations and thereby observe whether or not reinforcement learning is indeed capable of optimizing the placement of limit orders.
+Therefore, a comprehensive evaluation procedure is being introduced that allows to measure the capabilities of the reinforcement learning agents.
+Throughout which use of real world historical order books is being made, as well artificially created order books, whereas the latter allow to define distinctive price trends and eliminate the noise present in real market data.
+We first outline the steps of the evaluation procedure.
+Subsequently, the real world data sets chosen and their use within the reinforcement learning setup are described.
+Finally, we will proceed the evaluation steps in the outlined order.
+As a result, this chapter quantifies how effective deep reinforcement learning and the use of the previously constructed market features.
+
+\section{Explanation of the evaluation procedure}
+This section explains the procedure undergone in the following sections of this chapter, with which we aim to make a statement about the capabilities of optimizing limit order placement with reinforcement learning and the use of raw market data.
+The following points list the steps of the evaluation to be done in chronological order.
+\begin{description}
+    \item[Empirical investigation: ]
+    Section \ref{sec:eval-empirical} investigates the reinforcement learning environment empirically by simulating an agents behaviour that places buy and sell orders for a range of limit levels.
+    This will provide knowledge about the limitations of the potential optimization possibilities within the given data set and how well we should expect the reinforcement learners to perform.
+    \\
+    Results: the \textit{estimated returns} to be received for (1) the optimally chosen limit order or (2) an immediate purchase or sale by using a market order.
+    
+    \item[Q-Learning agent strategy: ]
+    In Section \ref{sec:eval-qlearn}, we make an attempt to build an order placement strategy based on private variables only, by using the Q-Learner.
+    This will provide insights of the performance of a naive reinforcement learner and serves as a benchmark for the following simulations proceeded in which we consider market variables.
+    \\
+    Results: the \textit{average reward} achieved by the Q-Learning agent that uses private variables.
+
+    \item[DQN agent strategy: ]
+    Section \ref{sec:eval-dqn} applies market variables to the DQN agent.
+    Hereby, we make use of both features, price and size of historical orders (Section \ref{sec:data-feature-1}) as well as the price and size of historical trades (Section \ref{sec:data-feature-2}), separately.
+    Similar to the previous evaluation step, we will find the average rewards produced by the agent.
+    \\
+    Results: the \textit{average reward} achieved by the DQN agent with the use of private variables and (1) historical orders or (2) historical trades.
+
+    \item[DQN agent limitations: ]
+    Section \ref{sec:eval-dqn-limitations} aims to determine the capabilities and limitations of the DQN agent in greater detail.
+    Therefore, we investigate the chosen actions selected by the agent in order to determine the agents limitations.
+    In addition, the agent is applied to an environment which is equipped with an artificially generated order book and will allow to determine to which extent the agent is able to learn from certain price trends.
+    \\
+    Results: (1) \textit{insights} into when then DQN agent does not perform well and (2) the \textit{average reward} achieved on order books that follow an artificially created trend (upwards, downwards and sine curve).
+\end{description}
+Given the found results throughout this evaluation, we will be able to determine and quantify to which extent deep reinforcement learning can optimize limit order placement and give reasons for its limitations.
+
+\section{Data sets and their usage in the reinforcement learning setup}
 \label{sec:analysis-data-sets}
 We have selected two $\sim$30 minute samples of historical order book recordings with which we proceed experiments in this chapter.
-Thereby we have consciously chosen two very distinctive samples periods of an order book recording.
 Reasons for choosing two very distinguishable data sets include to determine the ability of the learners to react on a variety of market situations.
 And, as explained in the following section, the expected return of a learner for buying and selling assets heavily depends on the market price movement and therefore the situations become very different for the data sets in use.
 More precisely, \textit{data set I}, as shown in Figure \ref{fig:sample-down-price}), is a downwards trend (indicated by the bid/ask mid-price) and consists of 1132 order book states with a duration of 1681.8 seconds, resulting in 0.67 states per second.
@@ -41,29 +70,26 @@ When reinforcement learning is applied, the data sets are split with ratio $2:1$
 \end{figure}
 
 As is explained in Chapter \ref{chap:setup}, the historical data sets are not maintained by the reinforcement learning agents directly but instead by the reinforcement learning environment.
-The environment provides observation states with information from the data set to an agent, after which the agent decides to take an action in form of a limit level.
-In turn, the environment prices the order at the received price level and returns the evaluated outcome to the agent.
-This way, the agent can simulate the placement of limit orders (by submitting limit levels), such that, within the given time horizon, the demanded inventory can be either bought or sold.
-Each \textit{epoch} an agent proceeds, one order, with a specified inventory and time horizon, is defined and is to be filled.
-The time window from the data set, which is chosen by the environment in order to match this order, is very critical.
-Depending on the window of data, not only will the agent receive a corresponding observation state, but also the matching process and its outcome will rely on the given data.
-\todo{random points in time...}
-
+The environment provides an observation state $O$, derived from the data set, to an agent, after which the agent decides to take an action $a$ in form of a limit level.
+In turn, the environment prices the order at the received price level and returns the evaluated reward $r$ and the next observation state $O$ to the agent.
+This way, the agent can simulate the placement of limit orders, such that, within the given time horizon, the demanded inventory can be either bought or sold.
+For each \textit{epoch} an agent proceeds, one order, with a specified inventory and time horizon, is defined and is to be filled.
+Therefore, the reinforcement learning environment selects, for each epoch the agent initiates, a range of order book states which form the given time horizon $H$ within which the agent is supposed to complete an order.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
         \includegraphics[width=10cm]{images/evaluation-orderbook.png}
     }
     \caption{Order placement training and testing on an order book data set.}
-    \label{fig:eval-orderbook}
+    \label{fig:eval-orderbook-window}
 \end{figure}
-
-
-Since we are interested in the general ability for reinforcement learning to learn how to place orders, potential maker or taker fees are neglected in this setup.
-
+Figure \ref{fig:eval-orderbook-window} illustrates this process.
+The state which defines the beginning of the time horizon from the data set, and is chosen randomly, is very critical.
+Depending on the states within this selection of states within the data set, not only will the agent receive the corresponding observation states, but also the matching process and its outcome will be determined by the bids and asks embedded within these order book state.
+This process is identical for training and testing, except that the underlying data is different and the agent will not learn from the epochs proceeded during testing and instead will report the achieved rewards.
 
 \section{An empirical investigation of the reinforcement learning environment}
-
+\label{sec:eval-empirical}
 This section serves to investigate the relationship between the limit order placement and the received reward, within a fixed time horizon.
 The demonstrated methods are based on the related work described in Section \ref{sec:related-execution-behaviour} and provide the ability to empirically evaluate the reinforcement learning environment (Chapter \ref{chap:setup}) by simulating the behaviour of an agent that buys and sells shares at every possible limit level and records the received rewards (e.g. immediate returns).
 The return is denoted by the difference between the market price prior the order placement and the volume weighted average price (VWAP) paid, respectively received, as stated in Eq. \ref{setup:reward}.
@@ -259,6 +285,7 @@ The advice stated before remains, that is, the agent should choose a price a few
 
 \newpage
 \section{Q-Learning without market variables}
+\label{sec:eval-qlearn}
 The previous section provided knowledge about the possibilities of the agent when placing buy and sell orders using the reinforcement learning environment and with the underlying data set I and II.
 The expected behaviour for each limit level has been observed under two significantly different market situations.
 For each such observation, a fixed time horizon was chosen for which an order was residing in the order book, followed by a market order in case the order has not been filled completely.
@@ -393,7 +420,7 @@ Furthermore, it is to be assumed that the absence of market variables, while onl
 Therefore, the following section will make use of market variables in order to determine whether or not a learner can exploit the information hidden in the market and then act in favour of optimally placing limit orders.
 
 \section{Deep Q-Network}
-
+\label{sec:eval-dqn}
 In the previous section the Q-Learning agent was trained on the given data sets and no significant optimization in terms of buying and selling assets was achieved.
 That was, without market variables and by only relying on private variables instead.
 By considering the previously found results of the empirical analysis of the limit order placement behaviour we found that most of the limit orders placed by the Q-Learning agent were not filled within the given time horizon and instead market orders had to be submitted after the time was consumed.
@@ -530,6 +557,7 @@ Finally, we conclude our findings and reason about the capabilities of the DQN a
     \label{fig:analysis-dqn-2}
 \end{figure}
 
-\subsection{Determining the limitations of the DQN agent}
+\section{Determining the limitations of the DQN agent}
+\label{sec:eval-dqn-limitations}
 
 \subsection{Conclusion of DQN approach}

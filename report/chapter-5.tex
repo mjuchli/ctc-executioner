@@ -130,6 +130,8 @@ Reasons for this are that in case the order could not be matched over the course
 In that case, a negative reward is ultimately given.
 As a result, we define the discounted return (Eq. \ref{eq:discounted-return}) as $R_t=\sum_{t'=t}^{t_0}{\gamma^{t'-t}*r_{t'}}$, whereas $t_0$ is the time step at which the agent has its time horizon fully consumed for the order of the current epoch.
 
+Disclaimer: Since we are interested in the general ability for reinforcement learning to learn how to place orders, potential maker or taker fees are neglected in this setup.
+
 \section{Q-Learning agent}
 \label{setup:q-learning}
 The agent described in this section is generally known as \textit{Q-Learning}\cite{watkins1992q}.

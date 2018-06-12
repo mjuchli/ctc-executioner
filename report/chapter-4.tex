@@ -308,6 +308,7 @@ Therefore, the following subsections will introduce features that are derived fr
 Instead of hand-engineer features such as shown in \cite{nevmyvaka2006reinforcement, hwangdeep, fletcher2010multiple}, the aim of this project is to learn the knowledge directly from raw inputs, similar to what has been proven to be a successful method in the gaming sector\cite{mnih2013playing} and was recently applied to the trading context\cite{lu2017agent}.
 
 \subsection{Feature: price and size of historical orders}
+\label{sec:data-feature-1}
 The order book was defined in Eq. \ref{eq:order-book} and generated in Section \ref{sec:data-generation} serves as the first feature.
 More precisely for each sample at time $t$, we use $n$ order book entries (Eq.\ref{eq:order-book-entry}) of $m$ of the order book states (Eq. \ref{eq:order-book-state}) with time stamp $ts \le t$.
 Therefore, as shown in Eq. \ref{eq:feature-bid-ask}, $s_{bidask} \in \mathbb{R^+}^{m\times2\times2n}$ is the state observed by a reinforcement learning agent.
@@ -410,6 +411,7 @@ This indicates that traders choose a broad range of order sizes.
 As a result, a window size of order book states $m$ greater than 40 states is suggested to benefit from price differences within the feature.
 
 \subsection{Feature: price and size of historical trades}
+\label{sec:data-feature-2}
 The previous feature provides information to the learner in order to reason about the hypotheses which are derived from order placed and cancelled.
 In order to reason about whether or not trade events can provide a positive learning effect to the agent to optimize order placement, we construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time} as follows.
 A $Trade$ (Eq. \ref{eq:trade}) carries an order side $os$, a quantity $q$ and a price $p$.
