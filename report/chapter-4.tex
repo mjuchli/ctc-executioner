@@ -1,4 +1,4 @@
-\chapter{Data curation}
+\chapter{Market data curation and feature construction}
 \label{chap:data}
 
 In this chapter, we will outline the details of our data collection process, and how this data can subsequently form a historical order book in order to serve as the historical data source for the match engine.
@@ -9,10 +9,10 @@ Thus, the findings serve as the basis for the feature construction process which
 Therefore, in the last section of this chapter, we will construct features which adequately address the stated hypotheses.
 Finally, the features constructed will serve as the observed state that is to be evaluated by the reinforcement learning agents described in Chapter \ref{chap:setup}.
 
-\section{Collection}
+\section{Collection of market events}
 \label{sec:data-collection}
 
-In most exchanges in the crypto-currency domain, real-time market data is freely available. 
+In most exchanges in the cryptocurrency domain, real-time market data is freely available. 
 There is often a limit as to how far into the past historical data is retained.
 However, continuously recording real-time data results in a historical data set which is complete from the time when recording was started and has provided the desired data set for this research.
 A historical limit order book consisting of states which store every bid and ask posted by traders is commonly referred to as a \textit{complete order book}.
@@ -48,7 +48,7 @@ We then defined an \textit{event} as,
 whereas $isTrade \in \{0,1\}$ and $isBid \in \{0,1\}$ indicating whether the update contains an order or a trade. 
 Finally, we made use of the data types defined in Chapter \ref{chap:preliminaries} (Sections \ref{sec:order-book} and \ref{sec:match-engine}) such that $order \in Order_{Limit}$ and $trade \in Trade$.
 
-\section{Order book generation}
+\section{Reconstruction of an order book with market events}
 \label{sec:data-generation}
 
 The next step was to transform the events collected into an order book structure.
@@ -66,7 +66,7 @@ As a result, a \textit{list} of order book states is formed which constitutes a 
 
 \vfill
 
-\section{Understanding the data set}
+\section{Formulating hypotheses of the market behaviour}
 \label{sec:data-hypotheses}
 
 Let us  take a random, \textasciitilde10 minute period of the recorded market event data, and try to extract essential information from either raw events or the order book that has been generated.
@@ -206,73 +206,61 @@ Interestingly, even though the price rose after the dip, not as much volume was 
 \subsection{Importance of volume of orders and trades over time}
 \label{sec:data-hypthesis-order-trade-volume-time}
 
-The volume has been investigated as a sum of events over time.
-In order to understand the behaviour of the participants in greater detail, a \textit{volume map} will provide better insight into the single events occurred over time, as shown in Figure \ref{fig:data-volmap-crated}.
-The x-axis represents the time stamp and the y-axis is the volume of the placed order.
-For visibility reasons and since the majority of the orders have a small volume and fewer have large volume, the y-axis follows a log-scale.
-Participants cannot be assigned to such an order, as the trader "id" is non-public information.
+So far, the volume has been investigated as a sum of events over time.
+In order to understand the behaviour of the participants in greater detail, a \textit{volume map} will provide better insight into the single events occurred over time, as shown in the following figures.
+The x-axis represents the time stamp and the y-axis is the volume of the placed order or resulted trade.
+For visibility reasons the y-axis follows a log-scale, since the majority of the orders and trades have a small volume and fewer have large volume.
+Participants cannot be assigned to such an order or trade, as the trader "id" is non-public information.
 However, as we will see, one can determine some participants according to their behaviour.
-
+Therefore, some of the obvious patterns were highlighted in the figures.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
         \includegraphics[width=14cm]{images/data-volmap-created}
     }
-    \caption{Volume map of created bid (cyan) and ask (yellow) orders.}
+    \caption{Volume map of created bid and ask orders.}
     \label{fig:data-volmap-crated}
 \end{figure}
-
-Most of the orders were placed with volume between >0 and <0.5 and significantly less orders had a larger volume.
-Only a few orders had a volume greater than 10 BTC, meaning that most of the participants are either willing to buy and sell only small quantities, or split their orders to minimize the market impact.
-
-From a horizontal perspective, one can detect some orders of both sides, bids and asks, being listed with the same time interval.
-Particularly evident is such a behaviour at the volume just below $10^0$.
-This is likely one or multiple bots posting orders with the same volume and perhaps at a different price level.
-Examples of this behaviour is marked with a red-dashed horizontal box.
-A similar behaviour can be seen from a vertical perspective where one or more traders post orders at different price levels, with the same price segmentation.
-This is market with a red-dashed vertical box.
-Furthermore, a very distinctive diagonal-shaped pattern occurs when a trader posts orders within a short period of time but changing volume.
-This might be evidence of someone splitting one larger order into small pieces (known as buy or sell wall) and is marked with an orange-dashed circle.
-Surprisingly, this behaviour appeared the most immediately before and during the market price started rising again (compare time stamps from Figure \ref{fig:data-price-movement}).
-Last but not least, examples of areas dominated by one particular order side (buy or sell) is marked with a purple box, indicating that for a certain period of time either buyers or sellers flooded the market with orders with various volume.
-
+\ref{fig:data-price-movement}).
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
         \includegraphics[width=14cm]{images/data-volmap-cancelled}
     }
-    \caption{Volume map of cancelled bid (cyan) and ask (yellow) orders.}
+    \caption{Volume map of cancelled bid and ask orders.}
     \label{fig:data-volmap-cancelled}
 \end{figure}
-
-It is to be expected that at least for some of the limit orders, which did not result in a trade, a cancellation followed.
-Figure \ref{fig:data-volmap-cancelled} therefore shows the cancelled orders over time.
-
-Continuous cancellations become especially evident at volume levels just below $10^0$ and $10^{-1}$ and correlate with the continuous orders created at the same price level, as shown above.
-Hence, there is likely a trader following some strategy which involves creations and cancellations of orders with equal volume.
-A cancellation of one of the created buy-walls is particularly evident at the same time stamp and with equal volumes as previously discovered during the observation of created orders.
-That makes it likely that the wall was created and cancelled by a single trader.
-\vfill
-\pagebreak
-
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
         \includegraphics[width=14cm]{images/data-volmap-traded}
     }
-    \caption{Volume map of trades initiated by a bid (cyan) or ask (yellow) order crossing the spread.}
+    \caption{Volume map of trades initiated by a bid or ask order crossing the spread.}
     \label{fig:data-volmap-traded}
 \end{figure}
+Figure \ref{fig:data-volmap-crated} shows the volumes of the created orders.
+Most of the orders were placed with volume less than 1.0 BTC and significantly less orders had a larger volume, indicating that most of the participants are either willing to buy and sell only small quantities, or have split their orders to minimize the market impact.
+From a horizontal perspective, one can detect some orders of both sides, bids and asks, that were placed with the same time interval.
+Particularly evident is such a behaviour at the highlighted regions on the volume axis just below $10^0$.
+This is likely one or multiple bots posting orders with the same volume and perhaps at a different price level.
+Furthermore, a very distinctive diagonal-shaped pattern occurs when a trader posts orders within a short period of time but changing volume.
+This might be evidence of someone splitting a large order into small pieces (known as buy or sell wall).
+Surprisingly, this behaviour appeared the most immediately after and during the market price started rising again (compare time stamps from Figure 
+
+It is to be expected that at least for some of the limit orders, which did not result in a trade, a cancellation followed.
+Figure \ref{fig:data-volmap-cancelled} therefore shows the cancelled orders over time.
+Continuous cancellations become especially evident at volumes just below $10^0$ and at $10^{-3}$ and correlate with the continuous orders created with the same volume, as shown above.
+Hence, there is likely a trader following some strategy which involves creations and cancellations of orders with equal volume.
+A cancellation of one of the created buy-walls is particularly evident at the same time stamp shortly after 13:34 and has approximately equal volume as previously discovered during the observation of created orders.
+That makes it likely that the wall was created and cancelled by a single trader, and perhaps created again as the same pattern occurs again in the order-creation figure to a later time stamp.
 
 So far only posted limit orders or their cancellation where observed.
-Not all of those limit orders might have resulted into a trade and therefore
+Not all of those limit orders might have resulted in a trade and therefore
 Figure \ref{fig:data-volmap-traded} illustrates the volume map of the actual trades occurred.
-
 Immediately evident are the trades transacted with volume $10^{-3}$, with oftentimes identical time interval.
-Additionally, an intensive series of consecutive sales occurred at the time when the price dipped.
-After the dip, such sales are not present anymore.
-Furthermore, intensive and immediate purchases are visible with various volume at time stamps before and during the price fall.
-We remember that there was one spike towards a higher price during the dip, and the time stamp of which correlates strongly with the purchases visible in this figure.
+Additionally, an intensive series of consecutive sales occurred at the times that correlate to the market price fall.
+After the price fall, such sales are not present anymore.
+We remember that there was one spike towards a higher price during the dip, and the time stamp of which correlates strongly with the purchases (bids) visible in this figure before 13:34 with volume $10^{-1}$.
 \\
 \\
 Various behavioural patterns have been observed by investigating events initiated by market participants over time.
@@ -285,10 +273,9 @@ However, an attempt to find correlation between the behaviour of the events and 
 \subsection{Impact of traded price and volume}
 \label{sec:data-hypthesis-trade-price-volume}
 
-The price levels and volume of events over time was investigated for each type in the previous subsections.
-Patterns were found and a hypothesis was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which would eventually influence the market price and allows determines optimal order placement.
-The next logical step is to investigate the sum of traded volume at a given point in time (as shown in Figure \ref{fig:data-volmap-traded}) in combination with the price the asset was traded for.
-
+The price levels and volume of events over time was investigated for each event type in the previous subsections.
+Patterns were found and a hypothesis was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which would eventually influence the market price and therefore would allow to determine optimal order placement.
+The next logical step is to investigate the sum of traded volume over time, in combination with the price the asset was traded for.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -297,16 +284,16 @@ The next logical step is to investigate the sum of traded volume at a given poin
     \caption{Relation of trade volume to price movement.}
     \label{fig:data-trade-volume}
 \end{figure}
-
 Figure \ref{fig:data-trade-volume} illustrates the volumes of trades on both bid and ask side, which resulted in a buy or sell at a certain price.
-The volume of these trades are illustrated as bubbles with a size that determines traded volume and the position defines the price.
+The volume of these trades are illustrated as bubbles with a size that determines traded volume and the position defines their price.
 As is known, a buy appears when one crosses the spread towards the sellers side (ask) and a sell appears when crossing towards the buyer side (bid).
-One can clearly see how buys are listed on the best ask price level and sells are listed on the best buy price level.
-Before and during the dip sells appear consecutively, followed by a series of buy orders with low volume, which caused the minor spike.
-Interestingly, a rather large trade caused by a bid appeared shortly before the price started to rise again.
-Even though sellers confronted the market in the middle of the price rise, participants continued buying shortly after with approximately equal volume.
-Concluding this observation it is evident that few trades with small volume caused a certain noise in the overall trend.
-Multiple consecutive trades initiated one side or a single large the like, however, led the market price to move for substantially longer period of time.
+One can clearly see how buys are listed at the best ask price and sells are listed at the best bid level.
+Before and during the dip sells appear consecutively, followed by one large sell trade.
+After that, a series of buy orders with low volume occurs, which caused the minor spike.
+Interestingly, a rather large buy trade appeared shortly before the price started to rise again.
+Even though sellers confronted the market in the middle of the price rise, participants continued buying shortly after.
+Concluding this observation, it is evident that few trades with small volume caused a certain noise in the overall trend.
+Multiple consecutive trades one side or a single large trade, however, led the market price to move for substantially longer period of time in one direction.
 \\
 \\
 \textit{\textbf{Hypothesis:} consecutive small or one large trade give an impulse that drives the market price up or down.}
