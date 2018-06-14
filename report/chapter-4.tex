@@ -153,8 +153,8 @@ As it can be seen that the price rises shortly after the dip, we can postulate t
 \subsection{Importance of order volume}
 \label{sec:data-hypthesis-order-volume}
 
-It was shown that market participants position their offerings at different price levels as the asset price is moving due to trading.
-The second variable in posting orders is the volume and we aim to determine whether or not this is a factor which is affected during the price movement in the given sample period.
+It was shown that market participants position orders at different price levels as the asset price is moving due to trading.
+The second variable in posting orders is the volume and we aim to determine whether or not this is a factor which is affected during price movements in the given sample period.
 
 % \begin{figure}[H]
 %     \centering
@@ -185,7 +185,7 @@ The second variable in posting orders is the volume and we aim to determine whet
 \centering
 \begin{tabular}{l|l|l|l|l|}
 \cline{2-5}
-& \textbf{All events} & \textbf{Trades only} & \textbf{Orders created} & \textbf{Orders cancelled} \\ \hline
+& \textbf{All events} & \textbf{Trades only} & \textbf{Orders created} & \textbf{Orders canceled} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Bids}} & 51\%                & 41\%                 & 54\%                    & 57\%                      \\ \hline
 \multicolumn{1}{|l|}{\textbf{Asks}} & 49\%                & 59\%                 & 46\%                    & 43\%                      \\ \hline
 \end{tabular}
@@ -194,25 +194,25 @@ The second variable in posting orders is the volume and we aim to determine whet
 \end{table}
 
 Table \ref{tbl:data-imbalance} shows the (im-)balance of the volumes of bid and ask orders segmented into bids and asks of all events, trade events only, order creations and order cancellations.
-It is evident that, even though the price moved significantly within the recorded time range, the entirety of the events is well balanced between the bid and ask side.
-And this is also true for trade events only.
-Further, it is evident that the market participants reacted on the sale of the asset by not only creating but also cancelling more buy than sell orders.
-We take the last statement as an indication that the market participants may have responded to the price dip by cancelling their current buy orders and posting them to a lower price in the book.
+It is evident that, even though the price moved significantly within the recorded time range, the entirety of the events is well-balanced between the bid and ask side.
+This is also true for trade events only.
+Further, it is evident that the market participants reacted to the sale of the asset by not only creating but also canceling more buy- than sell orders.
+We take the last statement as an indication that the market participants may have responded to the price dip by canceling their current buy orders and posting them at a lower price in the book.
 Interestingly, even though the price rose after the dip, not as much volume was used on creations and cancellations of orders on the seller side.
 \\
 \\
-\textit{\textbf{Hypothesis:} imbalance of bids and asks of event types allows to estimate future behaviour of the market participants.}
+\textit{\textbf{Hypothesis:} the imbalance of bids and asks of event types allows us to estimate the future behavior of market participants.}
 
 \subsection{Importance of volume of orders and trades over time}
 \label{sec:data-hypthesis-order-trade-volume-time}
 
-So far, the volume has been investigated as a sum of events over time.
-In order to understand the behaviour of the participants in greater detail, a \textit{volume map} will provide better insight into the single events occurred over time, as shown in the following figures.
-The x-axis represents the time stamp and the y-axis is the volume of the placed order or resulted trade.
-For visibility reasons the y-axis follows a log-scale, since the majority of the orders and trades have a small volume and fewer have large volume.
-Participants cannot be assigned to such an order or trade, as the trader "id" is non-public information.
-However, as we will see, one can determine some participants according to their behaviour.
-Therefore, some of the obvious patterns were highlighted in the figures.
+So far, volume has been investigated as a sum of events over time.
+In order to understand the behavior of participants in greater detail, a \textit{volume map} will provide a better insight into single events occurring over time, as shown in the following figures.
+The x-axis represents the time stamp and the y-axis is the volume of the placed order or resulting trade.
+For visibility reasons, the y-axis follows a log scale, since the volumes of the majority of orders and trades are small and fewer have large volumes.
+Participants cannot be assigned to such an order or trade, as the trader "ID" is non-public information.
+However, as we will see, one can identify some participants on the basis of their behavior.
+Therefore, some of the more obvious patterns are highlighted in the figures.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -239,43 +239,42 @@ Therefore, some of the obvious patterns were highlighted in the figures.
     \label{fig:data-volmap-traded}
 \end{figure}
 Figure \ref{fig:data-volmap-crated} shows the volumes of the created orders.
-Most of the orders were placed with volume less than 1.0 BTC and significantly less orders had a larger volume, indicating that most of the participants are either willing to buy and sell only small quantities, or have split their orders to minimize the market impact.
-From a horizontal perspective, one can detect some orders of both sides, bids and asks, that were placed with the same time interval.
-Particularly evident is such a behaviour at the highlighted regions on the volume axis just below $10^0$.
-This is likely one or multiple bots posting orders with the same volume and perhaps at a different price level.
-Furthermore, a very distinctive diagonal-shaped pattern occurs when a trader posts orders within a short period of time but changing volume.
-This might be evidence of someone splitting a large order into small pieces (known as buy or sell wall).
-Surprisingly, this behaviour appeared the most immediately after and during the market price started rising again (compare time stamps from Figure 
+The volumes of most of the orders placed were less than 1.0 BTC and significantly fewer orders had a larger volume, indicating that most of the participants were either willing to buy and sell only small quantities, or split their orders to minimize the market impact.
+From a horizontal perspective, one can detect some orders on both sides, bids and asks, that were placed at the same time interval.
+This behavior is particularly evident at the regions highlighted on the volume axis just below $10^0$.
+This is likely to be one or multiple bots posting orders of the same volume and perhaps at different price levels.
+Furthermore, a very distinctive diagonal-shaped pattern occurs when a trader posts orders of varying volumes within a short period of time.
+This might be evidence of someone splitting a large order into small pieces (known as a buy- or sell wall).
+Surprisingly, this behavior most often appeared both while and immediately after the market price started rising again (compare time stamps from Figure 
 
-It is to be expected that at least for some of the limit orders, which did not result in a trade, a cancellation followed.
-Figure \ref{fig:data-volmap-cancelled} therefore shows the cancelled orders over time.
-Continuous cancellations become especially evident at volumes just below $10^0$ and at $10^{-3}$ and correlate with the continuous orders created with the same volume, as shown above.
-Hence, there is likely a trader following some strategy which involves creations and cancellations of orders with equal volume.
-A cancellation of one of the created buy-walls is particularly evident at the same time stamp shortly after 13:34 and has approximately equal volume as previously discovered during the observation of created orders.
-That makes it likely that the wall was created and cancelled by a single trader, and perhaps created again as the same pattern occurs again in the order-creation figure to a later time stamp.
+For at least some of the limit orders that did not result in a trade, the cancellation that followed was expected.
+Figure \ref{fig:data-volmap-cancelled} shows the canceled orders over time.
+Continuous cancellations become especially evident where volumes were just below $10^0$ and at $10^{-3}$ and their volume and time intervals correlate with the continuous orders created, as shown above.
+Hence, it is likely that there was a trader following a strategy which involved creating and canceling orders in equal volumes.
+A cancellation of one of the buy-walls that were created is particularly evident at the same time stamp shortly after 13:34 and has a volume approximately equal to the one previously discovered during the observation of created orders.
+That makes it likely that this wall was created and canceled by a single trader, and perhaps created again as the same pattern occurred again in the order-creation figure at a later time stamp.
 
-So far only posted limit orders or their cancellation where observed.
-Not all of those limit orders might have resulted in a trade and therefore
-Figure \ref{fig:data-volmap-traded} illustrates the volume map of the actual trades occurred.
-Immediately evident are the trades transacted with volume $10^{-3}$, with oftentimes identical time interval.
-Additionally, an intensive series of consecutive sales occurred at the times that correlate to the market price fall.
-After the price fall, such sales are not present anymore.
-We remember that there was one spike towards a higher price during the dip, and the time stamp of which correlates strongly with the purchases (bids) visible in this figure before 13:34 with volume $10^{-1}$.
+So far, only posted limit orders or their cancellations were observed.
+Not all of those limit orders might have resulted in a trade. Figure \ref{fig:data-volmap-traded} illustrates the volume map relating to the actual trades that occurred.
+It is evident that the volumes of the trades transacted were $10^{-3}$, and oftentimes they had identical time intervals.
+Additionally, an intensive series of consecutive sales occurred at times that correlate to the fall of the market price.
+After the price fell, such sales are not present anymore.
+Let us remember that there was one spike towards a higher price during the dip, and the time stamp related to it correlates strongly with the purchases (bids) visible in this figure before 13:34 with volumes of $10^{-1}$.
 \\
 \\
-Various behavioural patterns have been observed by investigating events initiated by market participants over time.
-For some, their impact on the market price is immediately obvious, for others it is hard to interpret by eye.
-However, an attempt to find correlation between the behaviour of the events and the resulted trades with the application of learning techniques seems promising.
+Various behavioral patterns were observed by investigating events initiated by market participants over time.
+For some, their impact on the market price is immediately obvious; for others it is hard to interpret visually.
+However, an attempt to find a correlation between the behavior of events and the resulting trades by means of learning techniques seems promising.
 \\
 \\
-\textit{\textbf{Hypothesis:} patterns arising from posted volume in events determines future short-term trading behaviour which can be exploited in favour of order placement.}
+\textit{\textbf{Hypothesis:} patterns arising from events in which there were variations in the volumes posted determine future short-term trading behavior which can be exploited in favour of order placement.}
 
 \subsection{Impact of traded price and volume}
 \label{sec:data-hypthesis-trade-price-volume}
 
-The price levels and volume of events over time was investigated for each event type in the previous subsections.
-Patterns were found and a hypothesis was stated which encourages the various offerings of volume of an order to be an indicator of future behaviour of market participants, which would eventually influence the market price and therefore would allow to determine optimal order placement.
-The next logical step is to investigate the sum of traded volume over time, in combination with the price the asset was traded for.
+The price levels and volume of events over time was investigated in respect of each event type in the previous subsections.
+Patterns were found and a hypothesis was stated that suggest that the various offerings of volume of orders to be an indicator of future behavior of market participants, which would eventually influence the market price and therefore allow us to determine optimal order placement.
+The next logical step is to investigate the sum of traded volume over time, in combination with the price at which the asset was traded.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -284,36 +283,36 @@ The next logical step is to investigate the sum of traded volume over time, in c
     \caption{Relation of trade volume to price movement.}
     \label{fig:data-trade-volume}
 \end{figure}
-Figure \ref{fig:data-trade-volume} illustrates the volumes of trades on both bid and ask side, which resulted in a buy or sell at a certain price.
-The volume of these trades are illustrated as bubbles with a size that determines traded volume and the position defines their price.
-As is known, a buy appears when one crosses the spread towards the sellers side (ask) and a sell appears when crossing towards the buyer side (bid).
+Figure \ref{fig:data-trade-volume} shows the volumes of trades on both bid and ask sides which resulted in a buy or sell at a certain price.
+The volumes of these trades are shown as bubbles of a size that indicates the traded volume and its position defines their price.
+As is known, a buy appears when one crosses the spread towards the seller side (ask) and a sell appears when crossing towards the buyer side (bid).
 One can clearly see how buys are listed at the best ask price and sells are listed at the best bid level.
-Before and during the dip sells appear consecutively, followed by one large sell trade.
-After that, a series of buy orders with low volume occurs, which caused the minor spike.
+Before and during the dip, sells appear consecutively, followed by one large sell transaction.
+After that, a series of buy orders with low volumes occurs, which caused the minor spike.
 Interestingly, a rather large buy trade appeared shortly before the price started to rise again.
-Even though sellers confronted the market in the middle of the price rise, participants continued buying shortly after.
-Concluding this observation, it is evident that few trades with small volume caused a certain noise in the overall trend.
-Multiple consecutive trades one side or a single large trade, however, led the market price to move for substantially longer period of time in one direction.
+Even though sellers confronted the market in the middle of the price rise, participants continued buying shortly thereafter.
+In conclusion, it is evident that a few trades with small volumes caused a certain noise in the overall trend.
+Multiple consecutive trades on one side or a single large trade, however, led the market price to move for a substantially longer period of time in one direction.
 \\
 \\
-\textit{\textbf{Hypothesis:} consecutive small or one large trade give an impulse that drives the market price up or down.}
+\textit{\textbf{Hypothesis:} consecutive small trades or one large trade give an impulse that drives the market price up or down.}
 
 
 \section{Feature construction}
 \label{sec:feature-engineering}
-The previous section demonstrated certain trading behaviours of the market participants in an order driven market, which ultimately determines the evolution of the limit order book. 
-Hypotheses were laid out which give reasons to believe that the outcome in terms of a change in the order book constellation and price development can be related to aforementioned trading behaviour.
-Consequently this implies that orders can be placed and filled at limit levels which result in a favourable price.
+The previous section demonstrated certain trading behaviors of market participants in an order-driven market, which ultimately determines the development of the limit order book. 
+Hypotheses were laid out which posit that the outcome in terms of a change in the order book constellation and price development can be related to the aforementioned trading behavior.
+This suggests that orders can be placed and filled at limit levels which result in a favorable price.
 Therefore, the following subsections will introduce features that are derived from the previously collected (Section \ref{sec:data-collection}) and processed (Section \ref{sec:data-generation}) data and cover the assumptions stated in Section \ref{sec:data-hypotheses}.
-Instead of hand-engineer features such as shown in \cite{nevmyvaka2006reinforcement, hwangdeep, fletcher2010multiple}, the aim of this project is to learn the knowledge directly from raw inputs, similar to what has been proven to be a successful method in the gaming sector\cite{mnih2013playing} and was recently applied to the trading context\cite{lu2017agent}.
+Instead of hand-engineer features such as those shown in \cite{nevmyvaka2006reinforcement, hwangdeep, fletcher2010multiple}, the aim of this project is to acquire knowledge directly from raw inputs, similar to a proven, successful method in the gaming sector\cite{mnih2013playing} and which was recently applied in the trading context\cite{lu2017agent}.
 
 \subsection{Feature: price and size of historical orders}
 \label{sec:data-feature-1}
 The order book was defined in Eq. \ref{eq:order-book} and generated in Section \ref{sec:data-generation} serves as the first feature.
-More precisely for each sample at time $t$, we use $n$ order book entries (Eq.\ref{eq:order-book-entry}) of $m$ of the order book states (Eq. \ref{eq:order-book-state}) with time stamp $ts \le t$.
+More precisely, for each sample at time $t$, we use $n$ order book entries (Eq.\ref{eq:order-book-entry}) of $m$ of the order book states (Eq. \ref{eq:order-book-state}) with time stamp $ts \le t$.
 Therefore, as shown in Eq. \ref{eq:feature-bid-ask}, $s_{bidask} \in \mathbb{R^+}^{m\times2\times2n}$ is the state observed by a reinforcement learning agent.
 The order book states are ordered such that $m$ is the closest to $t$.
-The $n$ order book entries are closest to the spread whereas only the price $bp$ (respectively $ap$) and size $bs$ (respectively $as$) are considered.
+The $n$ order book entries are closest to the spread in which only the price $bp$ (respectively $ap$) and size $bs$ (respectively $as$) are considered.
 
 \begin{equation}\label{eq:feature-bid-ask}
 s_{bidask} =\begin{bmatrix}
@@ -348,23 +347,23 @@ ap_{mn} & as_{mn}
 \end{bmatrix} \ 
 \end{equation}
 
-Considering that the state will be observed by a deep learning agent, which makes use of a neural network, scaling of inputs will contribute to a faster learning process.
-We therefore further apply normalization the the prices ($bp, ap$) with respect to the best ask price for each state, that is $ap_{i1}$.
-Equivalently we normalize the sizes ($bs, as$) with respect to the size provided at the best ask $as_{i1}$.
+As the state will be observed by a deep learning agent that makes use of a neural network, the scaling of inputs will contribute to a faster learning process.
+We therefore also apply normalization to the prices ($bp, ap$) with respect to the best ask price for each state, that is $ap_{i1}$.
+Accordingly, we normalize the sizes ($bs, as$) by reference to the size provided at the best ask price $as_{i1}$.
 While this method does not scale the values of prices and sizes within a predefined range, the values sill decrease significantly.
-Furthermore, empirical observations show that the minimum and maximum of prices within a single order book state do not differ more than ~2\%, which determines the approximate scaling boundary.
+Furthermore, empirical observations show that the minimum and maximum prices within a single order book state do not differ by more than ~2\%, which determines the approximate scaling boundary.
 \\
 \\
 This feature incorporates some of the previously stated hypotheses and therefore enables the learner to determine whether the statements were valid or not.
-Particularly, the feature includes historical order prices (hypothesis \ref{sec:data-hypthesis-order-price}) their volume (hypothesis \ref{sec:data-hypthesis-order-volume} and partly \ref{sec:data-hypthesis-order-trade-volume-time}).
+Particularly, the feature includes historical order prices (hypothesis \ref{sec:data-hypthesis-order-price}), their volume (hypothesis \ref{sec:data-hypthesis-order-volume} and partly \ref{sec:data-hypthesis-order-trade-volume-time}).
 \\
 \\
 \todo[inline]{Might be unnecessary according to our talk.}
-The question remains how large the window of $m$ order books states and the number of limit levels $n$ should be chosen.
-The following observation provides an intuition about the parameters, however, this by no means aims to make an estimate how well the agent may perform under the consideration a certain parameter setup.
+There remain the questions of how large the window of $m$ order books states should be and the number of limit levels that $n$ should be chosen.
+The following observation provides an insight into the parameters; however, by no means does it aim to make an estimate of how well the agent may perform under the consideration of a certain parameter setup.
 
-In order to reason about the impact of $n$ limit levels, we take the average of 100 evaluations whereas we take 1000 random order book states for which we measure the Shannon entropy\cite{shannon2001mathematical} for a range of 40 limit levels (maximum of what goes from collection) on the bid and ask side, applied to price and size.
-The entropy therefore serves as an indicator of how much information can be gained for each limit level, derived from the their change in price and size for each state.
+In order to determine the impact of $n$ limit levels, we take the average of 100 evaluations whereas we take 1,000 random order book states for which we measure the Shannon entropy\cite{shannon2001mathematical} for a range of 40 limit levels (maximum of what goes from collection) on the bid and ask side, applied to price and size.
+The entropy therefore serves as an indicator of how much information can be gained in respect of each limit level, derived from the change in price and size for each state.
 
 \begin{figure}[H]
     \centering
@@ -381,10 +380,10 @@ The entropy therefore serves as an indicator of how much information can be gain
     \caption{Entropy measured for 40 limit levels}\label{fig:bidask-entropy}
 \end{figure}
 
-It is noticeable that the entropy remains high regarding the prices for for limit levels 0-30 on both, bid and ask side, as shown in Figure \ref{fig:bidask-price-entropy}. 
+It is noticeable that the entropy of prices of limit levels 0-30 on both bid and ask sides remains high, as shown in Figure \ref{fig:bidask-price-entropy}. 
 The price becomes slightly more constant for limit levels $>30$. 
-The entropy for order sizes, as shown in Figure \ref{fig:bidask-size-entropy}, drop after 20 limit levels, which indicates that the accumulated order size deep in the book is more constant. 
-We therefore suggest to consider at least 30 limit levels of the bid-ask feature.
+The entropy for order sizes, as shown in Figure \ref{fig:bidask-size-entropy}, drops after 20 limit levels, which indicates that the accumulated order size deep in the book is more constant. 
+We therefore suggest considering at least 30 limit levels of the bid-ask feature.
 
 \begin{figure}[H]
     \centering
@@ -401,9 +400,9 @@ We therefore suggest to consider at least 30 limit levels of the bid-ask feature
     \caption{Correlation measured for 100 order book states}\label{fig:bidask-correlation}
 \end{figure}
 
-After having a brief understanding of how limit levels $n$ affect order prices and sizes, we try to make a statement about how order book states are related to the most recent state.
-More precisely, we determine the correlation of the order prices and sizes from the previous $m$ states to the most recent order book state.
-We take the average of 100 evaluations whereas we take a single order book state at time $t$ and a sequence of 100 previous order book states for each of which we measure the Shannon entropy\cite{shannon2001mathematical} to the state at $t$, whereas $n=40$ (maximum).
+With this brief understanding of how limit levels $n$ affect order prices and sizes, we will try to make a statement about how order book states are related to the most recent state.
+More precisely, we will determine the correlation between the order prices and sizes from the previous $m$ states and the most recent order book state.
+We will take an average of 100 evaluations whereas we take a single order book state at time $t$ and a sequence of 100 previous order book states for each of which we measure the Shannon entropy\cite{shannon2001mathematical} to the state at $t$, whereas $n=40$ (maximum).
 As can be seen in Figure \ref{fig:bidask-price-correlation}, the correlation of the price positions drop rapidly, however the effective change is not significant, indicating that the price changes are noticeable but overall do not differ much.
 Order book states which lay more than 40 states in the past are slightly less correlated to the current state.
 The correlation of order sizes, as shown in Figure \ref{fig:bidask-size-correlation} drops more rapid and to a much greater extent than the order prices.

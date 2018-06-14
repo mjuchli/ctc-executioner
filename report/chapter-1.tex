@@ -126,16 +126,16 @@ Therefore we have formulated the following research question to be answered in t
     
     Further, we shall then build two reinforcement learners which will both act as intelligent traders and thereby place limit orders that provide an incentive to buy or sell an asset at a favorable price.
     Both agents should be driven by an end-to-end learning process by which the agent improves based on the outcome of the orders placed and ultimately learns a strategy for  buying and selling shares at favorable prices.
-    The former agent is an adaption of the well known Q-Learning algorithm and optimizes based on the amount of assets to buy or sell and a given time horizon only.
-    The latter is a deep reinforcement learning agent that makes use of a convolutional neural network in order to detect patterns in market data.
+    The former agent is an adaptation of the well- known Q-Learning algorithm and optimizes only in accordance with the amount of assets to buy or sell and the given time horizon.
+    This agent is a deep reinforcement learning agent that makes use of a convolutional neural network in order to detect patterns in market data.
 
 \begin{description}
     \item[RQ 1.3:] How can one evaluate a reinforcement learning agent in the context of order placement?
 \end{description}
-    The ability to quantify the capabilities of a limit order placement strategy learned by a reinforcement learning agent is of significant importance when answering the main research question of this thesis.
-    Since there is no literature available which states results for the exact same data set, nor for any data set within the crypto currency domain, a procedure has to be introduced with which different learning approaches and features considered can be evaluated.
-    Therefore a measure is to be taken that is well-suited to determine and compare the capabilities of a reinforcement learning agent in the order placement context.
-    Furthermore, the evaluation procedure should identify to which extent a limit order placement can be optimized in a given historical data set.
+    The ability to quantify the capabilities of a limit order placement strategy learned by a reinforcement learning agent is of significant importance when answering the main research question in this thesis.
+    Since there is no literature available which states results for the exact same data set, nor for any data set within the crypto- currency domain, a procedure has to be introduced by which different learning approaches and features considered can be evaluated.
+    Therefore a measure is to be taken that is well-suited to the determination and comparison of the capabilities of a reinforcement learning agent in the order placement context.
+    Furthermore, the evaluation procedure should identify the extent to which a limit order placement can be optimized in a given historical data set.
     As a result, the evaluation shall serve as a reliable measure of how well a learned order placement strategy performs.
     
 \begin{description}
@@ -149,7 +149,7 @@ Therefore we have formulated the following research question to be answered in t
 
 \section{Document structure}
 
-In Chapter \ref{chap:preliminaries} we first provide background information to the reader on the components of a stock exchange and the fundamentals of the closely related time series.
+In Chapter \ref{chap:preliminaries}, we first provide background information to the reader on the components of a stock exchange and the fundamentals of the closely related time series.
 Further, we make the reader familiar with (Deep) Reinforcement Learning.
 In Chapter \ref{chap:related-work}, we elaborate on the behavior of order execution followed by approaches of both statistical and machine learning nature.
 Chapter \ref{chap:data} explains the process of data collection and preparation which was carried out prior to its use in the subsequent chapters.

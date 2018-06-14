@@ -78,33 +78,35 @@ Therefore, the reinforcement learning environment selects, for each epoch the ag
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
-        \includegraphics[width=10cm]{images/evaluation-orderbook.png}
+        \includegraphics[width=8cm]{images/evaluation-orderbook.png}
     }
     \caption{Order placement training and testing on an order book data set.}
     \label{fig:eval-orderbook-window}
 \end{figure}
 Figure \ref{fig:eval-orderbook-window} illustrates this process.
-The state which defines the beginning of the time horizon from the data set, and is chosen randomly, is very critical.
-Depending on the states within this selection of states within the data set, not only will the agent receive the corresponding observation states, but also the matching process and its outcome will be determined by the bids and asks embedded within these order book state.
+A randomly chosen order book state defines the beginning of the time horizon and the set of order book states that fall into this window.
+This is very crucial since the states within this time horizon and set of states, not only lead to the observation states received by the agent, but also will determine the outcome of the matching process.
+More precisely, for each step the agent takes, a consecutive sequence of order book states (with a total difference of their time stamps of $\Delta{t}$) will be considered by the match engine, as explained in the previous chapter in Section \ref{setup:parameters}.
 This process is identical for training and testing, except that the underlying data is different and the agent will not learn from the epochs proceeded during testing and instead will report the achieved rewards.
 
 \section{An empirical investigation of the reinforcement learning environment}
 \label{sec:eval-empirical}
-This section serves to investigate the relationship between the limit order placement and the received reward, within a fixed time horizon.
-The demonstrated methods are based on the related work described in Section \ref{sec:related-execution-behaviour} and provide the ability to empirically evaluate the reinforcement learning environment (Chapter \ref{chap:setup}) by simulating the behaviour of an agent that buys and sells shares at every possible limit level and records the received rewards (e.g. immediate returns).
-The return is denoted by the difference between the market price prior the order placement and the volume weighted average price (VWAP) paid, respectively received, as stated in Eq. \ref{setup:reward}.
-As a result we gain understanding of the behaviour of order placement within a given historical market and set a baseline for the reinforcement learners to come.
+This section serves to investigate the relationship between the limit order placement and the received return.
+The demonstrated methods are based on the related work described in Section \ref{sec:related-execution-behaviour} and provide the ability to empirically evaluate the reinforcement learning environment (Chapter \ref{chap:setup}).
+Therefore we simulate an agent that buys and sells shares at every possible limit level and records the received immediate returns.
+The return is denoted by the difference between the market price prior the order placement and the volume weighted average price (VWAP) paid or received respectively, as stated in Eq. \ref{setup:reward}.
+As a result, we gain understanding about estimated rewards for limit order placement using the given historical data set.
+In addition, these results set a benchmark for the reinforcement learners to come.
 
-We recapitulate that according to \cite{nevmyvaka2005electronic, yingsaeree2012algorithmic} there are three obvious trading strategies in order to determine the execution price of an order (considering limit and market order types only):
-\begin{enumerate}
-    \item Submit a market order tor the entire amount immediately.
-    \item Wait until the end of the time period and then go to the market with the entire amount.
-    \item Submit a limit order at the beginning of the time period; then submitting a market order for the remainder of shares (if any) at the end of the interval.
-\end{enumerate}
-Having a total time horizon of 100 seconds available, the last approach is of interested in this analysis.
-However, we investigate the behaviour on progressive increasing time horizons, starting from 10 seconds up to 100 seconds, as this demonstrates the discrete time steps to be taken by a learner.
-By doing so, the expected return is observed by the average return of placing (e.g. cross-validating) 100 orders of size 1.0 BTC at a random point in the given data set.
-The price of the orders are determined by a range of 201 limit levels ($-100...100$) with step size \$0.10, resulting in orders priced in the range of $p_m-10 \ \dots \ p_m+10$, whereas $p_m$ is the market price before the order was placed.
+The setup of this investigation is as follows.
+We investigate the rewards of limit orders placed on progressive increasing time horizons, starting from 10 seconds up to 100 seconds, and therefore demonstrate by hand how a reinforcement learning agent would take discrete time steps.
+For each time horizon, we place (e.g. cross-validating) 100 orders of size 1.0 BTC at the beginning of the time horizon whose beginning is defined by a randomly chosen order book state. 
+A market order follows for the remainder of shares (if any) once the time horizon is consumed.
+The expected return is then formed by the average of the received returns of these 100 orders.
+This process is repeated for a range of 201 limit levels ($-100...100$) with step size \$0.10, resulting in orders priced in the range of $p_m-10 \ \dots \ p_m+10$, whereas $p_m$ is the market price before the order was placed.
+The limit levels are chosen broadly in order to retrieve understanding about the outcome of a variety of possible actions.
+Hence, a total 20'100 orders are submitted for each defined time horizon.
+Finally, the investigation is proceeded for both data sets I and II.
 
 \subsection{Order placement behaviour on data set I}
 For the data set I, where the market undergoes a downwards trend, the intuition is as follows:
@@ -114,34 +116,30 @@ Therefore, the longer the time horizon, the lower the limit level can be chosen 
 Contrarily, we expect sell orders to provide better returns when the agent crosses the spread with a positive limit level.
 The assumption is that in a falling market it is unlikely that market participants are willing to buy for higher prices and therefore the agent must place sell orders higher in the book in order to sell immediately.
 Otherwise, the longer the time horizon, the less return an agent would retrieve as the market order after the order has not been filled becomes costly.
-We proceed this investigation within our reinforcement learning environment as shown Figure \ref{fig:behvaiour-down}.
-Therefore, time horizons of 10, 30, 60 and 100 seconds (y-axis) and limit levels reaching from -100 to +100 (x-axis) were chosen.
-The time horizons determine the various situations an agent is confronted while proceeding steps within an epoch.
-The limit levels are chosen broadly in order to retrieve understanding about the outcome of a variety of possible actions.
+This investigation is shown in Figure \ref{fig:behvaiour-down} for time horizons of 10, 30, 60 and 100 seconds respectively.
+The x-axis indicates the placement of the order at limit levels reaching from -100 to +100 and the y-axis indicates the average received return.
 
 With a time horizon of only 10 seconds left, the expected behaviour is, however, proven wrong.
 For buy orders, shown in Figure \ref{fig:behvaiour-down-10s-buy}, the returns suggest to place the orders close to the spread, but still on the opposing side, at a limit level of $\sim$+5.
 The spike at limit level $\sim$-5 indicates that the overall best return was provided at this level, however it comes with the risk that the orders fails to execute, indicated by the downwards spike also close to level $\sim$-5.
 For selling within 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-sell}, the best return is given when crossing the spread with a positive limit level of $\sim$+50.
-The spike at limit level $\sim$-70 is likely caused by one of the orders during the cross-validation process, that was able to execute and therefore contributed to greater return.
 
-With an increased time horizon of a total of 30 seconds, as shown in Figures \ref{fig:behvaiour-down-30s-buy} and \ref{fig:behvaiour-down-30s-sell}, the expected behaviour becomes more evident.
-Positive returns can be achieved by posting buy orders deep in the order book, whereas there is not much variance between the negative limit levels itself.
-Therefore, we can expect that in the given market situation the agent was able to execute the order partially at very low limit levels and for the unexecuted part a market order followed which ultimately averaged the price to be similar as when the agent placed the order initially at a price which is only slightly below the spread.
-This is confirmed by the fact that the most dense range of positive returns is indeed around the limit levels just below the spread.
-Crossing the spread causes increasingly lower returns, the more positive the limit level is chosen.
-That is a result of agents willingness to immediately buy for an increasing price by using market orders.
+With an increased time horizon of a total of 30 seconds, as shown in Figures \ref{fig:behvaiour-down-30s-buy} and \ref{fig:behvaiour-down-30s-sell}, the expected behaviour becomes more apparent.
+Positive returns can be achieved by posting buy orders deep in the order book.
+Therefore, we can expect that in the given market situation an agent would be able to execute the order partially at very low limit levels and for the unexecuted part a market order would follow.
+The most dense range of positive returns seen around the limit levels just below the spread.
+Orders placed deeper in the book result oftentimes in slightly lower returns, which indicates that the orders were only filled partially and expensive market orders followed.
+Crossing the spread causes increasingly lower returns, the more positive the limit level is chosen, as a result of agents willingness to immediately buy at an increasing price.
 The opposite effect occurs while selling assets.
 Market orders higher in the book result in result in better returns than limit orders deep in the book.
 Interestingly, orders which were placed very deep in the book, at limit level $\sim$-50 and below, are rewarded better than the ones close to the spread.
 This is most likely a consequence of a minority of orders which were partially filled at this level during the cross-validation process.
 
-With time horizons of 60 and 100 seconds the expected behaviour of the orders is clearly given.
-Buy orders as shown in Figures \ref{fig:behvaiour-down-60s-buy} and \ref{fig:behvaiour-down-100s-buy}, best best off when placed very deep in the order book.
-However, when placed too deep, at level -100, the return is slightly less as a result of unexecuted orders which had to be filled with market orders once the time was consumed.
+With time horizons of 60 and 100 seconds the expected behaviour of the orders is clearly apparent.
+Buy orders, as shown in Figures \ref{fig:behvaiour-down-60s-buy} and \ref{fig:behvaiour-down-100s-buy}, achieve most return when placed very deep in the order book.
+However, when placed too deep, at level -100, the return is slightly less as a result of unexecuted orders which had to be completed with market orders.
 In addition, positive limit levels become stable since there are more sellers in the market with the extended time horizon and therefore very high placed orders have the same effect as limit orders posted only slightly above the spread.
-The same applies to sell orders which are placed very deep in the book, as shown in Figures \ref{fig:behvaiour-up-60s-sell} and \ref{fig:behvaiour-up-100s-sell}.
-Placing orders very deep in the book have the same effect as when placing the order just below the spread, that is, there are no traders willing to buy at such a high price and therefore market orders follow once the time has passed.
+Furthermore, placing orders very deep in the book have the same effect as when placing the order just below the spread, that is, there are no traders willing to buy at such a high price and therefore market orders follow once the time has passed.
 \vfill
 \newpage
 \begin{figure}[H]
@@ -190,38 +188,7 @@ Placing orders very deep in the book have the same effect as when placing the or
     \label{fig:behvaiour-down}
 \end{figure}
 
-\subsection{Order placement behaviour on data set II}
-For the data set II, which contains an upwards trend, the intuition is the opposite as during the investigation of data set I.
-Namely, we expect buy orders to result in better returns when immediately filled, that is when the agent crosses the spread and places the order high in the book.
-The assumption is that as time passes and the market price rises, other traders become less willing to sell for the market price or lower.
-Therefore, the longer the time horizon given to the agent, the more critical it becomes to execute immediately, as otherwise shares would have to be bought to an increased market price.
-Likewise, better returns of sell orders are expected when placed deep in the book, meaning to be sold at a higher price.
-The assumption is that as the price rises, market participants become more likely to buy assets for higher prices.
-Hence, the longer the time horizon, the deeper the agent should place a limit sell order in the book, as this will likely not require a following market order due to (partially) unexecuted shares.
-We investigate these assumptions by proceeding the same experiment as in the previous section, as shown in Figure \ref{fig:behvaiour-up}, whereas time horizons of 10, 30, 60 and 100 seconds (y-axis) and limit levels reaching from -100 to +100 (x-axis) were chosen
-
-The returns of buy orders with a time horizon of 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-buy}, correlate with the above stated assumptions.
-That is, highest returns are achieved when crossing the spread and although limit levels in the range of 1-50 tend to perform the same, the wises choice for the agent would be to choose the one closest to the spread as it comes with the least risk of paying a premium.
-With the same time horizon, the sell orders placed contradict the assumptions, as shown in Figure \ref{fig:behvaiour-up-10s-sell}.
-Here the agent is rewarded the most when choosing a price for the order at market price, as indicated by the limit level 0, that is on the spread.
-A highly negative limit level causes to receive approximately \$3.00 less than when placing at the suggested market price.
-
-With 30 seconds left to buy 1.0 BTC, in Figure \ref{fig:behvaiour-up-30s-buy}, the orders placed above the spread become stable for any such limit level, much more so than in the previous investigation with the data set I.
-This is likely due to the higher order pressure of the data set II, as described in Section \ref{sec:analysis-data-sets}.
-Hence, there are more market participants willing to sell.
-The return curve that indicates sell orders placed by an agent, shown in Figure \ref{fig:behvaiour-up-30s-sell}, shifts towards a more evenly distributed returns compare to when only 10 seconds were left.
-Therefore, limit orders tend to become more rewarding and an agent might benefit from a slight increase in price within the given time horizon.
-
-Even more so, this pattern becomes evident when a time horizon of 60 and 100 seconds were given, as shown in Figures \ref{fig:behvaiour-up-60s-sell} and \ref{fig:behvaiour-up-100s-sell} respectively.
-With the increased time horizon the assumptions stated in the beginning of this section are confirmed by shown that the agent, when trying to sell shares, should place orders indeed deep in the order book.
-When time passes and the market price rises, market participants are willing to buy for an increasing price and an agent is able to sell all assets for such an increased price without the need of a following market order.
-Contrarily, if the agent decides to offer to sell the assets for a decreasing price, as indicated by the higher limit levels above the spread, the less reward would be given.
-More precisely, for a time horizon of 100 seconds, the agent would receive up to \$7.00 less when choosing to cross the spread with a limit level of +100 compared to some negative limit level.
-Figures \ref{fig:behvaiour-up-60s-buy} and \ref{fig:behvaiour-up-100s-buy} which show the result of an agent that tries to buy assets within the increased time horizon, the behaviour is clear.
-That is, during an uprising market, the damage can be minimized by crossing the spread and buying immediately.
-The advice stated before remains, that is, the agent should choose a price a few steps (\$0.10) above the market price as there is enough liquidity in the market to buy the demanded number of assets.
-
-\begin{figure}
+\begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{images/behaviour-up-10s-buy.png}
@@ -267,23 +234,59 @@ The advice stated before remains, that is, the agent should choose a price a few
     \label{fig:behvaiour-up}
 \end{figure}
 
-\subsection{Conclusion of empirical analysis}
+\subsection{Order placement behaviour on data set II}
+For the data set II, which shows an upwards price trend, the intuition is the opposite as for the investigation using data set I.
+We expect buy orders to result in better returns when immediately filled, that is, when the agent crosses the spread and places the order high in the book.
+The assumption is that, as time passes and the market price rises, other traders become less willing to sell for the market price or lower.
+Therefore, the longer the time horizon given to the agent, the more critical it becomes to execute immediately, as otherwise shares would have to be bought to an increased market price.
+Contrarily, better returns with sell orders are expected when placed deep in the book, meaning to be sold at a higher price.
+The assumption is that as the price rises, market participants become more likely to buy assets for higher prices.
+Hence, the longer the time horizon, the deeper the agent should place a limit sell order in the book, as this will likely not require a following market order due to (partially) unexecuted shares.
+We investigate these assumptions by proceeding the same experiment as in the previous section, as shown in Figure \ref{fig:behvaiour-up}, with time horizons of 10, 30, 60 and 100 seconds respectively.
+The x-axis denotes the placement of the order at limit levels reaching from -100 to +100 and the y-axis indicates the average received return.
 
+The returns of buy orders filled within a time horizon of 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-buy}, correlate with the above stated assumptions.
+The highest returns are achieved when crossing the spread and although limit levels in the range of 1-50 tend to perform the same, and considering the risk of paying a premium, the wisest choice for the agent would be to choose the level closest to the spread.
+The sell orders placed, with a time horizon of 10 seconds, contradict the assumptions, as shown in Figure \ref{fig:behvaiour-up-10s-sell}.
+The agent is rewarded the most when choosing a price for the order at market price, as indicated by the limit level 0, that is on the spread.
+A highly negative limit level causes to receive approximately \$3.00 less than when placing at the suggested market price.
+
+With 30 seconds left to buy 1.0 BTC, in Figure \ref{fig:behvaiour-up-30s-buy}, the orders placed above the spread become stable for any such limit level, much more so than with the same time horizon in the previous investigation with the data set I.
+This is likely due to the higher order pressure of the data set II, as described in Section \ref{sec:analysis-data-sets}, as there are more market participants willing to sell.
+The return curve that indicates sell orders placed by an agent, shown in Figure \ref{fig:behvaiour-up-30s-sell}, becomes more evenly distributed.
+Therefore, limit orders tend to become more rewarding and an agent might benefit from a slight increase in price within the given time horizon.
+
+This pattern becomes clearly appararent when a time horizon of 60 and 100 seconds was given, as shown in Figures \ref{fig:behvaiour-up-60s-sell} and \ref{fig:behvaiour-up-100s-sell} respectively.
+With the increased time horizon, the assumptions stated in the beginning of this section are confirmed and the agent, when trying to sell shares, should indeed place orders deep in the order book.
+As time passes and the market price rises, market participants are willing to buy for an increasing price and an agent is expected to be able to sell all assets for such an increased price without the need of a following market order.
+Contrarily, if the agent decides to offer to sell the assets for a decreasing price, as indicated by the higher limit levels above the spread, the less reward would can be expected.
+More precisely, for a time horizon of 100 seconds, the agent is expected to receive up to \$7.00 less when choosing to cross the spread with a limit level of +100, compared to some negative limit level.
+Figures \ref{fig:behvaiour-up-60s-buy} and \ref{fig:behvaiour-up-100s-buy} which show the expected results of an agent that buys assets within the 60 and 100 seconds respectively.
+As is evident, during this uprising market, the expected damage can be minimized by crossing the spread and buying immediately.
+The advice stated before remains: the agent should choose a price a few steps (\$0.10) above the market price as there is enough liquidity in the market to buy the demanded number of assets.
+
+\subsection{Conclusion of empirical analysis}
+The results of the empirical analysis proceeded on data set I and II have shown that the tendency of limit order execution is as follows:
+during a downwards trend of the market price, buying assets can be optimized by placing limit orders deep in the order book and the least loss is taken when selling assets immediately to the market price.
+Contrarily, during an upwards market price trend, buying assets is suggested using a market order and selling can be optimized by placing the sell orders deep in the order book.
+This effect becomes more apparent when a longer time horizon is given for an order, as for shorter time horizons the order placement process gets either intercepted by short term fluctuations or a lack of market participants providing volume to buy and sell assets.
+In this analysis, the orders placed had to be completely filled without the ability to make intermediary steps of cancellations and replacements of the order within the given time horizon.
+It is therefore to be evaluated by the reinforcement learners whether or not such adaptions to the order will result in a more favorable reward.
+In order to have a measure of comparison for the reinforcement learning agents to come, Table \ref{tbl:analysis-empirical-summary} summarizes the findings and shows the expected rewards for (1) the optimal limit level chosen and (2) an immediate completion of the order using a market order.
 \begin{table}[H]
 \centering
 \begin{tabular}{l|l|l|}
 \cline{2-3}
 & \textbf{Limit order (optimal)} & \textbf{\begin{tabular}[c]{@{}l@{}}Market order\end{tabular}} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & ?          & -0.05                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & ?         & -27.70                                                          \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & ?          & -1.06                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (II)}} & ?          & -1.72                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 15.20          & -0.05                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -27.70         & -27.70                                                          \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.06          & -1.06                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & 3.68          & -1.72                                                           \\ \hline
 \end{tabular}
 \caption{Summary of rewards derived form the empirical analysis.}
 \label{tbl:analysis-empirical-summary}
 \end{table}
 
-\newpage
 \section{Q-Learning without market variables}
 \label{sec:eval-qlearn}
 The previous section provided knowledge about the possibilities of the agent when placing buy and sell orders using the reinforcement learning environment and with the underlying data set I and II.
@@ -312,28 +315,53 @@ The difference to the occurring costs of a market order then serves as the guide
 
 \begin{figure}
     \centering
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{q_1_10000_BUY_rewards.png}
         \caption{Mean rewards per epoch (buy)}
         \label{fig:analysis-q-learn-1-reward-buy}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{q_1_10000_BUY_mean_actions.png}
         \caption{Mean of actions per epoch (buy)}
         \label{fig:analysis-q-learn-1-action-buy}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{q_1_10000_SELL_rewards.png}
         \caption{Mean rewards per epoch (sell)}
         \label{fig:analysis-q-learn-1-reward-sell}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{q_1_10000_SELL_mean_actions.png}
         \caption{Mean of actions per epoch (sell)}
         \label{fig:analysis-q-learn-1-action-sell}
     \end{subfigure}
     \caption{Mean rewards and actions for buying and selling on training data set I.}
     \label{fig:analysis-q-learn-1}
+\end{figure}
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_BUY_rewards.png}
+        \caption{Mean rewards per epoch (buy)}
+        \label{fig:analysis-q-learn-2-reward-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_BUY_mean_actions.png}
+        \caption{Mean of actions per epoch (buy)}
+        \label{fig:analysis-q-learn-2-action-buy}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_SELL_rewards.png}
+        \caption{Mean rewards per epoch (sell)}
+        \label{fig:analysis-q-learn-2-reward-sell}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{q_2_10000_SELL_mean_actions.png}
+        \caption{Mean of actions per epoch (sell)}
+        \label{fig:analysis-q-learn-2-action-sell}
+    \end{subfigure}
+    \caption{Mean rewards and actions for buying and selling on training data set II.}
+    \label{fig:analysis-q-learn-2}
 \end{figure}
 
 Figure \ref{fig:analysis-q-learn-1} shows the experiment proceeded on data set I.
@@ -353,33 +381,8 @@ The agent started off at limit level 0 and after some exploration concluded to k
 The backtest resulted in an average reward of -21.34 achieved by the agent.
 The reward received for placing market orders on the test set account to a negative reward of -27.70.
 Hence, the agent is able to save \$6.36 when selling 1.0 BTC.
-
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{q_2_10000_BUY_rewards.png}
-        \caption{Mean rewards per epoch (buy)}
-        \label{fig:analysis-q-learn-2-reward-buy}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{q_2_10000_BUY_mean_actions.png}
-        \caption{Mean of actions per epoch (buy)}
-        \label{fig:analysis-q-learn-2-action-buy}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{q_2_10000_SELL_rewards.png}
-        \caption{Mean rewards per epoch (sell)}
-        \label{fig:analysis-q-learn-2-reward-sell}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{q_2_10000_SELL_mean_actions.png}
-        \caption{Mean of actions per epoch (sell)}
-        \label{fig:analysis-q-learn-2-action-sell}
-    \end{subfigure}
-    \caption{Mean rewards and actions for buying and selling on training data set II.}
-    \label{fig:analysis-q-learn-2}
-\end{figure}
-
+\\
+\\
 Figure \ref{fig:analysis-q-learn-2} shows the experiment proceeded on data set II.
 The average received reward while training to buy the asset is shown in Figure \ref{fig:analysis-q-learn-2-reward-buy}.
 Throughout the epochs, the agent was able to improve the mean reward like with the previous data by roughly 0.5.
