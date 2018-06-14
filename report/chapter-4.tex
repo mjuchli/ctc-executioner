@@ -403,18 +403,18 @@ We therefore suggest considering at least 30 limit levels of the bid-ask feature
 With this brief understanding of how limit levels $n$ affect order prices and sizes, we will try to make a statement about how order book states are related to the most recent state.
 More precisely, we will determine the correlation between the order prices and sizes from the previous $m$ states and the most recent order book state.
 We will take an average of 100 evaluations whereas we take a single order book state at time $t$ and a sequence of 100 previous order book states for each of which we measure the Shannon entropy\cite{shannon2001mathematical} to the state at $t$, whereas $n=40$ (maximum).
-As can be seen in Figure \ref{fig:bidask-price-correlation}, the correlation of the price positions drop rapidly, however the effective change is not significant, indicating that the price changes are noticeable but overall do not differ much.
-Order book states which lay more than 40 states in the past are slightly less correlated to the current state.
-The correlation of order sizes, as shown in Figure \ref{fig:bidask-size-correlation} drops more rapid and to a much greater extent than the order prices.
+As can be seen in Figure \ref{fig:bidask-price-correlation}, the correlation of the price positions drop rapidly. However the effective change is not significant, indicating that the price changes are noticeable but overall do not differ much.
+Order book states which lay more than 40 states in the past are slightly less correlated with the current state.
+The correlation of order sizes, as shown in Figure \ref{fig:bidask-size-correlation} drops more rapidly and to a much greater extent than the order prices.
 This indicates that traders choose a broad range of order sizes.
-As a result, a window size of order book states $m$ greater than 40 states is suggested to benefit from price differences within the feature.
+As a result, a window size of order book states $m$ greater than 40 states is suggested, in order to benefit from price differences within the feature.
 
 \subsection{Feature: price and size of historical trades}
 \label{sec:data-feature-2}
-The previous feature provides information to the learner in order to reason about the hypotheses which are derived from order placed and cancelled.
-In order to reason about whether or not trade events can provide a positive learning effect to the agent to optimize order placement, we construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time} as follows.
+The previous feature provides information to the learner in order to reason about the hypotheses which are derived from orders placed and canceled.
+In order to reason about whether or not trade events can provide a positive learning effect to the agent to optimize order placement, we construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time}, as follows.
 A $Trade$ (Eq. \ref{eq:trade}) carries an order side $os$, a quantity $q$ and a price $p$.
-Similar to the previous feature, in this feature we take $n$ trades into consideration, which occurred prior the time of the order placement.
+Similar to the previous feature, in this feature, we take $n$ trades into consideration, which occurred prior the time of the order placement.
 More precisely, the feature is generated at some time $t$, when an order is placed, and therefore the time stamp $ts$ of the historical trades must satisfy $ts \leq t$.
 \\
 \\
