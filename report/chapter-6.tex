@@ -23,13 +23,13 @@ The evaluation steps will proceed chronologically, as follows:
     \\
     Results: the \textit{estimated returns} to be received for (1) the optimally chosen limit order or (2) an immediate purchase or sale by using a market order.
     
-    \item[Q-Learning agent strategy: ]
-    In Section \ref{sec:eval-qlearn}, we make an attempt to build an order placement strategy based on private variables only, by using the Q-Learner.
+    \item[Q-Learning agent policy: ]
+    In Section \ref{sec:eval-qlearn}, we make an attempt to build an order placement policy based on private variables only, by using the Q-Learner.
     This will provide insights into the performance of a naive reinforcement learner and serve as a benchmark for the following simulations proceeded in which we consider market variables.
     \\
     Results: the \textit{average reward} achieved by the Q-Learning agent that uses private variables.
 
-    \item[DQN agent strategy: ]
+    \item[DQN agent policy: ]
     Section \ref{sec:eval-dqn} applies market variables to the DQN agent.
     Hereby, we make use of Feature I: the price and size of historical orders as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-1}); as well as Feature II: the price and size of historical trades (described in Section \ref{sec:data-feature-2}).
     As in the previous evaluation step, we will find the average rewards produced by the agent.
@@ -277,7 +277,7 @@ In order to have a measure of comparison for the reinforcement learning agents t
 \centering
 \begin{tabular}{l|l|l|}
 \cline{2-3}
-& \textbf{Limit order (optimal)} & \textbf{\begin{tabular}[c]{@{}l@{}}Market order\end{tabular}} \\ \hline
+& \textbf{$\mathbb{E}$[Limit order] (optimal)} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market order]\end{tabular}} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 15.20          & -0.05                                                           \\ \hline
 \multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -27.70         & -27.70                                                          \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.06          & -1.06                                                           \\ \hline
@@ -367,7 +367,7 @@ The agent started off with the average action of $\sim$-3 which is a result of t
 Actions where then adapted to the more negative side of the order book, such that after $\sim$1500 epochs the agent choose actions as low as -20 and then adjusted and stagnated at $\sim$-15.
 The backtest, during which 1000 orders were executed on the test data set, resulted in an average reward of \textit{-1.17}.
 Comparing the results to the empirical analysis proceeded on the same data set, as shown in Figure \ref{fig:behvaiour-down}, provides means for interpretation:
-The strategy learned by the Q-Learning agent performs worse than the expected cost of a market order, which was \$-1.12 when buying 1.0 BTC and is shown in Section \ref{sec:eval-empirical}.
+The policy learned by the Q-Learning agent performs worse than the expected cost of a market order, which was \$-1.12 when buying 1.0 BTC and is shown in Section \ref{sec:eval-empirical}.
 The highly negative average actions the agent choose towards the end of the training indicates that the order might have oftentimes not been able to be filled within the time horizon and an expensive market order had to follow.
 
 The rewards received for the agents tasks to sell the assets are much more volatile than for buying, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}, and no clear improvement can be seen.
@@ -382,7 +382,7 @@ The average reward received while training to buy the asset is shown in Figure \
 Throughout the epochs, the agent was able to improve the mean reward similar as with the previous data set I, by approximately 0.5.
 Even though the trend of this data set is the opposite, the change in chosen actions correlates to the previous findings and is illustrated in Figure \ref{fig:analysis-q-learn-2-action-buy}.
 The backtest on the test data set II, resulted in an average reward of \textit{-1.04} -- again worse than the average reward received on the training set.
-A market order on this test data accounts to an average reward of -1.06, indicating that the agents strategy is saving \$0.02 when buying 1.0 BTC.
+A market order on this test data accounts to an average reward of -1.06, indicating that the agents policy is saving \$0.02 when buying 1.0 BTC.
 Considering the empirical analysis proceeded for buying on this data set, as shown in Figure \ref{fig:behvaiour-up}, and comparing it to the received rewards by the agent, implies that the agent failed to execute orders with the placed limit orders and oftentimes market orders must have followed.
 
 Similar to the sell orders placed on data set I, the rewards received for the agents tasks to sell the assets on data set II are very volatile, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}.
@@ -396,7 +396,7 @@ Hence, the agent causes to pay a premium of \$3.02 for selling 1.0 BTC.
 \centering
 \begin{tabular}{l|l|l|}
 \cline{2-3}
-& \textbf{Q-Learner} & \textbf{\begin{tabular}[c]{@{}l@{}}Market\\ Order\end{tabular}} \\ \hline
+& \textbf{Q-Learner} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market\\ Order]\end{tabular}} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (I)}}   & -1.17          & -0.05                                                           \\ \hline
 \multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -21.34         & -27.70                                                          \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.04          & -1.06                                                           \\ \hline
@@ -412,7 +412,7 @@ Clearly, this is due to the fact that the agent was not able to find the most su
 Furthermore, in order to investigate whether or not these findings were a result of the agent aiming for too much immediate reward, the same experiment was proceeded with $\gamma=0.3$ and therefore rely more extensively on the future rewards.
 However, no improvement could be achieved and instead the agent achieved similar rewards while requiring more epochs in order to converge to the same mean of actions.
 In this section we have only investigated the mean of the actions chosen throughout an epoch, which gave enough proofs that the chosen actions resulted mostly in market orders.
-Furthermore, it is to be assumed that the absence of market variables, while only relying on the given rewards, makes it hard for any learner to determine an optimal strategy.
+Furthermore, it is to be assumed that the absence of market variables, while only relying on the given rewards, makes it hard for any learner to determine an optimal policy.
 Therefore, the following section will make use of market variables in order to determine whether or not a learner can exploit the information hidden in the market and therefore act in favor of optimally placing limit orders.
 
 \section{Deep Q-Network with market features}
@@ -420,11 +420,13 @@ Therefore, the following section will make use of market variables in order to d
 In the previous section, the Q-Learning agent was trained on data sets I and II, and no significant optimization in terms of buying and selling assets was achieved.
 By considering the previously found results of the empirical analysis of the limit order placement behaviour we found that most of the limit orders placed by the Q-Learning agent were not filled within the given time horizon and instead market orders had to be submitted after the time was consumed.
 
-In this section we aim to determine whether or not the DQN agent is capable of extracting information provided by the raw market features and therefore improve the limit order placement strategy.
+In this section we aim to determine whether or not the DQN agent is capable of extracting information provided by the raw market features and therefore improve the limit order placement policy.
 The setup is the same as in the previous section where the agents task is to buy and sell 1.0 BTC within 100 seconds with discrete step size $\Delta{t}=10$ on both data sets I and II.
 Furthermore, both features, which were constructed in Chapter \ref{chap:data}, will be applied and investigated separately.
-The input shape of the CNN is therefore determined by the chosen feature and is described below.
-Furthermore, for both DQN agents, we relied on the default hyperparameters worked out by Mnih et al. \cite{mnih2015human}, as shown in Figure \ref{fig:eval-dqn-hyperparameters}.
+The input shape of the model in use that approximates the action-value function, as described in Chapter \ref{chap:preliminaries} (Section \ref{sec:deep-reinforcement-learning}), is therefore determined by the chosen feature and is described below.
+After extensive investigations with multiple such models, including various multi-layer neural networks\cite{svozil1997introduction} and a long short-term neural network (LSTM)\cite{gers1999learning} and a convolutional neural network (CNN), the best performance was achieved with the latter.
+As a result, the model is use for this analysis is the CNN, as described in Chapter \ref{chap:setup} (Section \ref{setup:dqn}).
+Therefore, for both DQN agents, we relied on the default hyperparameters worked out by Mnih et al. \cite{mnih2015human}, as shown in Figure \ref{fig:eval-dqn-hyperparameters}.
 Finally, we conclude our findings and determine the capabilities of the DQN approach (and its use of the market features) by comparing it to the expected rewards found in Section \ref{sec:eval-empirical}.
 \begin{figure}[H]
     \centering
@@ -530,7 +532,7 @@ However, when market conditions did not come in favor of the intention to either
 \centering
 \begin{tabular}{l|l|l|}
 \cline{2-3}
-& \textbf{DQN (Feature I)} & \textbf{\begin{tabular}[c]{@{}l@{}}Market\\ Order\end{tabular}} \\ \hline
+& \textbf{DQN (Feature I)} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market\\ Order]\end{tabular}} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 22.06          & -0.05                                                           \\ \hline
 \multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -39.26         & -27.70                                                          \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -2.26          & -1.06                                                           \\ \hline
@@ -628,7 +630,7 @@ However, when the market conditions came not in favor of the intention to either
 \centering
 \begin{tabular}{l|l|l|}
 \cline{2-3}
-& \textbf{DQN (Feature II)} & \textbf{\begin{tabular}[c]{@{}l@{}}Market\\ Order\end{tabular}} \\ \hline
+& \textbf{DQN (Feature II)} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market\\ Order]\end{tabular}} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 31.92          & -0.05                                                           \\ \hline
 \multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -25.15         & -27.70                                                          \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -3.56          & -1.06                                                           \\ \hline
@@ -640,16 +642,16 @@ However, when the market conditions came not in favor of the intention to either
 
 \section{Determining the limitations of the DQN agent}
 \label{sec:eval-dqn-limitations}
-In this section we intend to determine the capabilities and limitations of the DQN agent with the use of Feature I in greater detail.
+This section aims to determine the capabilities and limitations of the DQN agent with the use of Feature I in greater detail.
 Sample order submissions are investigated which uncover the actions chosen by an agent throughout one epoch.
-Therefore, we will be able to see which market situations prevented the agent from achieving a positive reward and make a statement why the agent might have chosen inappropriate actions.
+Therefore, we will be able to see which market situations prevented the agent from achieving a positive reward and conclude why the agent was not able to choose the most ppropriate actions.
 In addition, artificial order books are being created which serve as new data sets to train and test the DQN agent on.
 By doing so, we aim to determine the capabilities of the deep reinforcement learning technique under market conditions which are 1) not affected by short term fluctuations and 2) a hold constant spread between best bid and best ask is given.
 
 \subsection{Limitation arising from market situations or inappropriate actions from the agent}
-The agents inability to place an order that leads to positive rewards can be due to the following two reasons: 1) when the market situation does not allow to do so and 2) when the agent submits an inappropriate action.
+Extensive investigations have shown that the DQN agent fails to place orders that lead to constant positive rewards due to the following two reasons: 1) when the market situation does not allow to do so and 2) when the agent submits an inappropriate action.
 
-Our investigations have shown that for the first category, not just upwards and downwards trends arise difficulties for the order placement but also when the spread between the best bid and best ask price becomes large.
+Our investigations have shown that for the first category, not just upwards and downwards trends arise difficulties for the order placement to result in a positive reward, but also when the spread between the best bid and best ask price becomes large.
 The latter is shown in Figures \ref{fig:analysis-limit-wide-spread-buy} and \ref{fig:analysis-limit-wide-spread-sell} where an agent attempted the placement of a buy and sell order respectively.
 \begin{figure}[H]
     \centering
@@ -659,19 +661,6 @@ The latter is shown in Figures \ref{fig:analysis-limit-wide-spread-buy} and \ref
     \caption{Wide spread between bid and ask prevents agent from buying.}
     \label{fig:analysis-limit-wide-spread-buy}
 \end{figure}
-Before the start of the buy order placement, the spread was very close between the best bid and best ask price, as indicated by the green and red lines.
-However, during the placement of this order, the spread widened and was almost for the entire time horizon larger than \$50.00.
-Since the actions are segmented in discrete \$0.10 steps, with a total of 101 steps, reaching from -\$5.00 to +\$5.00 relative to the market price, the agent had no chance of placing the orders close to the best ask price.
-As a result, the entire inventory of 1.0 BTC had to be bought by using a market order at the end of the time horizon, and the trades are marked with a cross.
-This generated a negative reward of -8.08.
-The same market situation is demonstrated during which the agent initiated the process of placing a sell order.
-Similarly, the pricing level was almost never close to the best bid price, except for once.
-As a result, a market order was followed with which the agent sold the remaining 0.9 BTC to a decreased price that resulted in a negative reward of -47.28.
-In addition, since there was not much liquidity offered by buyers, the market order was partially filled for ever decreasing prices, as indicated with the crosses.
-
-A way to overcome this limitation would be to either increase the number of steps or to increase the action step size.
-Increasing the number of steps would enlarge the action space and therefore training the agent would become more difficult and computationally more expensive as the agent has more options to choose from.
-Increasing the action step size could arise inefficiencies when the spread between best bid and best ask is low as therefore the agent would likely place order too deep or too height in the order book.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -680,16 +669,31 @@ Increasing the action step size could arise inefficiencies when the spread betwe
     \caption{Wide spread between bid and ask prevents agent from selling.}
     \label{fig:analysis-limit-wide-spread-sell}
 \end{figure}
+Prior to the start of the buy order placement, the spread was very close between the best bid and best ask price, as indicated by the green and red lines.
+However, during the placement of this order, the spread widened and remained almost for the entire time horizon larger than \$50.00.
+Since the actions are segmented in discrete steps of $\Delta{a}=0.10$, with a total of 101 steps, reaching from -\$5.00 to +\$5.00 relative to the market price, the agent had no chance of placing the orders close to the best ask price.
+As a result, the entire inventory of 1.0 BTC bought by using a market order at the end of the time horizon (a trade is marked with a cross).
+This generated a negative reward of -8.08.
+The same market situation is demonstrated during which the agent initiated the process of placing a sell order.
+Similarly, the pricing level was almost never close to the best bid price, except for once.
+As a result, a market order was followed with which the agent sold the remaining 0.9 BTC to a decreased price that resulted in a negative reward of -47.28.
+In addition, since there was not much liquidity offered by buyers, the market order was partially filled at decreasing price levels, as indicated by the crosses in the figure.
 
+A way to overcome this limitation would be to either increase the number of steps or to increase the action step size.
+Increasing the number of steps would enlarge the action space and therefore training the agent would become more difficult and computationally more expensive as the agent has more options to choose from.
+Increasing the action step size could arise inefficiencies when the spread between best bid and best ask is low as therefore the agent would likely place order too deep or too height in the order book.
+\\
+\\
 An example of the seconds category, where the agent clearly failed to select an appropriate action, is shown in Figure \ref{fig:analysis-limit-impatient} below.
-As is illustrated, the market price and the best bid and ask price were declining before the initialization of a sell order placement. 
+As is illustrated, the market price and the best bid and ask price were declining before the initialization of the sell order placement. 
 The agent then decided to cross the spread with the first step and choose the action 28, in which it was willing to sell for \$2.80 below the market price.
 By doing this, the order was immediately filled and resulted in a negative reward of -1.71.
 Ideally, the agent should have been patient and decide to place a limit order below the spread.
-The, in a subsequent step, the order could have been filled with a negative action, which would have resulted in a positive reward.
-It is to be assumed that the shown reaction of the agent was due to over-fitting of the previous declining market situation, in which it would have been indeed the better choice to immediately fill the sell order.
+Then, in a subsequent step, the order could have been filled with a negative action, which would have resulted in a positive reward.
+It is to be assumed that the agent failed to generalize the development of the order book with the provided feature set.
+Instead, the agent over-fitting on the previous declining market situation, in which it would have been indeed the better choice to immediately fill the sell order.
 
-Such behaviour could likely to be improved by 1) enlarging the window size of the feature provided to the agent in order to cover long term market movements and 2) by increasing the training epochs which include such market situations.
+Such behaviour is likely to be improved by 1) enlarging the window size of the feature provided to the agent in order to cover long term market movements and 2) by increasing the training epochs in order to make the agent more aware of such pitfalls.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -702,11 +706,11 @@ Such behaviour could likely to be improved by 1) enlarging the window size of th
 \subsection{Capabilities evaluated using artificial limit order books}
 
 Introducing an artificially created order book allows to determine the capabilities of a reinforcement learning agent in greater detail.
-We define the formation of the order book states over time and therefore can calculate the optimal order placement strategy in advance.
-In doing this, we can investigate whether or not an agent is able to find this strategy.
-In addition, by constructing such artificial order books, we are able to remove any short term market fluctuations and therefore provide more consistent rewards to the agent as it is learning to find the optimal strategy.
+We define the formation of the order book states over time and therefore can calculate the optimal order placement policy in advance.
+In doing this, we can investigate whether or not an agent is able to find the optimal placement policy.
+In addition, by constructing such artificial order books, we are able to remove any short term market fluctuations and therefore provide more consistent rewards to the agent during training.
 Figure \ref{fig:eval-limit-artificial} below shows the setup of two such order books.
-Both of which consists of 10 minutes worth of data with order book states changing every 1 second, resulting in a total of 600 data points that represent the order book states.
+Both consist of 10 minutes worth of data with order book states changing every 1 second, resulting in a total of 600 data points that represent the order book states.
 Every such order book state consists of 25 levels on both the bid and ask side with a deviation of \$0.10 for each level, as shown in the zoomed panes.
 In addition, on every such level 1.0 BTC is listed on the bid and ask side, which ensures that an agent can fill the entire order with any chosen limit level.
 The change of the order book states is then determined by a function.
@@ -714,12 +718,12 @@ The change of the order book states is then determined by a function.
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{eval-limit-down}
-        \caption{Limit order book with linear development with slope $a=-0.1$}
+        \caption{Linear configuration of order book states with slope $a=-0.1$}
         \label{fig:eval-limit-down}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{eval-limit-sine}
-        \caption{Limit order book development according to sine function with $f=10$}
+        \caption{Order book states configured according to sine function with $f=10$}
         \label{fig:eval-limit-sine}
     \end{subfigure}
     \caption{Artificial order books with duration of 10 minutes}\label{fig:eval-limit-artificial}
@@ -727,36 +731,53 @@ The change of the order book states is then determined by a function.
 
 The first example, as shown in Figure \ref{fig:eval-limit-down}, is a linear function which defines the market price to start at \$10'000 and end at \$9'940.
 The price therefore falls by \$0.1 with every second.
-An agent should therefore realize that for buying the actions chosen should be negative for the given time horizon such that a trade transacts at the end of this horizon to a much lower price.
-The invariable reward after 100 seconds and choosing a random state to start at, should therefore be \$10.0.
-Contrarily, the agent should realize that the loss when selling can be minimized by selecting a very positive action that results in an immediate sale.
+An agent should therefore realize that for buying the actions chosen should be negative ($a<0$) for each step such that a trade transacts at the end of the time horizon to a much lower price.
+The invariable reward after 100 seconds by choosing a random state to start the order placement, should therefore be \$10.0.
+Contrarily, the agent should realize that the loss, when selling, can be minimized by selecting a very positive action that results in an immediate sale.
 The invariable reward should therefore be -\$0.10.
 
 The second example, as shown in Figure \ref{fig:eval-limit-sine}, applies a sine function over the order book states.
-The frequency was set to 10 such that within one minute a complete sine wave is generated with the amplitudes peaking at \$10'010.0 and \$9'990.0 respectively.
-An agent is therefore expected to learn to place limit orders according to the low and high peak for buy and sell orders respectively.
+The frequency was set to 10 such that within one minute at least one complete sine wave is generated with the amplitudes peaking at \$10'010.0 and \$9'990.0 respectively.
+An agent is expected to learn to place limit orders according to the low and high peak for buy and sell orders respectively.
 The average reward for this example will not serve as an adequate measure since depending on which state the agent starts (e.g. at which point in the amplitude) the optimal rewards can be different.
 Instead, we rely on the volume weighted average price directly and therefore expect the agent to buy close to \$9'990.0 and sell close to \$10'010.0.
 \\
 \\
-Both artificial order book constellations were trained and tested with the DQN agent.
+Both artificial order book constellations, in form of feature type I, were trained and tested with the DQN agent.
 The configuration of the agent was chosen equivalent to the setup described in Section \ref{sec:eval-dqn} and a total of 5000 epochs were proceeded for training and 1000 epochs for testing.
-For the first example, that shows a clear downwards trend, the average reward during the backtest of buying assets resulted in \$9.45 and for selling in -\$0.10.
-These results indicate that the agent was indeed able to find a near-optimal strategy.
+For the first example, that shows a clear downwards trend, the average reward during the backtest of buying assets resulted in \$9.45 and for selling in \$-0.10.
+These results indicate that the agent was indeed able to find a near-optimal policy.
 For the second example, that shows the multivariate sine wave that represents the order book, the average volume weighted average price for buying was \$9'992.0 and for selling \$10'007.0.
-This indicates that the agent was able to improve to an near-optimal strategy with regards to the flucuating but stationary development of the order book.
+This indicates that the agent was able to improve to an near-optimal policy with regards to the fluctuating but stationary development of the order book.
 
 \section{Conclusion of reinforcement learning on limit order placement}
 
-Inability to learn under hard market conditions where rewards are dominated by negative values.
+With the evaluation procedure introduced and undergone in this chapter it was shown that reinforcement learning techniques are indeed suitable for optimizing limit order placement for cryptocurrency markets.
+The findings are shown in Table \ref{tbl:analysis-conclusion}
+First, we empirically estimated the potential improvements that can be achieved by placing orders with the the most optimal limit level compared to an immediate sale or purchase using a market order.
+It has been shown that when the development of the market price comes in favor of the to limit order placement, namely when the price is falling while buying or when the price is rising while buying, then the reward for the optimal limit order is expected to be significantly higher.
+In situations where the market price does not come in favor, then no improvement can be achieved and the optimal limit level is to cross the spread which declares the order to become a market order that fulfills the demand to buy or sell immediately.
+Subsequently, after gaining the knowledge of the expected costs of a market- or optimal limit order, a Q-Learning agent was trained and tested without the knowledge of market data but with private variables (inventory and time horizon) only.
+The average rewards achieved during a backtest have shown that this agent was not able to take advantage of market price movements that come in favour of the order placement process.
+However, the agent was able to reduce the costs when the market price development does not come in favor of either buying or selling assets.
+In fact, the Q-Learning agent performed best among all considered agents, when it comes to reducing the occurrence of unavoidable losses.
+Subsequently, the DQN agent was evaluated under the independent application of two feature sets.
+It has been shown that the application of feature II (a sequence of historical trades) allows for a slightly better estimation of choosing actions for the limit order placement than the application of feature I (a window of historical order book states).
+Although the DQN was able to learn a policy that allows to optimize the order placement when market conditions come in favor of buying or selling, the agent performed worse than the expected market order when conditions were not ideal.
+In order to understand why no policy could be learned that would allow to constantly result in rewards better than the ones expected by using a market order, the actions taken by the DQN agent were analyzed.
+It has been shown that 1) a wide spread between the best bid and ask price and 2) over-fitting on the given market features prevented the agent from choosing actions which would fill an order to a price better than the market price.
+Furthermore, artificially created order books were created and features derived therefrom.
+It was shown that in such a setting, where short term market fluctuations are absent and liquidity on the buyer and seller side is constantly provided, a deep reinforcement learning agent is able to find a near-optimal placement policy.
+This gives reasons to believe that there is potential to further improve the limit order placement with the use of deep reinforcement learning by 1) increasing the data sets and training epochs as well as 2) increasing the action space in order to consider even more actions to be taken for each step within an epoch.
+However, this would require significantly more computational resources and time than what was available for this work.
 
 \begin{table}[H]
 \centering
-\caption{My caption}
-\label{my-label}
+\caption{Summary of expected and achieved average rewards from empirical evaluations and reinforcement learning applications.}
+\label{tbl:analysis-conclusion}
 \begin{tabular}{l|l|l|l|l|l|}
 \cline{2-6}
-\textbf{}& \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Market \\ Order\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Limit order\\ (optimal)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{Q-Learning}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN\\ (Feature I)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN\\ (Feature II)\end{tabular}}} \\ \hline
+\textbf{}& \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}$\mathbb{E}$[Market \\ Order]\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}$\mathbb{E}$[Limit order]\\ (optimal)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{Q-Learning}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN\\ (Feature I)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN\\ (Feature II)\end{tabular}}} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (I)}}   & -0.05     & 15.20     & -1.17         & 22.06     & {\ul 31.92}   \\ \hline
 \multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -27.70    & -27.70    & {\ul -21.34}  & -39.26    & -25.15        \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.06     & -1.06     & {\ul -1.04}   & -2.26     & -3.56         \\ \hline
