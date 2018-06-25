@@ -6,7 +6,7 @@ We will also rely on the knowledge provided in this chapter when describing data
 We rely on the reader to be patient while reading this chapter as, although the interplay between the components we will introduce may not be immediately obvious, this will become clear in Chapter \ref{chap:setup} when the components are used to build a reinforcement learning environment and agents. 
 Firstly, the concept of the order book (which was introduced above) is described in greater detail, as this serves as the data structure for the  historical data collected.
 Subsequently, a simplified match engine is described. We will use this to emulate a local broker that can match orders using the historical order book.
-The concept of a time series will then be introduced as the order book is essentially a multivariate time series.
+%The concept of a time series will then be introduced as the order book is essentially a multivariate time series.
 Furthermore, reinforcement learning is introduced in order to identify the differences between it and other machine learning techniques. This is followed by a detailed explanation of all its components.
 Finally, deep reinforcement learning is introduced as an extension to the previously described reinforcement learning principles.
 
@@ -474,6 +474,7 @@ The \textit{actor-critic agent} is a combination of a value-based and policy-bas
 \textit{Model-based agents} attempt to approximate the environment using a model. It then suggests the best possible behavior.
 
 \subsection{Deep Reinforcement Learning}
+\label{sec:deep-reinforcement-learning}
 
 From \cite{deeprlcourse} goes: \textit{``Reinforcement learning can be naturally integrated with artificial neural networks to obtain high-quality generalization''}.
 The term \textit{generalization} refers to the action-value function (Eq. \ref{eq:optimal-action-value-function}) and the fact that this value is estimated for each state separately--which becomes totally impractical for large state spaces that can occur in real world scenarios.

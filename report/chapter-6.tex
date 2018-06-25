@@ -53,7 +53,7 @@ In addition, as explained in the following section, the expected return of a lea
 More precisely, \textit{data set I}, as shown in Figure \ref{fig:sample-down-price}), is a downward trend (indicated by the bid/ask mid-price) and consists of 1132 order book states with a duration of 1681.8 seconds, resulting in 0.67 states per second.
 In contrast, \textit{data set II}, as shown in Figure \ref{fig:sample-up-price}, consists of 1469 order book states with a duration of 1746.0 seconds, resulting in 0.84 states per second, which indicates that there was slightly more pressure in terms of orders placed and canceled in this data set.
 When reinforcement learning is applied, the data sets are split with ratio $2:1$, resulting in a training set of $\sim$20 minutes and a test set of $\sim$10 minutes.
-Alt ought more than two data sets would contribute towards a more generalizes outcome of the evaluation, this was computationally not feasible within this work.
+Although more than two data sets would contribute towards a more generalizes outcome of the evaluation, this was computationally not feasible within this work.
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -750,7 +750,9 @@ These results indicate that the agent was indeed able to find a near-optimal pol
 For the second example, that shows the multivariate sine wave that represents the order book, the average volume weighted average price for buying was \$9'992.0 and for selling \$10'007.0.
 This indicates that the agent was able to improve to an near-optimal policy with regards to the fluctuating but stationary development of the order book.
 
-\section{Conclusion of reinforcement learning on limit order placement}
+\section{Discussion of reinforcement learning on limit order placement}
+
+\subsection{Real world versus artificial data sets}
 
 With the evaluation procedure introduced and undergone in this chapter it was shown that reinforcement learning techniques are indeed suitable for optimizing limit order placement for cryptocurrency markets.
 The findings are shown in Table \ref{tbl:analysis-conclusion}
