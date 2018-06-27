@@ -1,4 +1,4 @@
-\chapter{Order placement evaluation and discussion of results}
+\chapter{Evaluation procedure and discussion of results}
 \label{chap:analysis}
 
 In the previous Chapter, we built a reinforcement learning environment with the use of the components which were described earlier, in Chapter \ref{chap:preliminaries}.
@@ -678,22 +678,7 @@ The same market situation is demonstrated during which the agent initiated the p
 Similarly, the pricing level was almost never close to the best bid price, except for once.
 As a result, a market order was followed with which the agent sold the remaining 0.9 BTC to a decreased price that resulted in a negative reward of -47.28.
 In addition, since there was not much liquidity offered by buyers, the market order was partially filled at decreasing price levels, as indicated by the crosses in the figure.
-
-A way to overcome this limitation would be to either increase the number of steps or to increase the action step size.
-Increasing the number of steps would enlarge the action space and therefore training the agent would become more difficult and computationally more expensive as the agent has more options to choose from.
-Increasing the action step size could arise inefficiencies when the spread between best bid and best ask is low as therefore the agent would likely place order too deep or too height in the order book.
-\\
-\\
-An example of the seconds category, where the agent clearly failed to select an appropriate action, is shown in Figure \ref{fig:analysis-limit-impatient} below.
-As is illustrated, the market price and the best bid and ask price were declining before the initialization of the sell order placement. 
-The agent then decided to cross the spread with the first step and choose the action 28, in which it was willing to sell for \$2.80 below the market price.
-By doing this, the order was immediately filled and resulted in a negative reward of -1.71.
-Ideally, the agent should have been patient and decide to place a limit order below the spread.
-Then, in a subsequent step, the order could have been filled with a negative action, which would have resulted in a positive reward.
-It is to be assumed that the agent failed to generalize the development of the order book with the provided feature set.
-Instead, the agent over-fitting on the previous declining market situation, in which it would have been indeed the better choice to immediately fill the sell order.
-
-Such behaviour is likely to be improved by 1) enlarging the window size of the feature provided to the agent in order to cover long term market movements and 2) by increasing the training epochs in order to make the agent more aware of such pitfalls.
+A way to overcome this limitation would be to either increase the number of steps or to increase the action step size and will be addressed in Chapter \ref{chap:discussion}.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -702,6 +687,14 @@ Such behaviour is likely to be improved by 1) enlarging the window size of the f
     \caption{Wide spread between bid and ask prevents agent from selling.}
     \label{fig:analysis-limit-impatient}
 \end{figure}
+An example of the seconds category, where the agent clearly failed to select an appropriate action, is shown in Figure \ref{fig:analysis-limit-impatient}.
+As is illustrated, the market price and the best bid and ask price were declining before the initialization of the sell order placement. 
+The agent then decided to cross the spread with the first step and choose the action 28, in which it was willing to sell for \$2.80 below the market price.
+By doing this, the order was immediately filled and resulted in a negative reward of -1.71.
+Ideally, the agent should have been patient and decide to place a limit order below the spread.
+Then, in a subsequent step, the order could have been filled with a negative action, which would have resulted in a positive reward.
+It is to be assumed that the agent failed to generalize the development of the order book with the provided feature set.
+Instead, the agent reacted according to the previous declining market situation, in which it would have been indeed the better choice to immediately fill the sell order.
 
 \subsection{Capabilities evaluated using artificial limit order books}
 
@@ -750,16 +743,14 @@ These results indicate that the agent was indeed able to find a near-optimal pol
 For the second example, that shows the multivariate sine wave that represents the order book, the average volume weighted average price for buying was \$9'992.0 and for selling \$10'007.0.
 This indicates that the agent was able to improve to an near-optimal policy with regards to the fluctuating but stationary development of the order book.
 
-\section{Discussion of reinforcement learning on limit order placement}
-
-\subsection{Real world versus artificial data sets}
+\section{Conclusion of the evaluation}
 
 With the evaluation procedure introduced and undergone in this chapter it was shown that reinforcement learning techniques are indeed suitable for optimizing limit order placement for cryptocurrency markets.
 The findings are shown in Table \ref{tbl:analysis-conclusion}
 First, we empirically estimated the potential improvements that can be achieved by placing orders with the the most optimal limit level compared to an immediate sale or purchase using a market order.
 It has been shown that when the development of the market price comes in favor of the to limit order placement, namely when the price is falling while buying or when the price is rising while buying, then the reward for the optimal limit order is expected to be significantly higher.
 In situations where the market price does not come in favor, then no improvement can be achieved and the optimal limit level is to cross the spread which declares the order to become a market order that fulfills the demand to buy or sell immediately.
-Subsequently, after gaining the knowledge of the expected costs of a market- or optimal limit order, a Q-Learning agent was trained and tested without the knowledge of market data but with private variables (inventory and time horizon) only.
+Subsequently, the Q-Learning agent was trained and tested without the knowledge of market data but with private variables (inventory and time horizon) only.
 The average rewards achieved during a backtest have shown that this agent was not able to take advantage of market price movements that come in favour of the order placement process.
 However, the agent was able to reduce the costs when the market price development does not come in favor of either buying or selling assets.
 In fact, the Q-Learning agent performed best among all considered agents, when it comes to reducing the occurrence of unavoidable losses.
@@ -770,9 +761,6 @@ In order to understand why no policy could be learned that would allow to consta
 It has been shown that 1) a wide spread between the best bid and ask price and 2) over-fitting on the given market features prevented the agent from choosing actions which would fill an order to a price better than the market price.
 Furthermore, artificially created order books were created and features derived therefrom.
 It was shown that in such a setting, where short term market fluctuations are absent and liquidity on the buyer and seller side is constantly provided, a deep reinforcement learning agent is able to find a near-optimal placement policy.
-This gives reasons to believe that there is potential to further improve the limit order placement with the use of deep reinforcement learning by 1) increasing the data sets and training epochs as well as 2) increasing the action space in order to consider even more actions to be taken for each step within an epoch.
-However, this would require significantly more computational resources and time than what was available for this work.
-
 \begin{table}[H]
 \centering
 \caption{Summary of expected and achieved average rewards from empirical evaluations and reinforcement learning applications.}
