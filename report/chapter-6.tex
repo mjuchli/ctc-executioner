@@ -424,9 +424,9 @@ In this section we aim to determine whether or not the DQN agent is capable of e
 The setup is the same as in the previous section where the agents task is to buy and sell 1.0 BTC within 100 seconds with discrete step size $\Delta{t}=10$ on both data sets I and II.
 Furthermore, both features, which were constructed in Chapter \ref{chap:data}, will be applied and investigated separately.
 The input shape of the model in use that approximates the action-value function, as described in Chapter \ref{chap:preliminaries} (Section \ref{sec:deep-reinforcement-learning}), is therefore determined by the chosen feature and is described below.
-After extensive investigations with multiple such models, including various multi-layer neural networks\cite{svozil1997introduction} and a long short-term neural network (LSTM)\cite{gers1999learning} and a convolutional neural network (CNN), the best performance was achieved with the latter.
-As a result, the model is use for this analysis is the CNN, as described in Chapter \ref{chap:setup} (Section \ref{setup:dqn}).
-Therefore, for both DQN agents, we relied on the default hyperparameters worked out by Mnih et al. \cite{mnih2015human}, as shown in Figure \ref{fig:eval-dqn-hyperparameters}.
+After extensive investigations with multiple such models, including a multi-layer neural network\cite{svozil1997introduction} (2 hidden layers) and a long short-term neural network (LSTM)\cite{gers1999learning} and the convolutional neural network (CNN) described in Section \ref{setup:dqn}.
+The best performance was achieved with the latter and thus this model is used for this analysis.
+For both DQN agents, we relied on the default hyperparameters worked out by Mnih et al. \cite{mnih2015human}, as shown in Figure \ref{fig:eval-dqn-hyperparameters}.
 Finally, we conclude our findings and determine the capabilities of the DQN approach (and its use of the market features) by comparing it to the expected rewards found in Section \ref{sec:eval-empirical}.
 \begin{figure}[H]
     \centering

@@ -66,25 +66,37 @@ As a result, the constructed features will contain the entire information and as
     However, since only up to 1.0 BTC were used for buying and selling, which is insignificant in terms of having a market impact\cite{hautsch2012market}, it was considered as safe to assume that the approximation of the matching process is sufficiently correct.
     Otherwise, the only way to overcome this limitation would be to train and test on live market data and therefore make real purchases and sales.
     
-    The reinforcement learning environment built in this work confirms that reinforcement learning is a very suitable choice for the optimization of the limit order placement problem.
-    First and foremost, the end-to-end learning process, which is known to be successful in other domains\cite{amodei2016deep, mnih2015human, mnih2013playing}, proofed to be a suitable choice in our context.
-    We were able to regard the underlying order matching process as a black-box, which allowed the environment itself to be kept relatively simple. 
-    Furthermore, with the chosen setup, the agent can improve its policy with the use of a reward function whose outcome is the volume weighted average price that is directly determined by the outcome of the matching process.
-    Furthermore, this setup not only allows to be used by multiple agents but also enabled us to empirically evaluate the expected rewards for certain actions taken by the agent.
-    However, the fact that the limit order placement process is non-trivial and can be attempted in many ways, it required the environment to feature a variety of configuration parameters, as defined in Section \ref{setup:parameters}.
-    As a result, the we were required to limit the scope of possible order placement constellations as follows:
-    Most notably are 
-    
+    The reinforcement learning environment built in this work confirms that reinforcement learning is a suitable for the optimization of the limit order placement problem.
+    The end-to-end learning process, which is known to be successful in other domains\cite{amodei2016deep, mnih2015human, mnih2013playing}, allowed us to regard the underlying order matching process as a black-box.
+    This in turn allowed the environment itself to be kept relatively simple.
+    With developed setup, the agent can improve its policy with the use of a reward function whose outcome is the volume weighted average price that is directly determined by the outcome of the matching process.
+    Furthermore, the environment can not only be used by multiple agents in a standardized way but also allowed us to empirically evaluate the expected rewards for certain actions taken by the agent.
+    The fact that the limit order placement process is non-trivial and can be attempted in many ways, we were required to equip the environment with a variety of configuration parameters, as defined in Section \ref{setup:parameters}.
+    While this provides the ability to define evaluation setups very precisely, it also introduces the inevitable obligation to limit the scope of how the problem is attempted to be optimized.
+    We have decided to define the discrete time step size $\Delta{t}=10 seconds$, which represents the duration of how long an order remains in the order book for each step taken by the agent and therefore limits the number of steps to be taken throughout one epoch to $\frac{H}{\Delta{t}}=10$.
+    With the empirical investigation (Section \ref{sec:eval-empirical}) we have shown that a placement of 10 seconds diverges from the expected rewards received for placing the order for a total of 100 seconds.
+    Naturally, if the agent decides for each step to choose the same action, the result is equivalent to a placement over 100 seconds.
+    Therefore, the benefit of the time step parameter agents ability to intercept and change the action accordingly, in case a sudden change in the market data suggests to place the order at a difference price level.
+    Investigations were made with time step parameters smaller 10 seconds and no improvements could be made.
+    The only difference was an increased training time as the agent had more steps to take for one epoch.
+    Another important parameter is the size of the action space, which we defined to be consisting of 50 negative and 50 positive actions that result in a total action space size of $|A|=101$.
+    The empirical investigation in Section \ref{sec:eval-empirical} has confirmed that this is indeed the range of actions which have most influence in the posting of order over a time horizon of 100 seconds.
+    However, the limitations found in Section \ref{sec:eval-dqn-limitations} have shown that there are rare occasions where the defined action space is too small and therefore the agent is unable to place the order at a price level close to the offers of potential buyers or sellers.
+    Increasing the already rather large action space would certainly allow the agent to place orders at the appropriate price levels, however, this comes with the cost of increased training required as well as a greater potential for misplacing orders.
+    Alternatively, the action step size, which is currently \$0.10, would allow to increase the price range at which to place orders by maintaining equal action space size.
+    However, this implies that the agent would make more coarse decisions in terms of the price level at which to place the order and therefore potential optimal placements would be out of reach.
 
-\ref{sec:eval-dqn-limitations}
-Increasing the number of steps would enlarge the action space and therefore training the agent
-would become more difficult and computationally more expensive as the agent has more options to choose
-from. Increasing the action step size could arise inefficiencies when the spread between best bid and best ask
-is low as therefore the agent would likely place order too deep or too height in the order book.
-
-agents reaction according to the market situation provided by the feature.
-Such behaviour is likely to be improved by 1) enlarging the window size of the feature provided to the agent in order to cover long term market movements and 2) by increasing the training epochs in order to make the agent more aware of such pitfalls.
-
+    The Q-Learning and DQN agents developed are similar in terms of the reward function in use that underlies the principles of the Bellman equation (Eq. \ref{eq:bellman}).
+    However, much complexity is added to the DQN agent, such as the use of an \textit{experience replay} and most importantly the use of a neural network that serves as \textit{value function approximator}.
+    While the Q-Learning agent can be suitable when no market variables, or an approximation thereof, are applied, it was found not to be an appropriate choice for the purpose of optimizing the limit order placement problem in general.
+    Market features, such as the ones constructed in Chapter \ref{chap:data}, would not provide any benefit when being applied to the Q-Learning agent.
+    Reason for this is that Q-Learning makes use of a look-up table which records a combination of all visited observation states and chosen actions.
+    Since the observation states are derived from market data at a given point in time, most observations states become unique and thus learning time is expected to scale exponentially with the size of the state space\cite{whitehead1991complexity}.
+    To overcome this limitation, market features would have to be approximated drastically, as demonstrated in \cite{nevmyvaka2006reinforcement}.
+    Contrarily, and for reasons stated above, the DQN proofed to be a suitable choice for our purposes.
+    We briefly investigated the architecture of the neural network was investigated briefly, including the experimentation with long short-term memory\cite{} as well as a 2-layer.
+    Our investigations have shown that the CNN architecture proposed in \cite{mnih2015human} performed best and was chosen for further evaluations in Chapter \ref{chap:analysis}.
+    Clearly, there is room for improvements with regard to parameter tuning, which we neglected in this work due to the prioritization of the architectural aspects of the reinforcement learning setup and therefore suggest this as future work.
 
 \subsection{RQ 1.3: How can one evaluate a reinforcement learning agent in the context of order placement?}
 
@@ -111,24 +123,23 @@ The near-optimal performance achieved during the evaluation of the DQN on artifi
 It is to be assumed that by 1) increasing the data sets and training epochs as well as 2) increasing the action space in order to consider even more actions to be taken for each step within an epoch.
 However, this would require significantly more computational resources and time than what was available for this work.
 
+q-learning Nevertheless, the agent proofed to be a suitable choice for the benchmark of the DQN agent by considering the private variables $I$ and $H$ only.
+
 model parameters
 
+agents reaction according to the market situation provided by the feature.
+Such behaviour is likely to be improved by 1) enlarging the window size of the feature provided to the agent in order to cover long term market movements and 2) by increasing the training epochs in order to make the agent more aware of such pitfalls.
 
-\section{Strengths and limitations of this study}
-
-\subsection{Approximation of the order matching process}
-
-\subsection{Data sets chosen for evaluation}
-data samples chosen during feature construction
-data samples chosen during evaluation
-Real world versus artificial data sets
-
-\subsection{Flexibility of the reinforcement environment}
-parameters, openai, market making,
-
-\subsection{Generic approach chosen}
-allows to extend for any financial market and product as long as limit order book data given
-
+%\section{Strengths and limitations of this study}
+%\subsection{Approximation of the order matching process}
+%\subsection{Data sets chosen for evaluation}
+%data samples chosen during feature construction
+%data samples chosen during evaluation
+%Real world versus artificial data sets
+%\subsection{Flexibility of the reinforcement environment}
+%parameters, openai, market making,
+%\subsection{Generic approach chosen}
+%allows to extend for any financial market and product as long as limit order book data given
 
 \section{Recommendations and future work}
 
