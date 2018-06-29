@@ -30,7 +30,7 @@ This section aims to revisit the questions stated, conclude what has been achiev
 The first attempt to find patterns in market data was made by investigating the relationship between trade activity (volume) and price change and volatility, as proposed by Karpoff et al. \cite{karpoff1987relation}.  
 As traders submit limit orders to buy (sell), they impact the bid (ask) volumes of the  limit order book and thereby gives us a view of the traders’ intentions and would allow  to gain insight into the direction of the upcoming price changes.
 To quantify this intent, we looked at the difference between the bid and ask volume, called order imbalance as stated in Section \ref{sec:data-hypthesis-order-volume}.
-Even though imbalance was clearly present, the high volatility in the Bitcoin/USD market prevented us from finding obvious correlation with the direction of future price movements.
+Even though imbalance was clearly present, the high volatility in the Bitcoin/USD market prevented us from finding obvious correlation to the direction of future price movements.
 This gave reasons to believe that the data had to be investigated on the raw market event level\cite{kane2011analyzing}.
 Market events occurred over time were investigated, and more importantly, visualized using volume maps.
 This allowed to detect patterns and associations to future price changes could be made, as described in Section \ref{sec:data-hypthesis-order-trade-volume-time}.
@@ -70,7 +70,7 @@ As a result, the constructed features will contain the entire information and as
     The end-to-end learning process, which is known to be successful in other domains\cite{amodei2016deep, mnih2015human, mnih2013playing}, allowed us to regard the underlying order matching process as a black-box.
     This in turn allowed the environment itself to be kept relatively simple.
     With developed setup, the agent can improve its policy with the use of a reward function whose outcome is the volume weighted average price that is directly determined by the outcome of the matching process.
-    Furthermore, the environment can not only be used by multiple agents in a standardized way but also allowed us to empirically evaluate the expected rewards for certain actions taken by the agent.
+    Furthermore, the environment can not only be used by multiple agents in a standardized way but also allowed us to estimate the expected rewards for certain actions taken by the agent.
     The fact that the limit order placement process is non-trivial and can be attempted in many ways, we were required to equip the environment with a variety of configuration parameters, as defined in Section \ref{setup:parameters}.
     While this provides the ability to define evaluation setups very precisely, it also introduces the inevitable obligation to limit the scope of how the problem is attempted to be optimized.
     We have decided to define the discrete time step size $\Delta{t}=10 seconds$, which represents the duration of how long an order remains in the order book for each step taken by the agent and therefore limits the number of steps to be taken throughout one epoch to $\frac{H}{\Delta{t}}=10$.
@@ -94,7 +94,7 @@ As a result, the constructed features will contain the entire information and as
     Since the observation states are derived from market data at a given point in time, most observations states become unique and thus learning time is expected to scale exponentially with the size of the state space\cite{whitehead1991complexity}.
     To overcome this limitation, market features would have to be approximated drastically, as demonstrated in \cite{nevmyvaka2006reinforcement}.
     Contrarily, and for reasons stated above, the DQN proofed to be a suitable choice for our purposes.
-    We briefly investigated the architecture of the neural network was investigated briefly, including the experimentation with long short-term memory\cite{} as well as a 2-layer.
+    We briefly investigated the architecture of the neural network was investigated briefly, including the experimentation with long short-term memory\cite{gers1999learning} as well as a 2-layer.
     Our investigations have shown that the CNN architecture proposed in \cite{mnih2015human} performed best and was chosen for further evaluations in Chapter \ref{chap:analysis}.
     Clearly, there is room for improvements with regard to parameter tuning, which we neglected in this work due to the prioritization of the architectural aspects of the reinforcement learning setup and therefore suggest this as future work.
 
@@ -108,8 +108,23 @@ As a result, the constructed features will contain the entire information and as
     This allowed to detect the limitations of the agent as well as the environment in greater detail.
     \\
     \\
+    The way in which order placement was simulated is heavily based on suggestions made regarding backtesting by Pedro et al. \cite{de2018advances}.
+    Particularly, the selection of random order book states as the starting point of an epoch the agent initializes drastically reduces the chances for possible over-fitting.
+    With this in mind, we considered data sets which show different market price constellations and furthermore developed a way to create artificial order books to train and test the agent on.
+    It is obvious that only by considering an infinite amount of data sets a completely generalized statement about the optimization capabilities can be made, however, and as mentioned earlier, this comes at the cost of time and computational resources.
+    The artificial data sets have therefore proven to be valuable since the possible optimization factor is known prior the validation of the model. 
     
+    The empirical investigation step executed prior the training of a policy has provided baseline performance results.
+    The expected costs for market and limit orders where determined and the results have shown that the expected behaviour for limit order placement is similar to what was proposed by Kearns et al. \cite{nevmyvaka2005electronic} when working with traditional stocks.
+    However, we have shown more detailed insights of the behaviour with respect to the given time horizon for the placements of orders.
+    The authors of \cite{nevmyvaka2005electronic} stated that, overall, the optimal price at which to place an order is just below the spread price.
+    This statement is true for the cryptocurrency market as well, however, only under the condition that the time horizon is chosen either very small ($H\leq10 seconds$) or rather large ($H>15 minutes$).
+    Otherwise, for example when $H=100 seconds$, we have demonstrated that the optimal price at which to place an order changes drastically depending on the fluctuations of the market price.
+    Namely, for buying, limit orders should be placed deep in the order book when market prices are falling, and high in the book when the price is rising.
+    Contrarily, for selling, orders should be place high in the book when the market price is falling and low in the book when the price is rising.
+    These insights not only provided knowledge of how to optimize the placement orders but also generated means to compare the performance achieved by reinforcement learning agents.
     
+    average reward and actions
     
 \subsection{RQ 1.4: In which way do the previously constructed features enable a reinforcement learning agent to improve the way it places orders?}
 
@@ -130,18 +145,17 @@ model parameters
 agents reaction according to the market situation provided by the feature.
 Such behaviour is likely to be improved by 1) enlarging the window size of the feature provided to the agent in order to cover long term market movements and 2) by increasing the training epochs in order to make the agent more aware of such pitfalls.
 
-%\section{Strengths and limitations of this study}
-%\subsection{Approximation of the order matching process}
-%\subsection{Data sets chosen for evaluation}
+
 %data samples chosen during feature construction
 %data samples chosen during evaluation
-%Real world versus artificial data sets
-%\subsection{Flexibility of the reinforcement environment}
 %parameters, openai, market making,
-%\subsection{Generic approach chosen}
-%allows to extend for any financial market and product as long as limit order book data given
 
 \section{Recommendations and future work}
+
+evaluation using multi agent setup in an artificial market "Price Formation in an Artificial Market"
+parameter tuning
+
+run on live market
 
 \section{Summary of contributions}
 
