@@ -14,6 +14,7 @@ Finally, we will evaluate the steps taken in respect of the order that will be u
 Accordingly, this chapter will seek to quantify the effectiveness of deep reinforcement learning and its use of the market features previously constructed.
 
 \section{Explanation of the evaluation procedure}
+\label{sec:analysis-procedure}
 This section explains the evaluation procedure that will be elaborated in the following sections of this chapter. From our analysis of the same, we will aim to formulate a statement that expresses the capabilities of optimizing limit order placement with reinforcement learning and the use of raw market data.
 The evaluation steps will proceed chronologically, as follows:
 \begin{description}
@@ -236,42 +237,42 @@ Furthermore, placing orders very deep in the book has the same effect as when pl
 \end{figure}
 
 \subsection{Order placement behavior on data set II}
-For the data set II, which shows an upwards price trend, the intuition is the opposite as for the investigation using data set I.
+For data set II, which shows an upward price trend, the intuition is the opposite as for the investigation using data set I.
 We expect buy orders to result in better returns when immediately filled, that is, when the agent crosses the spread and places the order high in the book ($a>0$).
-The assumption is that, as time passes and the market price rises, other traders become less willing to sell for the market price or lower.
-Therefore, the longer the time horizon given that is given to the agent, the more critical it becomes to execute immediately, as otherwise shares would have to be bought to an increased market price.
-Contrarily, better returns with sell orders are expected when placed deep in the book ($a<0$), meaning to be sold at a higher price.
-The assumption is that as the price rises, market participants become more likely to buy assets for higher prices.
-Hence, the longer the time horizon, the deeper the agent should place a limit sell order in the book.
-We investigate these assumptions by proceeding the same experiment as in the previous section, with time horizons of 10, 30, 60 and 100 seconds respectively, as shown in Figure \ref{fig:behvaiour-up}.
+The assumption is that, as time passes and the market price rises, other traders become less willing to sell at the market price or lower.
+Therefore, the longer the time horizon given to the agent, the more critical it becomes to execute immediately;  otherwise, shares would have to be bought at an increased market price.
+In contrast, better returns with sell orders are expected when placed deep in the book ($a<0$), meaning that they are sold at a higher price.
+The assumption is that, as the price rises, market participants become more likely to buy assets at higher prices.
+Hence, the longer the time horizon, the deeper in the book the agent should place a limit sell order.
+We investigate these assumptions by performing the same experiment as in the previous section, with time horizons of 10, 30, 60 and 100 seconds, as shown in Figure \ref{fig:behvaiour-up}.
 
-The returns of buy orders filled within a time horizon of 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-buy}, correlate with the above stated assumptions.
-The highest returns are achieved when crossing the spread and although limit levels in the range of 1-50 tend to perform the same, and considering the risk of paying a premium, the wisest choice for the agent would be to choose the level closest to the spread.
-The sell orders placed with a time horizon of 10 seconds, contradict the assumptions, as shown in Figure \ref{fig:behvaiour-up-10s-sell}.
-The agent is rewarded the most when choosing a price for the order at market price $a=0$.
-A highly negative limit level causes to receive approximately \$3.00 less than when placing at the suggested market price.
+The returns of buy orders filled within a time horizon of 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-buy}, correlate with the above-mentioned assumptions.
+The highest returns are achieved when crossing the spread and, although limit levels in the range of 1-50 tend to perform the same, and considering the risk of paying a premium, the wisest choice for the agent would be to choose the level closest to the spread.
+The sell orders placed with a time horizon of 10 seconds contradict the assumptions, as shown in Figure \ref{fig:behvaiour-up-10s-sell}.
+The agent obtains the highest rewards when choosing a price for the order at market price $a=0$.
+A highly negative limit level yields a return of  approximately \$3.00 less than when placing at the suggested market price.
 
 With 30 seconds left to buy 1.0 BTC, in Figure \ref{fig:behvaiour-up-30s-buy}, the orders placed with $a>0$ (above the spread) become stable for any such limit level, much more so than with the same time horizon in the previous investigation with the data set I.
-This is likely due to the higher order pressure of the data set II, as described in Section \ref{sec:analysis-data-sets}, as there are more market participants willing to sell.
+This is likely due to the higher order pressure of data set II, as described in Section \ref{sec:analysis-data-sets}, as there are more market participants willing to sell.
 The returns for limit sell orders, as shown in Figure \ref{fig:behvaiour-up-30s-sell}, become more rewarding as the agent benefits from a slight increase in price within the given time horizon.
 
 This pattern becomes clearly apparent when a time horizon of 60 and 100 seconds was given, as shown in Figures \ref{fig:behvaiour-up-60s-sell} and \ref{fig:behvaiour-up-100s-sell} respectively.
 With the increased time horizon, the assumptions stated in the beginning of this section are confirmed and the agent, when trying to sell shares, should indeed place orders deep in the order book ($a<0$).
-As time passes and the market price rises, market participants are willing to buy for an increasing price and the agent is expected to be able to sell all assets for such an increased price without the need of a following market order.
-Contrarily, if the agent decides to sell the assets for a decreasing price, as indicated by the higher limit levels, less reward can be expected with $a>0$.
+As time passes and the market price rises, market participants are willing to buy at an increasing price and the agent is expected to be able to sell all assets at this increased price without the need for a following market order.
+In contrast, if the agent decides to sell the assets at a decreasing price, as indicated by the higher limit levels, a lower reward can be expected with $a>0$.
 More precisely, for a time horizon of 100 seconds, the agent is expected to receive up to \$7.00 less when choosing to cross the spread with a limit level of +100, compared to some negative limit level.
-Figures \ref{fig:behvaiour-up-60s-buy} and \ref{fig:behvaiour-up-100s-buy} which show the expected results of an agent that buys assets within the 60 and 100 seconds respectively.
-As is evident, this uprising market price determines that the expected damage can be minimized by crossing the spread and buying immediately.
-The advice stated before remains: the agent should choose a price slightly above the market price as there is enough liquidity in the market to buy the demanded number of assets.
+Figures \ref{fig:behvaiour-up-60s-buy} and \ref{fig:behvaiour-up-100s-buy} show the expected results of an agent that buys assets within 60 and 100 seconds respectively.
+It is evident from the figures that the rise in the market price means that the expected damage can be minimized by crossing the spread and buying immediately.
+The advice stated before remains valid: the agent should choose a price slightly above the market price as there is enough liquidity in the market to buy the demanded number of assets.
 
 \subsection{Conclusion of empirical analysis}
-The results of the empirical analysis proceeded on data set I and II have shown that the tendency of limit order placement is as follows:
-during a downwards trend of the market price, buying assets can be optimized by placing limit orders deep in the order book ($a<0$) and the least loss is taken when selling assets immediately to the market price ($a>0$).
-Contrarily, during an upwards market price trend, buying assets is suggested using a market order ($a>0$) and selling can be optimized by placing the sell orders deep in the order book ($a<0$).
-This effect becomes more apparent when a longer time horizon is given for an order, as for shorter time horizons the order placement process gets either intercepted by short term fluctuations or a lack of market participants providing volume to buy and sell assets.
-The latter implies that, during an upwards trend, market participants are willing to buy and sell shares for higher prices and contrarily, during a downwards trend for lower prices.
-In this analysis, the orders placed had to be completely filled without the ability to make intermediary steps of cancellations and replacements of the order within the given time horizon.
-It is therefore to be evaluated by the reinforcement learners whether or not such adaptions to the order will result in a more favorable reward.
+From the results of the empirical analysis performed on data sets I and II, the following observations can be made with respect to limit order placement:
+during a fall in the market price, the purchase prices of assets can be optimized by placing limit orders deep in the order book ($a<0$) and the least loss is sustained when selling assets immediately to the market price ($a>0$).
+In contrast, during a rising market, it is suggested that assets be purchased using a market order ($a>0$) and sale prices can be optimized by placing the sell orders deep in the order book ($a<0$).
+These effects become more apparent when a longer time horizon is given for an order. With regard to shorter time horizons, the order placement process gets either intercepted by short term fluctuations or a lack of market participants providing volume to buy and sell assets.
+The latter implies that, during an upwards trend, market participants are willing to buy and sell shares at higher prices and on the contrary, during a downwards trend at lower prices.
+In this analysis, the orders placed had to be completely filled without the ability to take intermediate steps of canceling and replacing the order within the given time horizon.
+Therefore, it falls to the reinforcement learners to evaluate whether or not such amendments to the order will result in a more favorable reward.
 In order to have a measure of comparison for the reinforcement learning agents to come, Table \ref{tbl:analysis-empirical-summary} summarizes the findings and shows the expected rewards for (1) the optimal limit level chosen and (2) an immediate completion of the order using a market order.
 \begin{table}[H]
 \centering
@@ -292,22 +293,22 @@ In order to have a measure of comparison for the reinforcement learning agents t
 The previous section provided knowledge about the expected rewards an agent will receive when placing buy and sell orders using the reinforcement learning environment and with the underlying data set I and II.
 For each such observation, a fixed time horizon was chosen for which an order was placed in the order book, followed by a market order in case the order has not been filled completely.
 
-This section aims to investigate whether or not a Q-Learning agent, as described in Chapter \ref{chap:setup} (Section \ref{setup:q-learning}), can improve the received rewards over the expected return for a market order as derived in the previous section.
-Thereby, the agent is allowed to cancel its order after every 10 seconds and place a new order with the remaining inventory (e.g. $\Delta{t}=10$), until the time horizon of 100 seconds is fully consumed.
-After which, and in case the order has not been filled completely, a market order follows for the remaining share to be bought or sold.
-For both data sets (I and II) an independent learning experiment is being proceeded where the agent is supposed to either buy or sell shares.
-For each such experiment, the training is limited to 5000 epochs and 1000 orders are being placed and evaluated on the test set (denoted as "backtesting").
+This section aims to investigate whether or not a Q-Learning agent, as described in Chapter \ref{chap:setup} (Section \ref{setup:q-learning}), can improve the rewards received over the expected return for a market order as derived in the previous section.
+Thereby, the agent is allowed to cancel its order after every 10 seconds and place a new order with the remaining inventory (e.g. $\Delta{t}=10$), until the time horizon of 100 seconds has been fully consumed.
+Subsequently, and in the event that the order has not been filled completely, a market order is issued for the remaining share to be bought or sold.
+For both data sets (I and II), an independent learning experiment is being proceeded where the agent is supposed to either buy or sell shares.
+In each experiment, the training is limited to 5000 epochs and 1000 orders are being placed and evaluated on the test set (defined as "backtesting").
 The Q-Learning agent is set up as follows:
-the learning rate $\alpha=0.1$ is chosen small due to extensive amounts of steps the agent will make throughout the epochs.
-The discount factor $\gamma=0.5$ is chosen to balance the agents incentive to profit from immediate rewards and consuming the entirety of the given time horizon.
+the learning rate selected $\alpha=0.1$ is small due to the extensive number of steps the agent will take throughout the epochs.
+The discount factor $\gamma=0.5$ is chosen to balance the agent's incentive to profit from immediate rewards and consuming the entirety of the given time horizon.
 Initially, the exploration constant $\epsilon$ is set to 0.8 and a decay is applied such that the factor reduces to $\epsilon=0.1$ by the time the training is completed.
 This allows the agent first to explore the action space and then exploit on the learned optimal actions to take.
 
-With this setup, four observations were made and for each of which the training and testing results are stated below.
-During training, the mean rewards and the average action chosen for each epoch, were recorded.
-Once the model was trained, a backtest was run on the test data sets where the agent executed orders by choosing from the learned optimal actions.
+With this setup, four observations were made and for each, the training and testing results are stated below.
+During training, the mean rewards and the average action chosen for each epoch were recorded.
+Once the model was trained, a backtest was run on the test data sets, in which the agent executed orders by choosing from the learned optimal actions.
 
-\subsection{Results of training and testing on data set I and II}
+\subsection{Results of training and testing on data sets I and II}
 
 \begin{figure}
     \centering
@@ -361,34 +362,34 @@ Once the model was trained, a backtest was run on the test data sets where the a
 \end{figure}
 
 Figure \ref{fig:analysis-q-learn-1} shows the training on data set I.
-The average received reward during the training is shown in Figure \ref{fig:analysis-q-learn-1-reward-buy}.
-Over the course of 5000 epochs, the agent was able to improve the mean reward by approximately $\sim$0.5, as a result of the change in actions chosen as illustrated in Figure \ref{fig:analysis-q-learn-1-action-buy}.
-The agent started off with the average action of $\sim$-3 which is a result of the low epsilon parameter that makes the agent choose actions randomly.
-Actions where then adapted to the more negative side of the order book, such that after $\sim$1500 epochs the agent choose actions as low as -20 and then adjusted and stagnated at $\sim$-15.
-The backtest, during which 1000 orders were executed on the test data set, resulted in an average reward of \textit{-1.17}.
-Comparing the results to the empirical analysis proceeded on the same data set, as shown in Figure \ref{fig:behvaiour-down}, provides means for interpretation:
-The policy learned by the Q-Learning agent performs worse than the expected cost of a market order, which was \$-1.12 when buying 1.0 BTC and is shown in Section \ref{sec:eval-empirical}.
-The highly negative average actions the agent choose towards the end of the training indicates that the order might have oftentimes not been able to be filled within the time horizon and an expensive market order had to follow.
+The average reward received during the training is shown in Figure \ref{fig:analysis-q-learn-1-reward-buy}.
+Over the course of 5000 epochs, the agent was able to improve the mean reward by approximately $\sim$0.5, as a result of the change in actions chosen.  This is illustrated in Figure \ref{fig:analysis-q-learn-1-action-buy}.
+The agent started off with the average action of $\sim$-3, which is a result of the low epsilon parameter that makes the agent choose actions randomly.
+Actions were then adapted to the more negative side of the order book, such that after $\sim$1500 epochs, the agent chose actions as low as -20 and then adjusted and stagnated at $\sim$-15.
+During the backtest, 1000 orders were executed on the test data set, which resulted in an average reward of \textit{-1.17}.
+Making a comparison between the results of the empirical analysis performed on the same data set, as shown in Figure \ref{fig:behvaiour-down}, provides means for interpretation:
+The policy learned by the Q-Learning agent performs worse than the expected cost of a market order, which was \$-1.12 when buying 1.0 BTC; this is shown in Section \ref{sec:eval-empirical}.
+The highly negative average actions the agent choose toward the end of the training indicates that the order might not oftentimes have been able to be filled within the time horizon and an expensive market order had to follow.
 
-The rewards received for the agents tasks to sell the assets are much more volatile than for buying, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}, and no clear improvement can be seen.
-In addition, there was no significant adjustment made by the agent regarding the mean of the actions chosen, as indicated in Figure \ref{fig:analysis-q-learn-1-action-sell}.
-The backtest resulted in an average reward of -21.34 achieved by the agent.
+The rewards received for the agents' tasks of selling the assets are much more volatile than for buying, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}, and no clear improvement can be seen.
+In addition, no significant adjustment was made by the agent regarding the mean of the actions chosen, as indicated in Figure \ref{fig:analysis-q-learn-1-action-sell}.
+The backtest resulted in the achievement of an average reward of -21.34 by the agent.
 The reward received for placing market orders on the test set account to a negative reward of -27.70.
 Hence, the agent is able to save \$6.36 when selling 1.0 BTC.
 \\
 \\
-Figure \ref{fig:analysis-q-learn-2} shows the experiment proceeded on data set II.
+Figure \ref{fig:analysis-q-learn-2} shows the experiment performed on data set II.
 The average reward received while training to buy the asset is shown in Figure \ref{fig:analysis-q-learn-2-reward-buy}.
-Throughout the epochs, the agent was able to improve the mean reward similar as with the previous data set I, by approximately 0.5.
+Throughout the epochs, the agent was able to improve the mean reward by approximately 0.5, which was a similar result to that obtained with the previous data set (I), .
 Even though the trend of this data set is the opposite, the change in chosen actions correlates to the previous findings and is illustrated in Figure \ref{fig:analysis-q-learn-2-action-buy}.
-The backtest on the test data set II, resulted in an average reward of \textit{-1.04} -- again worse than the average reward received on the training set.
-A market order on this test data accounts to an average reward of -1.06, indicating that the agents policy is saving \$0.02 when buying 1.0 BTC.
-Considering the empirical analysis proceeded for buying on this data set, as shown in Figure \ref{fig:behvaiour-up}, and comparing it to the received rewards by the agent, implies that the agent failed to execute orders with the placed limit orders and oftentimes market orders must have followed.
+The backtest on test data set II resulted in an average reward of \textit{-1.04} --,  again worse than the average reward received with the training set.
+A market order on test data set to accounts to an average reward of -1.06, indicating that the agent's policy is saving \$0.02 when buying 1.0 BTC.
+On the basis of the empirical analysis performed when buying on this data set, as shown in Figure \ref{fig:behvaiour-up}, and comparing it to the rewards received by the agent, implies that the agent failed to execute orders with the limit orders placed and oftentimes market orders must have followed.
 
-Similar to the sell orders placed on data set I, the rewards received for the agents tasks to sell the assets on data set II are very volatile, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}.
-No improvement can be seen from the rewards during the training and no significant adjustment was made by the agent regarding the chosen actions, as indicated in Figure \ref{fig:analysis-q-learn-2-action-sell}.
+As with the sell orders placed on data set I, the rewards received for the agent's tasks to sell the assets in data set II are very volatile, as shown in Figure \ref{fig:analysis-q-learn-1-reward-sell}.
+No improvement can be seen from the rewards during the training and no significant adjustment was made by the agent regarding the actions chosen, as indicated in Figure \ref{fig:analysis-q-learn-2-action-sell}.
 The backtest resulted in an average reward of -4.74 achieved by the agent, whereas market orders are expected to result in an average reward of -1.72.
-Hence, the agent causes to pay a premium of \$3.02 for selling 1.0 BTC.
+Hence, the use of an requires the payment of a premium of \$3.02 when selling 1.0 BTC.
 
 \subsection{Conclusion of Q-Learning approach}
 
@@ -407,24 +408,24 @@ Hence, the agent causes to pay a premium of \$3.02 for selling 1.0 BTC.
 \end{table}
 The findings of this section are summarized in Table \ref{tbl:analysis-q-learn-summary}.
 We conclude that the Q-Learning agent was not able to constantly place buy and sell orders in a way which would result in a price better than the current market price.
-Oftentimes, a market order, which would cause an immediate purchase or sale, would be the better choice.
+Oftentimes, a market order, which would trigger an immediate purchase or sale, would be the better choice.
 Clearly, this is due to the fact that the agent was not able to find the most suitable actions.
-Furthermore, in order to investigate whether or not these findings were a result of the agent aiming for too much immediate reward, the same experiment was proceeded with $\gamma=0.3$ and therefore rely more extensively on the future rewards.
-However, no improvement could be achieved and instead the agent achieved similar rewards while requiring more epochs in order to converge to the same mean of actions.
-In this section we have only investigated the mean of the actions chosen throughout an epoch, which gave enough proofs that the chosen actions resulted mostly in market orders.
+Furthermore, in order to investigate whether or not these findings were a result of the agent aiming for a reward that was too immediate, the same experiment was performed with $\gamma=0.3$ and therefore rely more extensively on the future rewards.
+However, no improvement could be achieved and instead, the agent achieved similar rewards while requiring more epochs in order to converge to the same mean of actions.
+In this section, we have only investigated the mean of the actions chosen throughout an epoch, which has provided evidence, which we regard as sufficient, that the chosen actions resulted mostly in market orders.
 Furthermore, it is to be assumed that the absence of market variables, while only relying on the given rewards, makes it hard for any learner to determine an optimal policy.
 Therefore, the following section will make use of market variables in order to determine whether or not a learner can exploit the information hidden in the market and therefore act in favor of optimally placing limit orders.
 
 \section{Deep Q-Network with market features}
 \label{sec:eval-dqn}
-In the previous section, the Q-Learning agent was trained on data sets I and II, and no significant optimization in terms of buying and selling assets was achieved.
-By considering the previously found results of the empirical analysis of the limit order placement behaviour we found that most of the limit orders placed by the Q-Learning agent were not filled within the given time horizon and instead market orders had to be submitted after the time was consumed.
+In the previous section, the Q-Learning agent was trained on data sets I and II, and no significant optimization in terms of the buying and selling of assets was achieved.
+By considering the above-mentioned results of the empirical analysis of the limit order placement behavior, we found that most of the limit orders placed by the Q-Learning agent were not filled within the given time horizon and instead, market orders had to be submitted after the time was consumed.
 
-In this section we aim to determine whether or not the DQN agent is capable of extracting information provided by the raw market features and therefore improve the limit order placement policy.
-The setup is the same as in the previous section where the agents task is to buy and sell 1.0 BTC within 100 seconds with discrete step size $\Delta{t}=10$ on both data sets I and II.
-Furthermore, both features, which were constructed in Chapter \ref{chap:data}, will be applied and investigated separately.
+In this section, we aim to determine whether or not the DQN agent is capable of extracting information provided by the raw market features and therefore improve the limit order placement policy.
+The setup is the same as in the previous section, where the agents task is to buy and sell 1.0 BTC within 100 seconds with discrete step size $\Delta{t}=10$ in both data sets I and II.
+Furthermore, both of the features constructed in Chapter \ref{chap:data}, will be applied and investigated separately.
 The input shape of the model in use that approximates the action-value function, as described in Chapter \ref{chap:preliminaries} (Section \ref{sec:deep-reinforcement-learning}), is therefore determined by the chosen feature and is described below.
-After extensive investigations with multiple such models, including a multi-layer neural network\cite{svozil1997introduction} (2 hidden layers) and a long short-term neural network (LSTM)\cite{gers1999learning} and the convolutional neural network (CNN) described in Section \ref{setup:dqn}.
+After extensive investigations with many such models, including a multi-layer neural network\cite{svozil1997introduction} (2 hidden layers), a long short-term neural network (LSTM)\cite{gers1999learning}, and the convolutional neural network (CNN) described in Section \ref{setup:dqn}.
 The best performance was achieved with the latter and thus this model is used for this analysis.
 For both DQN agents, we relied on the default hyperparameters worked out by Mnih et al. \cite{mnih2015human}, as shown in Figure \ref{fig:eval-dqn-hyperparameters}.
 Finally, we conclude our findings and determine the capabilities of the DQN approach (and its use of the market features) by comparing it to the expected rewards found in Section \ref{sec:eval-empirical}.
@@ -439,10 +440,10 @@ Finally, we conclude our findings and determine the capabilities of the DQN appr
 
 \subsection{Application of historical order feature}
 
-The following evaluation of the DQN agent considers historical order book states as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-1}) which we denote henceforth as Feature I.
-Therefore, a \textit{lookback} of 30 historical order book states are considered and the number of level in each state is limited to 20 for bids and asks respectively.
-Consequently this feature set is of size: $(2*lookback, limit levels, 2) \implies (60, 20, 2)$.
-Including the two private variables by appending a vector $[inventory, time]$ at the beginning of this feature vector results a feature set size of: $(61, 20, 2)$ and serves as the input for the CNN.
+The following evaluation of the DQN agent considers historical order book states as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-1}) which we will denote henceforth as Feature I.
+Therefore, a \textit{lookback} of 30 historical order book states are considered and the number of levels in each state is limited to 20 for bids and asks respectively.
+Consequently, this feature set is of size: $(2*lookback, limit levels, 2) \implies (60, 20, 2)$.
+When we included the two private variables by appending a vector $[inventory, time]$ at the beginning of this feature vector, the size of the feature set was $(61, 20, 2)$ and, as such, will serve as the input for the CNN.
 
 \begin{figure}[H]
     \centering
@@ -496,38 +497,38 @@ Including the two private variables by appending a vector $[inventory, time]$ at
     \label{fig:analysis-dqn-2}
 \end{figure}
 
-Figure \ref{fig:analysis-dqn-1} shows the learning process using the data set I.
-During the training process of buying assets, the received rewards were consistently improve over the course of the 5000 epochs (Figure \ref{fig:analysis-dqn-1-reward-buy}), throughout which the agent steadily adjusted the actions to be chosen more negatively (Figure \ref{fig:analysis-dqn-1-action-buy}).
+Figure \ref{fig:analysis-dqn-1} shows the learning process using data set I.
+During the training process relating to the purchase of assets, the rewards obtained consistently improved over the course of the 5000 epochs (Figure \ref{fig:analysis-dqn-1-reward-buy}), throughout which the agent steadily adjusted the actions to be chosen more negatively (Figure \ref{fig:analysis-dqn-1-action-buy}).
 After 2000 epochs, the average chosen action stagnated just below -20, which is \$2.00 below the market price.
-It is evident that this adjustment is not as linear as during the training of the Q-Learning agent as shown in the previous section.
+It is evident that this adjustment is not as linear as it was during the training of the Q-Learning agent, as shown in the previous section.
 However, the adjustment is appropriate since the market price was falling.
 Therefore, the achieved reward during the backtest resulted in 22.06, which is a significant improvement compared to the expected return of -0.05 for a market order.
 
-The received rewards for selling is shown in Figure \ref{fig:analysis-dqn-1-reward-sell} and the average chosen action throughout the epochs is shown in Figure \ref{fig:analysis-dqn-1-action-sell}.
-The rewards were not improved over the course of the training and the agent did not choose to adjust the actions on average.
-Possibly, this is due to the constant negative rewards received during the training under the difficult market conditions for selling assets while the market price is falling.
-As a result, during the backtest a negative reward of -39.26 was achieved, much worse than a market order which comes with the expected return of -27.70 and therefore indicate that the agent despite the fact of a falling market tried to sell with limit orders instead of market orders.
+The rewards obtained from selling are shown in Figure \ref{fig:analysis-dqn-1-reward-sell} and the average chosen action throughout the epochs is shown in Figure \ref{fig:analysis-dqn-1-action-sell}.
+The rewards did not improve over the course of the training and the agent did not choose to adjust the actions on average.
+Possibly, this was due to the constantly negative rewards obtained during the training under market conditions that were difficult for the sale of assets while the market price was falling.
+As a result, during the backtest, a negative reward of -39.26 was achieved, much worse than a market orde,r which comes with the expected return of -27.70 and therefore indicate that the agent, despite a falling market, tried to sell with limit orders instead of market orders.
 
-Figure \ref{fig:analysis-dqn-2} shows the agents learning process using the data set II.
-Over the course of 5000 epochs the agent was not able to improve its reward and instead stagnated on average at approximately \$0.00 rewards per epoch, as shown in Figure \ref{fig:analysis-dqn-2-reward-buy}.
-The agent adjusted the chosen actions steadily such that the average limit level was below -20 at epoch 2000 and remained at this level, as shown in Figure \ref{fig:analysis-dqn-2-action-buy}.
-Therefore the reward was a product of market orders as the orders with these limit levels were most likely not filled.
-After all, the backtest resulted in an average reward of -2.26 which is, compared to the expected market order reward of -1.06, slightly worse.
+Figure \ref{fig:analysis-dqn-2} shows the agent's learning process using data set II.
+Over the course of 5000 epochs, the agent was not able to improve its reward and instead, stagnated on average at approximately \$0.00 rewards per epoch, as shown in Figure \ref{fig:analysis-dqn-2-reward-buy}.
+The agent adjusted the chosen actions steadily such that the average limit level fell to elow -20 at epoch 2000 and remained at this level, as shown in Figure \ref{fig:analysis-dqn-2-action-buy}.
+Therefore, the reward was a product of market orders as the orders with these limit levels were most likely not filled.
+After all, the backtest resulted in an average reward of -2.26 which is slightly worse than the expected market order reward of -1.06.
 
-The rewards for the agent that learned to sell assets is shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
-The reward could not be improved during the training, even though the agent lowered the average action chosen below -20, as shown in Figure \ref{fig:analysis-q-learn-2-action-sell}.
-Under this uprising market condition, the observed rewards are a product of the market order, since negative actions will likely not result in a filled order.
+The rewards for the agent that learned to sell assets are shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
+The rewards could not be improved during the training, even though the agent lowered the average action chosen to below -20, as shown in Figure \ref{fig:analysis-q-learn-2-action-sell}.
+In such rising market conditions, the rewards observed are a product of the market order, since negative actions will likely not result in a filled order.
 
-The rewards for selling assets under the rising market conditions could be improved and, after 1000 training epochs, kept constantly above \$0.00, as shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
-Therefore, the average of actions chosen for an epoch was lowered within the first 1000 epochs and, going forward, remained at approximately -10, which correlates with the received rewards.
+The rewards for selling assets in this rising market could be improved and, after 1000 training epochs, kept constantly above \$0.00, as shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
+Therefore, the average of actions chosen for an epoch was lowered within the first 1000 epochs and, thereafter, remained at approximately -10, which correlates with the rewards obtained .
 Finally, the backtest resulted in an average reward of 0.84, which is an improvement compared to the expected reward of -1.72 for a market.
 \\
 \\
-Table \ref{tbl:analysis-dqn-orderfeature-summary} summarizes the average rewards observed during the backtest using the DQN agent that uses Feature I, which includes 30 historical order book states as features and therefore has knowledge about the change in created and cancelled orders.
+Table \ref{tbl:analysis-dqn-orderfeature-summary} summarizes the average rewards observed during the backtest using the DQN agent that uses Feature I, which includes 30 historical order book states as features and therefore has knowledge about the change in created and canceled orders.
 Overall, the DQN agent was able to optimize limit order placement when the given market conditions came in favor of making a purchase or sale respectively.
-More precisely, significant improvements were made when the task was to buy assets and the market price was falling and minor optimization was achieved when the task was to sell assets and the market price was rising.
+More precisely, significant improvements were made when the task was to buy assets and the market price was falling. A minor optimization was achieved when the task was to sell assets and the market price was rising.
 Under these conditions, the DQN agent performed better than the Q-Learning agent.
-However, when market conditions did not come in favor of the intention to either buy or sell respectively, the agent performed not only worse than the expected return of a market order but also worse than the Q-Learning agent.
+However, when market conditions were not favorable to the intention to either buy or sell, the agent performed not only worse than the expected return of a market order but also worse than the Q-Learning agent.
 \begin{table}[H]
 \centering
 \begin{tabular}{l|l|l|}
@@ -544,10 +545,10 @@ However, when market conditions did not come in favor of the intention to either
 
 \subsection{Application of historical trade feature}
 
-The following evaluation of the DQN agent considers historical trades as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-2}) which we denote henceforth as Feature II.
+The following evaluation of the DQN agent considers historical trades as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-2}),  defined henceforth as Feature II.
 Therefore, a \textit{lookback} of 30 trades are considered.
-Consequently this feature set is of size: $(lookback, 4) \implies (30, 3)$.
-Including the two private variables that were appended as a vector $[inventory, time, 0, 0]$ at the beginning of this feature vector results a feature set size of: $(31, 4)$ and serves as the input for the CNN.
+Consequently, this feature set is of size: $(lookback, 4) \implies (30, 3)$.
+When we included the two private variables that were appended as a vector $[inventory, time, 0, 0]$ at the beginning of this feature vector, the result was a feature set of size $(31, 4)$, which will serve as the input for the CNN.
 
 \begin{figure}[H]
     \centering
@@ -602,28 +603,28 @@ Including the two private variables that were appended as a vector $[inventory, 
 \end{figure}
 
 Figure \ref{fig:analysis-dqn-1-trades} illustrates the learning process of the agent for buying and selling using data set I.
-Similar to the agent that was provided with Feature I, the rewards received cold be slightly improved over the course of 5000 epochs, as shown in Figure \ref{fig:analysis-dqn-1-trades-reward-buy}.
-Interestingly, the average action per epoch converged just below -40 after an abrupt adjustment was made after 4000 epochs.
+As with the agent that was provided with Feature I, the rewards received could be slightly improved over the course of 5000 epochs, which is shown in Figure \ref{fig:analysis-dqn-1-trades-reward-buy}.
+Interestingly, the average action per epoch converged at just below -40 after an abrupt adjustment was made after 4000 epochs.
 The average reward achieved during the backtest is 31.92 and is a clear improvement compared to the expected market order return of -0.05.
 
 The rewards received for selling remained at -20, as shown in Figure \ref{fig:analysis-dqn-1-trades-reward-sell}.
 However, the average of the actions chosen remain volatile and no clear trend can be seen in Figure \ref{fig:analysis-dqn-1-trades-action-sell}.
-This is by no means a negative sign, perhaps the agent indeed learned to respond on distinct patterns with appropriate measures.
-As a result, during the backtest an average reward of -35.15 was achieved, which is still worse than the expected return of a market order but significantly better than the DQN agent under the application of Feature I.
+This is by no means a negative sign; perhaps the agent learned to respond to distinct patterns with appropriate measures.
+As a result, during the backtest, an average reward of -35.15 was achieved, which is still worse than the expected return of a market order but significantly better than the DQN agent under the application of Feature I.
 
 Figure \ref{fig:analysis-dqn-2-trades} illustrates the same learning process with the application of data set II.
 The rewards for the buying process were not improved (Figure \ref{fig:analysis-dqn-2-trades-reward-buy}) and the actions were adjusted towards limit levels deep in the order book (Figure \ref{fig:analysis-dqn-2-trades-action-buy}).
 The backtest resulted in an average reward of -3.56, slightly worse than the expected market return of -1.06.
 
 Rewards for selling increased during the training, as shown in Figure \ref{fig:analysis-dqn-2-trades-reward-sell} and the chosen average action remained just above -40 after 1000 epochs, as shown in Figure \ref{fig:analysis-dqn-2-trades-action-sell}.
-The resulted average reward after the backtest was 0.15, which is an improvement to the expected market order return of -1.72.
+The average reward after the backtest was 0.15, which is an improvement on the expected market order return of -1.72.
 \\
 \\
-Table \ref{tbl:analysis-dqn-tradefeature-summary} summarizes the average rewards received for the DQN agent that makes use of Feature II and considers the past 25 trades prior each of the 1000 epochs backtested.
-Similar to the previous application of Feature I to the agent, significant optimization could be achieved when market conditions came in favor of buying or selling respectively.
-The application of Feature II resulted that the agent was able to outperform the DQN agent with Feature I when it comes to buying when the market price is in tendency to fall.
-Slightly worse performance was achieved when attempting to sell and the market price was rising.
-Nevertheless the received reward was much better than the expected market order return.
+Table \ref{tbl:analysis-dqn-tradefeature-summary} summarizes the average rewards received for the DQN agent that makes use of Feature II and considers the 25 trades immediately prior to each of the 1000 epochs backtested.
+As with the previous application of Feature I to the agent, significant optimization could be achieved when market conditions became more favorable to buying or selling.
+The application of Feature II meant that the agent was able to outperform the DQN agent with Feature I when it comes to buying when the market price is falling.
+A slightly worse performance resulted when attempting to sell and the market price was rising.
+Nevertheless, the reward obtained was much better than the expected market order return.
 However, when the market conditions came not in favor of the intention to either buy or sell, the agent performed equal to the DQN under application of Feature I.
 
 \begin{table}[H]
