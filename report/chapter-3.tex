@@ -5,7 +5,6 @@ Compared to the execution problem, the literature for the order placement proble
 In this Chapter, we will provide an overview of the work relied upon for the foundations of this project and for the insights they provided.
 We will first consider an empirical study of the general behavior of order placements, which serves as the conceptual basis for this project.
 Then, we will present a statistical approach which provides contrast to the subsequent overview of previous machine learning approaches.
-todo
 
 \section{Execution/Placement behaviour}
 \label{sec:related-execution-behaviour}
@@ -33,33 +32,37 @@ As is evident from the figure, the expected execution price is at its most favor
 The return becomes worse when placing orders deeper in the order book (in other words, offering a lower price) as the orders then do not get filled within an hour and instead, the inventory has to be bought by means of a market order at the end of the period.
 Likewise, the return can be expected to be lower when placing the order higher in the order book (i.e. deeper in the opposing side of the book, meaning one is willing to pay more).
 This is due to the fact that the order is filled instantly by paying a premium.
+\\
+\\
+Although this research does not optimize the placement of limit orders per se, it provides a method to measure the expected costs for (1) placing orders at certain limit levels or (2) submitting a market order.
+Therefore, this approach can serve as a measure to determine how well a method which does attempt to optimize the limit order placement performs.
 
-\begin{figure}[H]
-    \centering
-    \makebox[\linewidth]{
-        \includegraphics[width=8cm]{kearns-std.png}
-    }
-    \caption{Taken from \cite{nevmyvaka2005electronic}. An illustration of the uncertainty of the expected execution price.}
-    \label{fig:kearns-std}
-\end{figure}
-
-Risk is defined as the standard deviation of the returns and is illustrated on the y-axis in Figure \ref{fig:kearns-std}.
-This is an important aspect to be considered throughout our project as it illustrates the danger that arises from placing limit orders at less favourable limit levels.
-As has been already demonstrated, orders which are placed deep in either side of the book are less likely to be executed and their final prices are therefore necessarily less certain.
-
-\begin{figure}[H]
-    \centering
-    \makebox[\linewidth]{
-        \includegraphics[width=8cm]{kearns-frontier.png}
-    }
-    \caption{Taken from \cite{nevmyvaka2005electronic} An illustration of the trade-off between risk and return indicated by a efficient pricing frontier.}
-    \label{fig:kearns-frontier}
-\end{figure}
-
-Lastly, both techniques were combined and this resulted in an efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}). 
-Figure \ref{fig:kearns-frontier} shows the trade-off between the risk (x-axis) and return (y-axis).
-In this example, the point of minimum risk is at $(8, 18)$ and the point of maximum returns at $(29, 9)$.
-With this technique, a trader, or in our case a reinforcement learning agent, can decide upon an execution strategy by choosing how much risk and return he is willing to accept.
+%\begin{figure}[H]
+%    \centering
+%    \makebox[\linewidth]{
+%        \includegraphics[width=8cm]{kearns-std.png}
+%    }
+%    \caption{Taken from \cite{nevmyvaka2005electronic}. An illustration of the uncertainty of the expected execution price.}
+%    \label{fig:kearns-std}
+%\end{figure}
+%
+%Risk is defined as the standard deviation of the returns and is illustrated on the y-axis in Figure \ref{fig:kearns-std}.
+%This is an important aspect to be considered throughout our project as it illustrates the danger that arises from placing limit orders at less favourable limit levels.
+%As has been already demonstrated, orders which are placed deep in either side of the book are less likely to be executed and their final prices are therefore necessarily less certain.
+%
+%\begin{figure}[H]
+%    \centering
+%    \makebox[\linewidth]{
+%        \includegraphics[width=8cm]{kearns-frontier.png}
+%    }
+%    \caption{Taken from \cite{nevmyvaka2005electronic} An illustration of the trade-off between risk and return indicated by a efficient pricing frontier.}
+%    \label{fig:kearns-frontier}
+%\end{figure}
+%
+%Lastly, both techniques were combined and this resulted in an efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}). 
+%Figure \ref{fig:kearns-frontier} shows the trade-off between the risk (x-axis) and return (y-axis).
+%In this example, the point of minimum risk is at $(8, 18)$ and the point of maximum returns at $(29, 9)$.
+%With this technique, a trader, or in our case a reinforcement learning agent, can decide upon an execution strategy by choosing how much risk and return he is willing to accept.
 
 \section{Statistical approach}
 \label{sec:related-statistical}
@@ -112,9 +115,10 @@ As a result, the trade-off between profit and risk was defined as,
 
 
 \section{Supervised Learning approach}
+\label{sec:related-supervised}
 
 Fletcher et al. \cite{fletcher2010multiple} investigated order books with the aim of forecasting the movements of bid and ask prices at time $t+\Delta{t}$.
-Although this was not directly applied to the optimization of order placement, the resulting predictions can certainly be used as the limit price to be set while placing an order.
+Although this was not directly applied to the optimization of order placement, it was suggested that the resulting predictions can be used as the limit price to be set while placing an order.
 
 SVM classification techniques with different kernels along with two Multiple Kernel Learning (MKL) techniques were used.
 The authors' approach is a multi-class setup with three labels, A: $P_{t+\Delta{t}}^{Bid} > P_t^{Ask}$, B: $P_{t+\Delta{t}}^{Ask} < P_t^{Bid}$ and C: $P_{t+\Delta{t}}^{Bid} < P_t^{Ask}, P_{t+\Delta{t}}^{Ask} > P_t^{Bid}$.
@@ -124,9 +128,17 @@ A set of features was constructed that contains volumes from the current time $t
 With a time delta ($\Delta{t}$) of 100 seconds, an accuracy of 51\% was achieved.
 When a shorter time delta was chosen, this resulted in significantly better performance. However, this was mostly due to the fact that the zero movement prediction was accurate.
 An increased time delta resulted in significantly worse prediction accuracy.
+\\
+\\
+A supervised learning approach, such as presented in this research, has multiple disadvantages.
+First, the model is incentivized based on the accuracy of bid and ask price predictions and therefore does not incorporate the outcome of order placements, at the predicted price levels, during training at all.
+Instead, with this setup the process of order placement would be attempted in a subsequent step where the predicted price determines at which price level to place the order.
+However, a multi-class setup would only provide knowledge whether to place a limit- or market order and does not specify the exact price level.
+Certainly, such an approach can easily be modified in order to become a regression problem where the price is defined specifically.
+However, the outcome of the order placement would still not have an impact on the loss function during training.
 
 \section{Reinforcement Learning approach}
-
+\label{sec:related-reinforcement}
 A large-scale empirical application of reinforcement learning to optimize trade execution has been presented by Kearns et al. \cite{nevmyvaka2006reinforcement}.
 Although the title of their research suggests otherwise, their work is related to order placement with a larger time horizon $H$ (2 minutes and 8 minutes), according to our definition in Section \ref{sec:execution-placement}.
 Their research objective is accordingly defined as:
@@ -137,14 +149,20 @@ They built a reinforcement learning based on 1.5 years of millisecond time-scale
 The investigation considered three stocks, AMZN, NVDA, and QCOM; each with an inventory $I$ of 5,000 shares.
 The relative improvement over a submit-and-leave strategy ranged from 27.16\% to 35.50\%.
 An additional improvement of 12.85\% was achieved by considering the following market variables: Spread, Immediate Cost, and Signed Volume.
-\\
-\\
+
 The architecture developed is as follows.
 \textit{States} are represented by a vector $x \in X$ and correspond to an observation state that has the function of making a  partially observable environment fully observable.
 \textit{Actions} ($a \in A$) represent the limit price relative to the current ask price, $ask - a$. 
 That is, action $a = 0$ is the ask price, $a < 0$ is a limit price deep in the book, and $a > 0$ is a limit order on the opposing side of the book.
-The \textit{reward} represent the VWAP (Eq. \ref{eq:vwap}) of the executed order relative to the bid-ask mid price ($(ask + bid) / 2$).
+The \textit{reward} represent the VWAP (Eq. \ref{eq:vwap}) of the executed order relative to the bid-ask mid price ($\frac{ask + bid}{2}$).
 If the order is not filled completely at the end of the time horizon H, then a market order follows.
 The chosen \textit{algorithm} is a slightly adapted version of the Q-Learning algorithm that was developed by the authors, and which explores the state space inductively.
 Starting from $t=T...0$ the algorithm explores the inventories $i=0...I$.
 At each step, all possible actions in this state are evaluated, leading to the most rewarding strategy for $t=0$.
+\\
+\\
+This work demonstrates the suitability of reinforcement learning for the limit order placement problem.
+The use of a reward function that involves the outcome of the proceeded placement itself allows to train a model specifically for this task.
+In addition, and unlike what was shown in Section \ref{sec:related-supervised}, this architecture does not require a separation of the prediction and placement processes.
+Therefore, this research provides foundation for modelling and integrating the limit order placement problem into a reinforcement learning context with the use of a relatively complex environment and a simple agent.
+Furthermore, the results show the potential improvements that can be achieved by using market features.

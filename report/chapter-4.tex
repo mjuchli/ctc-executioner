@@ -352,62 +352,11 @@ We therefore have applied normalization to the prices ($bp, ap$) with respect to
 Accordingly, we have also normalized the sizes ($bs, as$) by reference to the size provided at the best ask price $as_{i1}$.
 While this method does not scale the values of prices and sizes within a predefined range, the values sill decrease significantly.
 Furthermore, empirical observations show that the minimum and maximum prices within a single order book state do not differ by more than ~2\%, which determines the approximate scaling boundary.
+Lastly, we define $n=40$ order book entries (maximum of what goes from collection) on the bid and ask side, and therefore make the most possible use of the available data.
 \\
 \\
 This feature incorporates some of the previously stated hypotheses and therefore enables the learner to determine whether the statements are valid or not.
 In particular, the feature includes historical order prices (hypothesis \ref{sec:data-hypthesis-order-price}), their volume (hypothesis \ref{sec:data-hypthesis-order-volume} and partly \ref{sec:data-hypthesis-order-trade-volume-time}).
-\\
-\\
-\todo[inline]{Might be unnecessary according to our talk.}
-There remain the questions of how large the window of $m$ order books states should be and the number of limit levels that $n$ should be chosen.
-The following observation provides an insight into the parameters; however, by no means does it aim to make an estimate of how well the agent may perform under the consideration of a certain parameter setup.
-
-In order to determine the impact of $n$ limit levels, we take the average of 100 evaluations whereas we take 1,000 random order book states for which we measure the Shannon entropy\cite{shannon2001mathematical} for a range of 40 limit levels (maximum of what goes from collection) on the bid and ask side, applied to price and size.
-The entropy therefore serves as an indicator of how much information can be gained in respect of each limit level, derived from the change in price and size for each state.
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{bidask-price-entropy}
-        \caption{Entropy of order prices}
-        \label{fig:bidask-price-entropy}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{bidask-size-entropy}
-        \caption{Entropy of order sizes}
-        \label{fig:bidask-size-entropy}
-    \end{subfigure}
-    \caption{Entropy measured for 40 limit levels}\label{fig:bidask-entropy}
-\end{figure}
-
-It is noticeable that the entropy of prices of limit levels 0-30 on both bid and ask sides remains high, as shown in Figure \ref{fig:bidask-price-entropy}. 
-The price becomes slightly more constant for limit levels $>30$. 
-The entropy for order sizes, as shown in Figure \ref{fig:bidask-size-entropy}, drops after 20 limit levels, which indicates that the accumulated order size deep in the book is more constant. 
-We therefore suggest considering at least 30 limit levels of the bid-ask feature.
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{bidask-price-correlation}
-        \caption{Correlation of order prices}
-        \label{fig:bidask-price-correlation}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{bidask-size-correlation}
-        \caption{Correlation of order sizes}
-        \label{fig:bidask-size-correlation}
-    \end{subfigure}
-    \caption{Correlation measured for 100 order book states}\label{fig:bidask-correlation}
-\end{figure}
-
-With this brief understanding of how limit levels $n$ affect order prices and sizes, we will try to make a statement about how order book states are related to the most recent state.
-More precisely, we will determine the correlation between the order prices and sizes from the previous $m$ states and the most recent order book state.
-We will take an average of 100 evaluations whereas we take a single order book state at time $t$ and a sequence of 100 previous order book states for each of which we measure the Shannon entropy\cite{shannon2001mathematical} to the state at $t$, whereas $n=40$ (maximum).
-As can be seen in Figure \ref{fig:bidask-price-correlation}, the correlation of the price positions drop rapidly. However the effective change is not significant, indicating that the price changes are noticeable but overall do not differ much.
-Order book states which lay more than 40 states in the past are slightly less correlated with the current state.
-The correlation of order sizes, as shown in Figure \ref{fig:bidask-size-correlation} drops more rapidly and to a much greater extent than the order prices.
-This indicates that traders choose a broad range of order sizes.
-As a result, a window size of order book states $m$ greater than 40 states is suggested, in order to benefit from price differences within the feature.
 
 \subsection{Feature: price and size of historical trades}
 \label{sec:data-feature-2}
