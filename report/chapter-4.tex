@@ -373,8 +373,9 @@ A straightforward approach would be to construct the feature $s_{trade}$ as,
         \vdots & \vdots & \vdots\\
         p_n & q_n & os_n \\
     \end{pmatrix}
-    \ \forall \ p, q, os, ts \in Trade
-\end{equation}, whereas $ts_n - ts_1 \leq m$.
+    \ \forall \ p, q, os, ts \in Trade,
+\end{equation}
+whereas $ts_n - ts_1 \leq m$.
 However, trades do not occur at fixed time intervals and this causes the length of the vector to vary.
 Accordingly, we calculate the time difference $\Delta{ts}$ between each historical trade and the subsequent historical trade.
 For the most recent historical trade, the time difference is measured to the time of the order placement $t$.

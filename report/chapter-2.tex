@@ -482,9 +482,9 @@ Deep reinforcement learning generally means approximating the value function, th
 As is preferred in reinforcement learning, neural networks approximate a function as a non-linear function.
 Therefore, the estimate of the approximation is a local optimum, which is not always desirable.
 In our particular case, we use deep reinforcement learning in order to approximate the action-value function (Eq. \ref{eq:optimal-action-value-function}). 
-Therefore, we represent the action-value function with weights $\omega$ as,
+Therefore, we represent the action-value function with weights $\theta$ as,
 \begin{equation}
-Q(s, a; \omega) \approx Q^*(s,a)
+Q(s, a; \theta) \approx Q^*(s,a)
 \end{equation}
 Given a state $s$, the neural network outputs $n$ linear output units (corresponding to $n$ actions), as shown in Figure \ref{fig:drl-qvalues}.
 The agent will then choose the action with the maximum q-value.

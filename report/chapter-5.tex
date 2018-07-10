@@ -246,12 +246,15 @@ As a result, not only will we have a means of comparison alongside an evaluation
 We refer to MLP trained with our approach as Deep Q-Networks (DQN-MLP).
 \\
 \\
-The neural network treats the right-hand side of the above-mentioned Bellman equation (Eq. \ref{eq:bellman}), with weights $\omega$, as a target, that is, $r+\gamma \max_{a'} Q^*(s',a', \omega)$.
+The neural network treats the right-hand side of the above-mentioned Bellman equation (Eq. \ref{eq:bellman}), with weights $\theta$, as a target, that is, $r+\gamma \max_{a'} Q^*(s',a', \theta)$.
 We then minimize the mean squared error (MSE) with stochastic gradient descent,
-\begin{equation}
-    L=\frac{1}{2}[r+\gamma \max_{a'} Q^*(s',a', \omega') - Q(s,a,\omega)]^2
+\begin{equation}\label{eq:dqn-mse}
+    L(\theta_i)=\mathbb{E}[r+\gamma \max_{a'} Q^*(s',a', \theta_{i-1}) - Q(s,a,\theta_i)]^2
 \end{equation}
-While the optimal q-value converges for the Q-Learning approach by using a look-up table, the use of a non-linear function approximator can cause the convergence due to (1) correlation between samples and (2) non-stationary targets.
+
+Algorithm \ref{alg:dqn} shows the complete DQN algorithm.
+While the optimal q-value converges for the Q-Learning approach by using a look-up table, the DQN approach makes use of a non-linear function approximator.
+However, this can cause the convergence due to (1) correlation between samples and (2) non-stationary targets.
 In order to remove correlations we use \textit{experience replay} to build a data set $D$ from the agent's own experiences.
 Accordingly, we store the agent's experience $e_t=(s_t, a_t, r_t, s_{t+1})$ at each time-step $t$ in the data set, such that $D_t = {e_1, ..., e_t}$.
 During the learning process, Q-learning updates on samples (or mini-batches) of these experiences $(s,a,r,s') \sim U(D)$, which are drawn uniformly at random from the pool of stored samples in $D$.
@@ -259,9 +262,32 @@ Hence, we prevent the learner from developing a pattern from the sequential natu
 In our case, this might occur during a significant rise or fall in the market price.
 In addition, experience replay stores rare experiences for much longer so that the agent can learn them more often.
 That is, for example, when massive subsequent buy orders led to a noticeable change in the order book.
-Lastly, in order to deal with non-stationarity, the target network parameters $\delta'$ are only updated with $\delta$ every $C$ steps and otherwise remain unchanged between individual updates.
-%\\
-%\\
-%In order to have a means of comparisons regarding the state-of-the-art deep reinforcement learning architecture described above, we will also make use and briefly evaluate a second, much simpler method.
-%A multi-layer artificial neural network with input 
-%We refer to this architecture of neural networks trained with our approach as Deep Neural-Networks (DNN).
+Furthermore, in order to deal with non-stationarity, the target network parameters $\delta'$ are only updated with $\delta$ every $C$ steps and otherwise remain unchanged between individual updates.
+Lastly, no preprocessing is being done in $\phi(.)$, as this is handled by the environment (see Section \ref{setup:state}).
+
+\begin{algorithm}
+\caption{Deep Q-learning with Experience Replay}\label{alg:dqn}
+\begin{algorithmic}[1]
+\State Initialize replay memory $D$ to capacity $N$
+\State Initialize action-value function $Q$ with random weights
+\For{episode$=1,M$}
+    \State Initialize sequence $s_1={x_1}$ with observation and preprocessed sequenced $\phi{}_1=\phi{(s_1)}$
+    \For{t=1,T}
+        \State With probability $\epsilon$ select a random action $a_t$
+        \State otherwise select $a_t=\max{}_aQ^{*}(\phi{(s_t)}, a; \theta)$
+        \State Execute action $a_t$ in emulator and observe reward $r_t$ and observation state $x_{t+1}$
+        \State Set $s_{t+1}=s_t,a_t,x_{t+1}$ and preprocess $\phi_{t+1}=\phi{(s_{t+1})}$
+        \State Store transition $(\phi_t,a_t,r_t,\phi_{t+1})$ in $D$
+        \State Sample random minibatch of transitions $(\phi_j,a_j,r_j,\phi_{j+1})$ from $D$
+        \State Set
+            \[
+                y_j = \begin{cases}
+                    r_j & \textrm{for terminal}\ \phi_{j+1}\\
+                    r_j+\gamma \max_{a'} Q^*(\phi_{j+1},a', \theta) & \textrm{for non-terminal}\ \phi_{j+1}
+                \end{cases}
+            \]
+        \State Perform a gradient descent step on $(y_j-Q(\phi_j,a_j;\theta))^2$ according to Eq. \ref{eq:dqn-mse}
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
