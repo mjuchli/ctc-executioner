@@ -98,15 +98,15 @@ Consequently, the payoff the trader will receive from submitting a limit buy ord
 \\
 The expected price is compounded by a) the probability that the limit order at price $p^L$ will be executed before the end of the period and b) the distribution of the asset price at the end of the period,
 \begin{equation}
-    \mathbb{E}[U(p^L)] = P_E(p^L)\ U(p^L) + [1-P_E(p^L)] \int_{-\infty}^{\infty} U_{NE}(p) f_{p_M^T | p^L}(p) dp
+    \mathbb{E}[U(p^L)] = P_E(p^L)\ U(p^L) + [1-P_E(p^L)] \int_{-\infty}^{\infty} U_{NE}(p) f_{p_M^T | p^L}(p) dp,
 \end{equation}
-, whereas $P_E(p^L)$ is the probability that the limit order at price $p^L$ will be executed before the end of the period, and $f_{p_M^T | p^L}(.)$ is the probability density function of the asset price at the end of the period. 
+whereas $P_E(p^L)$ is the probability that the limit order at price $p^L$ will be executed before the end of the period, and $f_{p_M^T | p^L}(.)$ is the probability density function of the asset price at the end of the period. 
 \\
 Similarly, the variance was defined as $V[U(p^L)]$, and this was followed by a mean variance optimization step which introduced the utility function,
 \begin{equation}
-    U_O(p^L) = \mathbb{E}[U(p^L)] - \lambda V[U(p^L)]
+    U_O(p^L) = \mathbb{E}[U(p^L)] - \lambda V[U(p^L)],
 \end{equation}
-, whereas $\lambda$ serves as a risk factor.
+whereas $\lambda$ serves as a risk factor.
 That is, when $\lambda=0$ the trader is concerned only about the profit, and when $\lambda=1$ the trader is equally concerned about profit, risk, and missed opportunities.
 As a result, the trade-off between profit and risk was defined as,
 \begin{equation}

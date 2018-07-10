@@ -210,7 +210,6 @@ Hence, the agent has learned each discrete step $i$ and $t$ in the process of bu
 \label{setup:dqn}
 The second agent presented in this section is known as Deep Q-Network\cite{mnih2015human}.
 DQN is a deep reinforcement learning method that combines reinforcement learning with a class of artificial neural network known as deep neural networks.
-
 \begin{quote}
 Notably, recent advances in deep neural networks, in which several layers of nodes are used to build up progressively more abstract representations of the data, have made it possible for artificial neural networks to learn concepts such as object categories directly from raw sensory data.\cite{mnih2015human}
 \end{quote}
@@ -227,22 +226,27 @@ Figure \ref{fig:setup-cnn-output} indicates that this model generates one output
 Furthermore, it is valid to note that this is not a classification problem but a regression instead, as the Q-value output is a scalar number.
 \\
 \\
-We use one particularly successful architecture, the deep convolutional network\cite{cnn}, which uses hierarchical layers of tiled convolutional filters to mimic the effects of receptive fields--thereby exploiting the correlations present in trading activity.
-This model is in line with the architecture described in \cite{mnih2013playing}, except of the input shape changed for our data in use.
-The input to the neural network is determined by the feature in use.
+We use one particularly successful architecture, the deep convolutional network (CNN)\cite{cnn}, which uses hierarchical layers of tiled convolutional filters to mimic the effects of receptive fields, thereby exploiting the correlations present in trading activity.
+This model is in line with the architecture described in \cite{mnih2013playing}, except that the input shape changed for the data that we used.
+The input to the neural network is determined by the feature to be used.
 That is, for feature I (Section \ref{sec:data-feature-1}): $(m+1) \times 2 \times 2n$, whereas $m$ is the number of order book states plus a window consisting of the inventory $i$ and time left $t$, and $n$ is the number of bid and ask levels.
-For feature II (Section \ref{sec:data-feature-2}) that is: $4 \times (n+1)$, whereas $n$ is the number of historical trades appended to the row consisting of inventory $i$ and time left $t$.
-The first and second hidden layers convolve filters with stride 4 and stride 2 with the input and applies a rectifier nonlinearity \cite{jarrett2009best}. 
-Thereby, we have to ensure that the depth of the filters have the same depth as the input.
-For feature I we choose the filter of size $(m+1) \times \frac{n}{4} \times \frac{n}{4}$ and for feature II of size $1 \times \frac{n}{4} \times \frac{n}{4}$.
-The final hidden layer is fully-connected and consists of 200 rectifier units. 
+For feature II (Section \ref{sec:data-feature-2}), that is: $4 \times (n+1)$, whereas $n$ is the number of historical trades appended to the row consisting of inventory $i$ and time left $t$.
+The first and second hidden layers convolve filters that have stride 4 and stride 2 with respect to the input and apply a rectifier nonlinearity \cite{jarrett2009best}. 
+Thereby, we have to ensure that the depth of the filters is equal to the depth of the input.
+For feature I, we will choose a filter of size $(m+1) \times 5 \times 5$ and for feature II of size $1 \times 5 \times 5$.
+The final hidden layer is fully connected and consists of 200 rectifier units. 
 The output layer is a fully-connected linear layer with a single output for each valid action. 
-The number of valid actions is thereby defined by $|A|$, which is 201 in the default setup.
-We refer to convolutional networks trained with our
-approach as Deep Q-Networks (DQN).
+The number of valid actions is therefore defined by $|A|$, which is 201 in the default setup.
+We refer to convolutional networks trained with our approach as Deep Q-Networks (DQN-CNN).
+
+Even though the CNN is the standard architecture for the widely-used DQN agent setup, and has been shown to perform well in various fields\cite{mnih2015human, mnih2013playing}, we will provide one additional architecture to be evaluated,
+namely, a simple multilayer perceptron (MLP)\cite{haykin2009neural} with two hidden layers, each of which consists of 200 neurons. These layers are followed by the output layer which generates one output for each valid action.
+Therefore, the second architecture processes the samples in the same way as the aforementioned CNN approach, except that no convolution will be applied.
+As a result, not only will we have a means of comparison alongside an evaluation of the effectiveness of the state-of-the-art DQN agent setup, but we will also have additional confidence while concluding the effectiveness of deep reinforcement learning, when applied to the context of limit order placement. 
+We refer to MLP trained with our approach as Deep Q-Networks (DQN-MLP).
 \\
 \\
-The neural network treats the right-hand side of the above mentioned Bellman equation (Eq. \ref{eq:bellman}), with weights $\omega$, as a target, that is, $r+\gamma \max_{a'} Q^*(s',a', \omega)$.
+The neural network treats the right-hand side of the above-mentioned Bellman equation (Eq. \ref{eq:bellman}), with weights $\omega$, as a target, that is, $r+\gamma \max_{a'} Q^*(s',a', \omega)$.
 We then minimize the mean squared error (MSE) with stochastic gradient descent,
 \begin{equation}
     L=\frac{1}{2}[r+\gamma \max_{a'} Q^*(s',a', \omega') - Q(s,a,\omega)]^2

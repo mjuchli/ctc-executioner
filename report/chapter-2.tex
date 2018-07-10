@@ -42,9 +42,9 @@ Order=\{Order_{Limit}, Order_{Market}\}
 
 A limit order refers to an attempt to buy or sell a stock at a specific price or better,
 \begin{equation}\label{eq:order-limit}
-    Order_{Limit}=(side, quantity, price_{Limit})
+    Order_{Limit}=(side, quantity, price_{Limit}),
 \end{equation}
-, where $side \in OrderSide$, $quantity \in \mathbb{R^+}$ and $price_{Limit} \in \mathbb{R^+}$.
+where $side \in OrderSide$, $quantity \in \mathbb{R^+}$ and $price_{Limit} \in \mathbb{R^+}$.
 \\
 \\
 A buy limit order can only be executed at the limit price or lower, and a sell limit order can only be executed at the limit price or higher \cite{sec-limit-order}.
@@ -57,9 +57,9 @@ If no order appears on the opposing side, the order will remain (possibly foreve
 
 A market order refers to an attempt to buy or sell a stock at the current market price, expressing the desire to buy (or sell) at the best available price. Therefore,
 \begin{equation}
-Order_{Market}=(side, quantity)
+Order_{Market}=(side, quantity),
 \end{equation}
-, where $side \in OrderSide$ and $quantity \in \mathbb{R^+}$.
+where $side \in OrderSide$ and $quantity \in \mathbb{R^+}$.
 \\
 \\
 The advantage of a market order is that as long as there are willing buyers and sellers, the execution of the order is almost always guaranteed. \cite{sec-market-order}
@@ -80,10 +80,10 @@ OB=OS_1, ... OS_n
 As we can see, every such state holds entries whose \textit{price} or \textit{amount} change, on both the buyer's and the seller's sides.
 We refer to each row that can be formed by participants who submitted limit orders of some amount at the same price level as \textit{order book entry ($OE_{s_l}$)} of the side $s$ at level $l$.
 \begin{equation}\label{eq:order-book-entry}
-OE_{s_l}=(count, price, amount)
+OE_{s_l}=(count, price, amount),
 \end{equation}
-, whereas $count \in \mathbb{N}$, $price \in \mathbb{R^+}$ and $amount \in \mathbb{R^+}$.
-As a result, the order book state is a sequence containing order book entries for each \textit{side} (buy and sell) and the time stamp $ts$ of the state,
+whereas $count \in \mathbb{N}$, $price \in \mathbb{R^+}$ and $amount \in \mathbb{R^+}$.
+As a result, the order book state is a sequence containing order book entries for each \textit{side} (buy and sell) and the time stamp $ts$ (in milliseconds) of the state,
 \begin{equation}\label{eq:order-book-state}
 OS=(ts, OE_{b_1}, ..., OE_{b_n}, OE_{s_1}, ..., OE_{s_n})
 \end{equation}
@@ -136,9 +136,9 @@ In order to understand the purpose of the matching process, which is described i
 A trade results when the orders (Eq. \ref{eq:order}) from two parties on opposing order sides (Eq. \ref{eq:order-side}) agree on a quantity of shares and its price.
 That is,
 \begin{equation}\label{eq:trade}
-    Trade=(ts, side, type, quantity, price )
+    Trade=(ts, side, type, quantity, price ),
 \end{equation}
-, where $ts$ is the time-stamp when the participants agreed on the exchange of the products, $side \in OrderSide$, $type \in OrderType$, $quantity \in \mathbb{R^+}$ and $price \in \mathbb{R^+}$.
+where $ts$ is the time-stamp when the participants agreed on the exchange of the products, $side \in OrderSide$, $type \in OrderType$, $quantity \in \mathbb{R^+}$ and $price \in \mathbb{R^+}$.
 
 \subsection{Interface}
 \label{sec:match-engine-interface}
@@ -155,9 +155,9 @@ The two most commonly used timing mechanisms are:
 The match engine built in this project made available an interface that represents a function $match$ which takes any type of \textit{Order} (Section \ref{sec:orders}) and time horizon $H$ and returns a sequence of \textit{trade} (Eq. \ref{eq:trade}).
 That is,
 \begin{equation}
-    match : Order \times H \rightarrow Trades
+    match : Order \times H \rightarrow Trades,
 \end{equation}
-, whereas $|Trades| \in \mathbb{N}$.
+whereas $|Trades| \in \mathbb{N}$.
 The order is \textit{filled} (which means "fulfilled") if the sum of the traded quantity is equal to the amount stated in the submitted order, \textit{partially-filled} if the traded quantity is $> 0$ but not filled and \textit{not filled} otherwise.
 \\
 \\
@@ -214,9 +214,9 @@ Its aim is to minimize the \textit{opportunity cost} which arises when the price
 Literature\cite{nevmyvaka2006reinforcement, guo2013optimal} suggests using the \textit{volume weighted average price (VWAP)} as measures of the \textit{return} of order placement and order execution.
 That is,
 \begin{equation}\label{eq:vwap}
-    p_{vwap}=\frac{\sum{v_p*p}}{V}
+    p_{vwap}=\frac{\sum{v_p*p}}{V},
 \end{equation}
-, whereas $p$ is the price paid for $v_p$ shares and $V$ represents the total volume of shares.
+whereas $p$ is the price paid for $v_p$ shares and $V$ represents the total volume of shares.
 
 %\section{Time series}
 %
@@ -395,9 +395,9 @@ We rely on the standard assumption that future rewards are discounted by a facto
 Hence, we can define the future discounted \textit{return} at time $t$ as 
 
 \begin{equation}\label{eq:discounted-return}
-R_t=\sum_{i=t}^{T}{\gamma^{i-t}{*}r_{i}}
+R_t=\sum_{i=t}^{T}{\gamma^{i-t}{*}r_{i}},
 \end{equation}
-, where $T$ is the length of the episode (which can be infinity if there is no maximum length for the episode).
+where $T$ is the length of the episode (which can be infinity if there is no maximum length for the episode).
 \\
 The discounting factor has two purposes: it prevents the total reward from going to infinity (since $0 \leq \gamma \leq 1$), and it enables the preferences of the agent for immediate rewards or potential future ones to be controlled. \cite{rl-demysitifed2}
 

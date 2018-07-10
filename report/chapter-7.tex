@@ -1,17 +1,42 @@
 \chapter{General conclusions and discussion}
 \label{chap:discussion}
 
-This thesis serves to determine how deep reinforcement learning can be used to optimize the limit order placement problem.
-In the course of this project, it has been understood that, in order to propose a solution to this problem, concepts from the contexts of finance as well as machine learning are required to be understood and developed.
-Therefore, this thesis was structured such that each chapter makes a constructive contribution to the translation of the order placement problem into the reinforcement learning context and finally allows to pursue experiments which state the effectiveness of our setup.
-The required components involved were introduced in Chapter \ref{chap:preliminaries}; the data, including the features constructed therefrom, were elaborated in Chapter \ref{chap:data}.
-In Chapter \ref{chap:setup} a reinforcement learning environment and two implementations of agents were developed, by which inspiration and knowledge was acquired from the related work presented in Chapter \ref{chap:related-work}.
-Ultimately, the setup was evaluated in Chapter \ref{chap:analysis} and the found results show that the DQN agent was able to outperform the expected volume weighted average price for market orders by \$14.18 for buying 1.0 BTC within a time horizon of 100 seconds.
-However, the agent failed to outperform a market order by \$15.0 for selling 1.0 BTC within the equivalent time horizon.
+%This thesis serves to determine how deep reinforcement learning can be used to optimize the limit order placement problem.
+%In the course of this project, it has been understood that, in order to propose a solution to this problem, concepts from the contexts of finance as well as machine learning are required to be understood and developed.
+%Therefore, this thesis was structured such that each chapter makes a constructive contribution to the translation of the order placement problem into the reinforcement learning context and finally allows to pursue experiments which state the effectiveness of our setup.
+%The required components involved were introduced in Chapter \ref{chap:preliminaries}; the data, including the features constructed therefrom, were elaborated in Chapter \ref{chap:data}.
+%In Chapter \ref{chap:setup} a reinforcement learning environment and two implementations of agents were developed, by which inspiration and knowledge was acquired from the related work presented in Chapter \ref{chap:related-work}.
+%Ultimately, the setup was evaluated in Chapter \ref{chap:analysis} and the found results show that the DQN agent was able to outperform the expected volume weighted average price for market orders by \$14.18 for buying 1.0 BTC within a time horizon of 100 seconds.
+%However, the agent failed to outperform a market order by \$15.0 for selling 1.0 BTC within the equivalent time horizon.
 
 This chapter discusses and revisits the research questions with respect to the corresponding contributions made and thereby mentions strengths and limitations of this work.
 Furthermore, a summary of the contributions made is provided.
 Finally, future work is suggested and a motivation is stated which supports the application of the techniques developed to be used in real world practices.
+
+\section{Summary of contributions}
+
+This work aims to take a step towards answering the important question of how one can optimize limit order placement on cryptocurrency exchanges using deep reinforcement learning.
+Previous work in this field, by Kearns et al., who studied the behavior of order placement and order execution\cite{nevmyvaka2005electronic} and developed a reinforcement learning strategy\cite{nevmyvaka2006reinforcement} for the purposes of optimization on traditional exchanges, has been extended and applied to the cryptocurrency field.
+
+In this work, raw market data of the Bitcoin/US dollar trading pair was analyzed with regard to the activity of market participants.
+We have found that patterns emerge while traders create and cancel orders in financial markets.
+Based on these findings, two features where designed which incorporate these patterns, in the form of a window of 1) historical order book states and 2) historical trades, respectively.
+Furthermore, we developed a limit order book data structure and a simplified match engine; the latter  emulates a local broker and can match orders using the historical order book.
+These mechanisms were incorporated into a reinforcement learning environment which enables the order placement problem to be transposed into the reinforcement learning context.
+This environment is configurable and therefore flexible enough to enable investigations by means of the previously constructed features as well as a variety of agents.
+In addition, two implementations of reinforcement learning agents were developed: a Q-Learning agent, which serves as the learner when no market variables are provided, and a Deep Q-Network agent which was developed to handle the features previously mentioned.
+
+Prior to the experiments with the environment and using the agents developed, a comprehensive evaluation procedure was elaborated.
+This multi-step procedure involved an empirical investigation of the expected costs of limit and market orders and serves as a benchmark for the Q-Learning agent as well as the DQN agent.
+The results have shown that the Q-Learning agent was not able to take advantage of market price movements that were favorable to the order placement process.
+Nevertheless, the Q-Learner was able to reduce the costs when the market price development was not favorable to either buying or selling assets and when it outperformed all agent setups considered, in such a scenario.
+The DQN agent, on the other hand, was able to learn a policy that optimized order placement when market conditions were favorable to making a purchase or sale.
+However, this agent performed worse than the expected costs of a market order when conditions were not ideal.
+Furthermore, it has been shown that the agent is capable of finding a near-optimal policy on artificial market data, which suggests that non-stationary as well as noisy market data prevents the agent from achieving similar results.
+
+This thesis concludes that there is indeed a way in which deep reinforcement learning is capable of optimizing the limit order placement problem.
+However, under the application of real world market data, the agent can be exposed to severe conditions in the form of wide spreads or an absence of liquidity, which prevent the agent from applying an optimal policy.
+Therefore, and in order to constantly be able to perform better or equal placements than what is offered on financial markets at any given time, the approaches presented in this work have to be further improved and extended.
 
 \section{Findings with regard to the research questions}
 
@@ -54,18 +79,18 @@ Likewise, we tested multiple sizes of historical trades vector (10, 20, 30, 40, 
     Two agents with the purposes of learning with and without market features were developed.
     \\
     \\
-    At first, we will reflect why reinforcement learning is an appropriate approach to be taken in order to optimize the limit order placement problem.
+    We will first reflect on why reinforcement learning is an appropriate approach to be taken in order to optimize the limit order placement problem.
     As shown in Chapter \ref{chap:preliminaries}, the process of limit order placement involves many components.
-    Literature has used supervised learning methods (Section \ref{sec:related-supervised}) to forecast price movements and applied limit order placement as a separate task.
-    Reasons the separation of these tasks was due to the labelling of data samples.
-    More precisely, historical order book states have to be labelled with the optimal action that is to be taken when attempting to match an order with this state.
-    Thereby, the complexity depends on the number of order book states as well as the number of order book entries for each state (in our case the order book consisted of $n=40$ order book entries per state).
-    Not only does this imply extensive computational costs prior the training of the model, but also restricts the use of this setup in real world applications--when latency is crucial.
-    When a new market event is being created by a market participant, that leads to a new order book state, labels for all possible actions have to be computed before the state can be used for training the model.
-    With reinforcement learning these limitations can be overcome as follows: no pre-computation of labels is required for a new sample as the policy is updated based on the reward function, which in turn is determined by the outcome of the agents order placed.
-    Therefore, as soon a sample available, the agent can immediately attempt to place an order and update the maintained policy.
-    A successful application of this concept is known in literature\cite{nevmyvaka2006reinforcement} and was introduced in Section \ref{sec:related-reinforcement}.
-    However, while their approach made use of hand-crafted features, and one of the goals of our work was to make use of raw market data, the only solution was to use a action-value function approximator (see Section \ref{sec:deep-reinforcement-learning}).
+    Literature reports the uses of supervised learning methods (Section \ref{sec:related-supervised}) to forecast price movements and applied limit order placement as a separate task.
+    The reason for the separation of these tasks was due to the labeling of data samples.
+    More precisely, historical order book states have to be labeled with the optimal action that is to be taken when attempting to match an order with this state.
+    Thereby, run-time complexity depends on the number of order book states as well as the number of order book entries for each state. In our case, the order book consisted of $n=40$ order book entries per state.
+    Not only does this imply extensive computational costs prior to the training of the model, but it also restricts the use of this setup in real world applications, where latency is crucial.
+    When a new market event is being created by a market participant, this leads to a new order book state. Thereafter, labels for all possible actions have to be computed before the state can be used for training the model.
+    With reinforcement learning, these limitations can be overcome as follows: no pre-computation of labels is required for a new sample as the policy is updated based on the reward function, which in turn, is determined by the outcome of the agent's order placed.
+    Therefore, as soon as a sample becomes available, the agent can immediately attempt to place an order and update the maintained policy.
+    A successful application of this concept is known in literature\cite{nevmyvaka2006reinforcement} and was introduced earlier, in Section \ref{sec:related-reinforcement}.
+    However, while one of the goals of our work was to make use of raw market data, the authors' approach made use of hand-crafted features;  therefore, the only solution available to us was to use an action-value function approximator (see Section \ref{sec:deep-reinforcement-learning}).
     This in turn demanded the application of our own reinforcement learning framework.
     
     The construction of the reinforcement learning environment came with many difficulties and important findings were made.
@@ -119,15 +144,15 @@ Likewise, we tested multiple sizes of historical trades vector (10, 20, 30, 40, 
 
 \subsection{RQ 1.3: How can one evaluate a reinforcement learning environment and agent in the context of order placement?}
 
-    The fact that previous research has not yet been applied to the cryptocurrency market and therefore no optimization performance figures exist, to which the approach of this work can be compared to, an evaluation procedure was worked out as part of this thesis (Section \ref{sec:analysis-procedure}).
-    Therefore, two real world market data sets were chosen as well as artificially generated limit order books.
+    No previous research has  yet been applied to the cryptocurrency market and therefore there are no optimization performance numbers, to which the approach of this work can be compared. As a result, an evaluation procedure was elaborated as part of this thesis (Section \ref{sec:analysis-procedure}).
+    Therefore, two real-world market data sets were chosen as well as artificially generated limit order books.
     The multi-step procedure involved an empirical investigation of the expected costs of an optimally placed limit order as well as the costs of an immediate purchase or sale using a market order.
     Furthermore, the expected costs were taken as a benchmark for the Q-Learning agent as well as the DQN agent under the application of both aforementioned feature types.
     In addition, an evaluation mechanism was built into the reinforcement learning environment which enables the investigation of the steps taken by an agent while running a training or testing epoch.
     This detected the limitations of the agent as well as the environment in greater detail.
     \\
     \\
-    The way in which order placement was simulated relied significantly on suggestions related to backtesting made by Pedro et al. \cite{de2018advances}.
+    The way in which order placement was simulated relied significantly on suggestions related to backtesting made by Marcos Lopez de Prado \cite{de2018advances}.
     Particularly, the selection of random order book state that serves as the starting point of an epoch that the agent initializes drastically reduces the chances for possible over-fitting.
     With this in mind, we considered data sets which show different market price constellations and furthermore, developed a way to create artificial order books on which to train and test the agent.
     It is obvious that, only by considering an infinite amount of data sets can a completely generalized statement about the optimization capabilities be made; however, as mentioned earlier, this comes at the expense of time and computational resources.
@@ -143,9 +168,9 @@ Likewise, we tested multiple sizes of historical trades vector (10, 20, 30, 40, 
     On the contrary, when selling, orders should be place high in the book when the market price is falling and low in the book when the price is rising.
     These insights not only provided knowledge of how to optimize the placement of orders but also generated the means to compare the performance achieved by reinforcement learning agents.
     
-    We further reflect that average rewards provided much more understanding of the performance of reinforcement learners, as opposed to the additionally derived average actions chosen.
-    An average action, consisting of up to 10 values (equivalent to the maximum number of steps for one epoch) from the range of 101 total actions, certainly provides knowledge about the tendency at which price level the learners attempt to place orders.
-    However, it is suggested that an observation and analysis of the specific sequence of actions chosen be derived in future work.
+    We further reflect that average rewards provided a much greater insight into the performance of reinforcement learners, as opposed to the average actions chosen.
+    An average action, consisting of up to 10 values (equivalent to the maximum number of steps for one epoch) from the range of 101 total actions, certainly provides knowledge of the average price levels at which the learners attempt to place orders.
+    However, it is suggested that an observation and analysis of the specific sequence of actions chosen be undertaken in future work.
     
 \subsection{RQ 1.4: In which way do the previously constructed features enable a reinforcement learning agent to improve the way it places orders?}
 
@@ -162,8 +187,8 @@ Likewise, we tested multiple sizes of historical trades vector (10, 20, 30, 40, 
     That is, \$-27.70 was the expected return for selling 1.0 BTC and the agent reduced the return to \$-21.34, e.g. an improvement of 22.96\%.
     The agent was unable to outperform the expected market order costs of \$-1.72 and a loss of \$-4.74 was generated.
     In the buying process, the return improved from \$-1.06, as expected, to \$-1.04, when the market price was rising; no improvements were achieved when the price moved against our favor--\$-1.17 compared to \$-0.05 expected.
-    In general, it can be said that the performance of the Q-learner is relatively close to the costs of a market order, with one exception where it was significantly more profitable.
-    That suggests that the absence of market variables allows the agent to learn the general principles of determining the price level at to submit orders. Nevertheless, the agent is still not able to perform better than a market order.
+    In general, it can be said that the strategy learned by the Q-learner is relatively close to the costs of a market order, with one exception where it was significantly more profitable.
+    That suggests that the absence of market variables allows the agent to learn the general principles of determining the price level at which to submit orders. Nevertheless, the agent was still not able to perform better than a market order.
     The results found for the DQN agent were unlike the ones for the Q-Learning agent. 
     With regard to both market features, the agent was able to improve when market prices allowed, but failed otherwise.
     Hence, the agent learned that rewards are only high for prices below the spread, with $a<0$, but was unable to avoid the risk that came with it.
@@ -175,7 +200,7 @@ Likewise, we tested multiple sizes of historical trades vector (10, 20, 30, 40, 
     By considering the artificial data sets with linear and sine functions applied, near-optimal performance was achieved with the DQN agent and feature type I (window of historical order book states).
     This confirms that 1) reinforcement learning is indeed capable of optimizing limit order placement but 2) that there is potential to further improve the setup for real-world market data sets.
     Moreover, the increased optimization capability on a sine-shaped order book, compared to real-world market data, indicates that the learner had much difficulty finding a policy under non-stationary conditions and the $C$ parameter (see Section \ref{setup:dqn}) was only of minor assistance.
-    Furthermore, it is to be assumed that by 1) increasing the data sets and training epochs as well as 2) increasing the action space in order to consider even more actions to be taken for each step within an epoch, would increase the performance.
+    Furthermore, it is to be assumed that increasing 1) the data sets and training epochs and 2) the action space (in order to consider even more actions to be taken for each step within an epoch), would result in an improved performance.
     However, this would require significantly more computational resources and time than what was available for this work.
     Likewise, we expect a performance increase when tuning the hyper parameters of the DQN agent with a systematic grid search.
     In addition, during the evaluation of the limitation of the DQN agent, we have found that performance is likely to be improved by 1) enlarging the window size of the feature provided to the agent in order to cover long-term market movements and 2) increasing the training epochs in order to make the agent more aware of such pitfalls.
@@ -205,41 +230,16 @@ Therefore, we suggest updating the policy only if the rewards are either signifi
 Lastly, the setup built in this work can be used not only to learn order placement but also to learn a specific market making\cite{o1986microeconomics} strategy.
 This strategy is to place buy and sell orders simultaneously with the incentive of making a profit from the difference between the price paid for the buy order and the price received for the sell order.
 
-\section{Summary of contributions}
-
-This work aims to take a step towards answering the important question of how one can optimize limit order placement on cryptocurrency exchanges using deep reinforcement learning.
-Previous work in this field, by Kearns et al., who studied the behavior of order placement and order execution\cite{nevmyvaka2005electronic} and developed a reinforcement learning strategy\cite{nevmyvaka2006reinforcement} for the purposes of optimization on traditional exchanges, has been extended and applied to the cryptocurrency field.
-
-In this work, raw market data of the Bitcoin/US dollar trading pair was analyzed with regard to the activity of market participants.
-We have found that patterns emerge while traders create and cancel orders in financial markets.
-Based on these findings, two features where designed which incorporate these patterns, in the form of a window of 1) historical order book states and 2) historical trades, respectively.
-Furthermore, a limit order book data structure as well as a simplified match engine, that enables to emulate a local broker and can match orders using the historical order book, were developed.
-Those mechanisms were incorporated into a reinforcement learning environment which allows to make the translation of the order placement problem into the reinforcement learning context.
-The environment is configurable and therefore flexible enough to enable investigations with the previously constructed features as well a variety of agents.
-In addition, two implementations of reinforcement learning agents were developed: a Q-Learning agent serves as the learner when no market variables are provided and a Deep Q-Network agent is developed to handle the features previously mentioned.
-
-Prior the experimentation with the environment and agents developed, a comprehensive evaluation procedure was worked out as part of this work.
-The multi-step procedure involved an empirical investigation of the expected costs of limit and market orders and serves a benchmark for the Q-Learning agent as well as the DQN agent.
-The results have shown that the Q-Learning agent was not able to take advantage of market price movements that came in favour of the order placement process.
-Nevertheless, the Q-Learner was able to reduce the costs when the market price development did not come in favor of either buying or selling assets and outperformed all considered agent setups, in such a scenario.
-The DQN agent, on the other hand, was able to learn a policy that allows to optimize the order placement when market conditions came in favor of making a purchase or sale.
-However, this agent performed worse than the expected costs of a market order when conditions were not ideal.
-Furthermore, its has been shown that the agent is capable of finding a near-optimal policy on artificial market data, and therefore implies that non-stationary as well as noisy market data prevents the agent from achieving similar results.
-
-This thesis concludes that there is indeed a way in which deep reinforcement learning is capable of optimizing the limit order placement problem.
-However, under the application of real world market data, the agent can be exposed to severe conditions, in form of wide spreads or absence of liquidity, which prevent the agent from applying an optimal policy.
-Therefore, and in order to constantly be able to perform better or equal placements than what is offered at the financial market, at any given time, the approaches presented in this work have to be further improved and extended.
-
 \section{Application in real world practices}
 
-This work involved a pipeline of tasks, each of which contributed in partly towards answering research questions stated in this thesis.
+This work involved a pipeline of tasks, each of which contributed in part towards answering the research questions stated in this thesis.
 The tools and components developed throughout this process were thereby consecutively extended and merged.
-The result of which is a ready-to-use product, in form of a flexible framework, that allows to implement an intelligent order placement strategy according to the historical or live market data provided by the end user.
-The configuration parameters of the environment and agent provided allow to make further adjustments according to the users specific needs.
-Moreover, our approach is not limited to cryptocurrency markets but instead supports any product that is traded with limit order books, as long as data is provided.
-This in turn makes our setup attractive for numerous of real world practices.
-Financial exchanges could use this framework in order to provide a new \textit{order type}, which allows their customers to buy or sell an inventory $I$ of the asset within a time horizon of $H$ seconds.
-Moreover, this setup is not restricted to centralized exchanges but instead can also be applied to decentralized exchanges where each node of the exchange would feature its independent agent that learns from the corresponding order book residing in that node.
-Another target group of this framework are (institutional) traders or brokers which intend to optimize the way to place orders at the exchanges of their choice.
+The result of this is a ready-to-use product, in the form of a flexible framework that can implement an intelligent order placement strategy according to the historical or live market data provided by the end user.
+The configuration parameters of the environment and agent provided enable further adjustments to be made according to the user's specific needs.
+Moreover, our approach is not limited to cryptocurrency markets but also supports any product that is traded with limit order books, as long as data are provided.
+This in turn makes our setup attractive for numerous real- world practices.
+Financial exchanges could use this framework in order to provide a new \textit{order type} that allows their customers to buy or sell an inventory $I$ of the asset within a time horizon of $H$ seconds.
+Moreover, this setup is not restricted to centralized exchanges but can also be applied to decentralized ones where each node of the exchange would feature its independent agent that learns from the corresponding order book residing in that node.
+Another target group for this framework is (institutional) traders or brokers which intend to optimize the way in which they place orders on the exchanges of their choice.
 Therefore, data of the exchange serves as the source of the reinforcement learning environment. 
-The agents task is then to act as an \textit{intermediary} between the trader and exchange.
+The agent's task is then to act as an \textit{intermediary} between the trader and exchange.

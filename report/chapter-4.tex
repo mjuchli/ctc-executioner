@@ -30,13 +30,13 @@ There are three common types of events, all of which are initiated by a market p
 
 Our exchange of choice for collecting data was Bittrex as this exchange provides a \textit{SignalR}\footnote{https://docs.microsoft.com/en-us/aspnet/signalr/overview/getting-started/introduction-to-signalr} (a library that abstracts \textit{HTTP} and \textit{WebSocket}) interface from which one can extract all status updates (events) from the market.
 More specifically, a status update is either a buy or sell order, or a fill (e.g. trade).
-Therefore, we subscribed to \texttt{https://socket.bittrex.com/signalr} and filtered the data field \texttt{M} for \texttt{updateExchangeState}.
+Therefore, we subscribed to \texttt{https://socket.bittrex.com/signalr} and filtered the data field \texttt{M} of the channel \texttt{updateExchangeState}.
 The data type of the message contains the name of the trading pair and a nonce to identify the unique status update.
 That is,
 \begin{equation}
-    StatusUpdate = \{name, nonce, buy_1,...buy_n, sell_1,...sell_n, fill_1,...fill_n\}
+    StatusUpdate = \{name, nonce, buy_1,...buy_n, sell_1,...sell_n, fill_1,...fill_n\},
 \end{equation}
-, whereas $buy \in Order_{Limit}$, $sell \in Order_{Limit}$ (see Eq. \ref{eq:order-limit}) and $fill \in Trade$ (see Eq. \ref{eq:trade}).
+whereas $buy \in Order_{Limit}$, $sell \in Order_{Limit}$ (see Eq. \ref{eq:order-limit}) and $fill \in Trade$ (see Eq. \ref{eq:trade}).
 In this regard, the orders hold an additional field $type \in \{0,1,2\}$ which specifies whether it was a \textit{create}, \textit{cancel} or \textit{change} in the order, whereby the changes of orders are neglected in our setup as this function is rarely used by traders.
 
 It is evident that multiple events can be sent within one status update message. 
@@ -238,10 +238,10 @@ Therefore, some of the more obvious patterns are highlighted in the figures.
     \label{fig:data-volmap-traded}
 \end{figure}
 Figure \ref{fig:data-volmap-crated} shows the volumes of the orders created.
-The volumes of most of the orders placed were less than 1.0 BTC and significantly fewer orders had a larger volume, indicating that most of the participants were either willing to buy and sell only small quantities, or split their orders to minimize the market impact.
+The volumes of most of the orders placed were less than 1.0 BTC (see y-axis $10^0$ and below) and significantly fewer orders had a larger volume, indicating that most of the participants were either willing to buy and sell only small quantities, or split their orders to minimize the market impact.
 From a horizontal perspective, one can detect some orders on both sides, bids and asks, that were placed at the same time interval.
 This behavior is particularly evident at the regions highlighted on the volume axis just below $10^0$.
-This is likely to be one or multiple bots posting orders of the same volume and perhaps at different price levels.
+This is likely to be one or multiple bots posting orders of the same volume and perhaps at different price levels\cite{schluetter2010system}.
 Furthermore, a very distinctive diagonal-shaped pattern occurs when a trader posts orders of varying volumes within a short period of time.
 This might be evidence of someone splitting a large order into small pieces (known as a buy- or sell wall).
 Surprisingly, this behavior most often appeared both while and immediately after the market price started rising again. 
@@ -249,7 +249,7 @@ Surprisingly, this behavior most often appeared both while and immediately after
 For at least some of the limit orders that did not result in a trade, the cancellation that followed was expected.
 Figure \ref{fig:data-volmap-cancelled} shows the canceled orders over time.
 Sequences of cancellations emerged more clearly when volumes were just below $10^0$ and at $10^{-3}$, and when these volumes and their respective time intervals correlated with the sequences of the orders created, as shown in Figure \ref{fig:data-volmap-crated} before.
-Hence, it is likely that there was a trader following a strategy which involved creating and canceling orders in equal volumes.
+Hence, it is likely that there was a trader following a strategy which involved creating and canceling orders in equal volumes\cite{biais1995empirical}.
 A cancellation of one of the buy-walls that were created is particularly evident in both time stamps shortly after 13:34 and has a volume approximately equal to the one previously discovered during the observation of orders created.
 That makes it likely that this wall was created and canceled by a single trader, and perhaps created again as the same pattern occurred again in the order-creation figure at a later time stamp.
 
@@ -350,8 +350,6 @@ ap_{mn} & as_{mn}
 As the state will be observed by a deep learning agent that makes use of a neural network, the scaling of inputs will contribute to a faster learning process.
 We therefore have applied normalization to the prices ($bp, ap$) with respect to the best ask price for each state, that is $ap_{i1}$.
 Accordingly, we have also normalized the sizes ($bs, as$) by reference to the size provided at the best ask price $as_{i1}$.
-While this method does not scale the values of prices and sizes within a predefined range, the values sill decrease significantly.
-Furthermore, empirical observations show that the minimum and maximum prices within a single order book state do not differ by more than ~2\%, which determines the approximate scaling boundary.
 Lastly, we define $n=40$ order book entries (maximum of what goes from collection) on the bid and ask side, and therefore make the most possible use of the available data.
 \\
 \\

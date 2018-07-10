@@ -3,17 +3,21 @@
 
 \begin{abstract}
 Financial institutions buy or sell assets based on various reasons and such high-level trading strategies oftentimes define the purpose of their business.
-Regardless of their trading strategy, the invariable outcome is the decision to buy or sell assets.
+Many individuals, with or without prior trading knowledge, recently entered the field of trading as cryptocurrencies became popular and offers a low entry barrier for trading these assets.
+Regardless of the intention or trading strategy of these traders, the invariable outcome is their attempt to buy or sell assets. 
+However, in such a competitive field, market participants aim to take advantage over each other, for the purpose of their own profits.
+Therefore, this work aims to make a step towards answering the important question of how to optimize the process of buying and selling assets in an order-driven market and making these findings accessible to other traders.
 
-This work aims to make a step towards answering the non-trivial question on how to optimize a buy or sell of an asset on a stock exchange with the use of reinforcement learning techniques.
-Particularly:
-\begin{quote}
-    How can one design a reinforcement learning environment and construct features, which are derived from a limit order book, in order to optimize on the non-trivial problem of limit order placement, and what are the limitations thereof?
-\end{quote}
-We study event data from a crypto-currency exchange of our choice and build a framework that allows to simulate and understand the outcome of order placement in this market.
-We then try to overcome the exploitation of other participants in the market by building an intelligent trader that follows a placement strategy which aims to execute orders to a favourable price.
-Multiple reinforcement learning approaches are developed that consider various types of features, derived from the financial data set.
-To investigate the performance and analyze the behaviour of these approaches we further develop reinforcement learning environments on top of the aforementioned framework which simulate the processes of \textit{order placement}.
+This research concerns about the optimization of limit order placement within a given time horizon of 100 seconds and how to transpose this process into an end-to-end learning pipeline in the context of reinforcement learning.
+Features constructed from raw market event data, that were collected from the Bitcoin/USD trading pair at the Bittrex cryptocurrency exchange, were used by deep reinforcement learning agents in order to learn a limit order placement policy.
+This process was proceeded with the help of a reinforcement learning environment that emulates a local broker, which was developed as part of this work.
+Furthermore, we defined an evaluation procedure which allows to determine the capabilities and limitations of the policies learned by the reinforcement learning agents and ultimately provides means to quantify the optimization achieved with our approach.
 
-Our findings show...
+The results of this work include the finding patterns arising in cryptocurrency markets, that were formed by market participants who posted orders, and showed how to construct data features containing these patterns.
+We developed a fully-functioning reinforcement learning environment that emulates a local broker and thereby highlighted quintessential components and configuration settings.
+With the use of this environment we were able to train and test multiple reinforcement learning agents, whose intention it was to optimize the placement of buy and sell limit orders.
+During the evaluation we were able to improve the parameter settings of the constructed reinforcement learning environment and therefore improved policy learned by the agents.
+Ultimately, we showed significant optimization of limit order placement with the application of a state-of-the-art deep Q-network agent and were able to simulate purchases and sales of 1.0 BTC at a price that is up to \$33.89 better than the market price.
+
+The work done in this thesis can be used as a framework to (1) build an intermediary layer between trader and exchange and (2) to provide a new order type at an exchange to be used by traders.
 \end{abstract}

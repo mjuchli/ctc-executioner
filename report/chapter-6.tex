@@ -118,9 +118,9 @@ This investigation is shown in Figure \ref{fig:behvaiour-down} for time horizons
 The x-axis indicates the placement of the order at limit levels ranging from $a=-100$ to $a=+100$ and the y-axis indicates the average return received.
 
 With a time horizon of only 10 seconds left, the expected behavior is, however, proven wrong.
-For buy orders, shown in Figure \ref{fig:behvaiour-down-10s-buy}, the returns suggest that orders be placed close to the spread, but still on the opposing side, at a limit level of $\sim$+5.
-The spike at limit level $\sim$-5 indicates that the overall best return was produced at this level. However, this comes with the risk that the orders fail to execute, which is indicated by the downward spike also close to level $\sim$-5.
-For selling within 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-sell}, the best return is given when crossing the spread with a positive limit level of $\sim$+50.
+For buy orders, shown in Figure \ref{fig:behvaiour-down-10s-buy}, the returns suggest that orders be placed close to the spread, but still on the opposing side ($a=\sim{5}$).
+The spike at limit level $a=\sim{-5}$ indicates that the overall best return was produced at this level. However, this comes with the risk that the orders fail to execute, which is indicated by the downward spike also close to level $\sim{-5}$.
+For selling within 10 seconds, as shown in Figure \ref{fig:behvaiour-up-10s-sell}, the best return is given when crossing the spread with a positive limit level with $a=\sim{+50}$.
 
 With an increased time horizon of a total of 30 seconds, as shown in Figures \ref{fig:behvaiour-down-30s-buy} and \ref{fig:behvaiour-down-30s-sell}, the expected behavior becomes more apparent.
 Positive returns can be achieved by posting buy orders deep in the order book.
@@ -135,7 +135,7 @@ The most likely reasons it that a minority of orders  were partially filled at t
 
 With time horizons of 60 and 100 seconds, the expected behavior of the orders is clearly apparent.
 Buy orders, as shown in Figures \ref{fig:behvaiour-down-60s-buy} and \ref{fig:behvaiour-down-100s-buy}, achieve highest returns when placed very deep in the order book.
-However, when placed too deep, at levels -100, the returns are slightly lower as a result of unexecuted orders which had to be completed with market orders.
+However, when placed at levels -100, the returns are slightly lower as a result of unexecuted orders which had to be completed with market orders.
 In addition, positive limit levels become stable at this range since there are more sellers in the market with the extended time horizon.  Therefore, very highly placed orders have the same effect as limit orders posted only slightly above the spread.
 Furthermore, placing orders very deep in the book has the same effect as when placing them just below the spread; that is, there are no traders willing to buy at such a high price and therefore market orders follow once time has passed.
 \vfill
@@ -279,9 +279,23 @@ In order to have a measure of comparison for the reinforcement learning agents t
 \multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -27.70         & -27.70                                                          \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.06          & -1.06                                                           \\ \hline
 \multicolumn{1}{|l|}{\textbf{Sell (II)}} & 3.68          & -1.72                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{$\Sigma$}} & -9.88          & -30.53                                                           \\ \hline
 \end{tabular}
-\caption{Summary of rewards derived form the empirical analysis.}
+\caption{Summary of rewards derived from the empirical analysis.}
 \label{tbl:analysis-empirical-summary}
+\end{table}
+
+Furthermore, we have proceeded the same experiment by using different action step parameters $\Delta{a}$, as shown in Table \ref{tbl:analysis-empirical-summary-a}.
+Thereby we have found that a more coarse step size does not allow to improve the expected return for an optimal placed limit order.
+As a result, we will henceforth use the setting $\Delta{a}=\$0.1$ for investigations proceeded with reinforcement learning agents.
+\begin{table}[H]
+\centering
+\begin{tabular}{l|l|l|l|l|}
+\cline{2-5} & \textbf{$\Delta{a}=\$0.1$} & \textbf{$\Delta{a}=\$0.2$} & \textbf{$\Delta{a}=\$0.5$} & \textbf{$\Delta{a}=\$1.0$} \\ \hline
+\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}${[}Limit order{]} \\ (optimal)\end{tabular}}} & -9.88          & -9.96          & -13.52         & -17.65         \\ \hline
+\end{tabular}
+\caption{Rewards derived from the empirical analysis with different action step parameters $\Delta{a}$.}
+\label{tbl:analysis-empirical-summary-a}
 \end{table}
 
 \section{Q-Learning without market variables}
@@ -398,6 +412,7 @@ Hence, the use of an requires the payment of a premium of \$3.02 when selling 1.
 \multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -21.34         & -27.70                                                          \\ \hline
 \multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.04          & -1.06                                                           \\ \hline
 \multicolumn{1}{|l|}{\textbf{Sell (II)}} & -4.74          & -1.72                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{$\Sigma$}} & -28.29          & -30.53                                                           \\ \hline
 \end{tabular}
 \caption{Summary of rewards for the Q-Learning agent and market orders.}
 \label{tbl:analysis-q-learn-summary}
@@ -420,11 +435,11 @@ By considering the above-mentioned results of the empirical analysis of the limi
 In this section, we aim to determine whether or not the DQN agent is capable of extracting information provided by the raw market features and therefore improve the limit order placement policy.
 The setup is the same as in the previous section, where the agents task is to buy and sell 1.0 BTC within 100 seconds with discrete step size $\Delta{t}=10$ in both data sets I and II.
 Furthermore, both of the features constructed in Chapter \ref{chap:data}, will be applied and investigated separately.
-The input shape of the model in use that approximates the action-value function, as described in Chapter \ref{chap:preliminaries} (Section \ref{sec:deep-reinforcement-learning}), is therefore determined by the chosen feature and is described below.
-After extensive investigations with many such models, including a multi-layer neural network\cite{svozil1997introduction} (2 hidden layers), a long short-term neural network (LSTM)\cite{gers1999learning}, and the convolutional neural network (CNN) described in Section \ref{setup:dqn}.
-The best performance was achieved with the latter and thus this model is used for this analysis.
-For both DQN agents, we relied on the default hyperparameters worked out by Mnih et al. \cite{mnih2015human}, as shown in Figure \ref{fig:eval-dqn-hyperparameters}.
-Finally, we conclude our findings and determine the capabilities of the DQN approach (and its use of the market features) by comparing it to the expected rewards found in Section \ref{sec:eval-empirical}.
+The input shape of the model in use that approximates the action-value function, as described in Chapter \ref{chap:preliminaries} (Section \ref{sec:deep-reinforcement-learning}), is determined by the feature in use and is described below.
+We evaluate the performance of the DQN agent under the application of both neural network architectures, the standard convolutional neural network and the multilayer perceptron, as presented in Section \ref{setup:dqn}.
+For both of these DQN agent setups, we rely on the default hyperparameters worked out by Mnih et al. \cite{mnih2015human}, as shown in Figure \ref{fig:eval-dqn-hyperparameters}.
+Furthermore, we will train both agents with 5000 epochs and will test with 1000 epochs.
+Finally, we will conclude our findings and determine the capabilities of the DQN approach (and its use of the market features) by comparing it to the expected returns for a market order calculated earlier in Section \ref{sec:eval-empirical}.
 \begin{figure}[H]
     \centering
     \makebox[\linewidth]{
@@ -436,30 +451,30 @@ Finally, we conclude our findings and determine the capabilities of the DQN appr
 
 \subsection{Application of historical order feature}
 
-The following evaluation of the DQN agent considers historical order book states as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-1}) which we will denote henceforth as Feature I.
-Therefore, a \textit{lookback} of 30 historical order book states are considered and the number of levels in each state is limited to 20 for bids and asks respectively.
-Consequently, this feature set is of size: $(2*lookback, limit levels, 2) \rightarrow (60, 40, 2)$.
-When we included the two private variables by appending a vector $[inventory, time]$ at the beginning of this feature vector, the size of the feature set was $(61, 40, 2)$ and, as such, will serve as the input for the CNN.
+The following evaluation of the DQN agent setups that consider Feature I, as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-1}).
+Furthermore, in this initial run we consider $m=30$ historical order book states, alongside the maximum number of bid and ask levels $n=40$.
+This results in a feature set size of $(60, 40, 2)$, as a consequence of the defined size $(2*m, n, 2)$.
+When we included the two private variables by appending a vector $[inventory, time]$ at the beginning of this feature vector, the size of the feature set was $(61, 40, 2)$ and, as such, will serve as the input for the neural networks in use.
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_buy_rewards.png}
+        \includegraphics[width=\textwidth]{cnn_nn_1_buy_bidask_rewards.png}
         \caption{Reward per epoch (buy)}
         \label{fig:analysis-dqn-1-reward-buy}
     \end{subfigure}
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_buy_mean_actions.png}
+        \includegraphics[width=\textwidth]{cnn_nn_1_buy_bidask_mean_actions.png}
         \caption{Mean of actions per epoch (buy)}
         \label{fig:analysis-dqn-1-action-buy}
     \end{subfigure}
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_sell_rewards.png}
+        \includegraphics[width=\textwidth]{cnn_nn_1_sell_bidask_rewards.png}
         \caption{Mean rewards per epoch (sell)}
         \label{fig:analysis-dqn-1-reward-sell}
     \end{subfigure}
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_sell_mean_actions.png}
+        \includegraphics[width=\textwidth]{cnn_nn_1_sell_bidask_mean_actions.png}
         \caption{Mean of actions per epoch (sell)}
         \label{fig:analysis-dqn-1-action-sell}
     \end{subfigure}
@@ -470,22 +485,22 @@ When we included the two private variables by appending a vector $[inventory, ti
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_buy_rewards.png}
+        \includegraphics[width=\textwidth]{cnn_nn_2_buy_bidask_rewards.png}
         \caption{Reward per epoch (buy)}
         \label{fig:analysis-dqn-2-reward-buy}
     \end{subfigure}
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_buy_mean_actions.png}
+        \includegraphics[width=\textwidth]{cnn_nn_2_buy_bidask_mean_actions.png}
         \caption{Mean of actions per epoch (buy)}
         \label{fig:analysis-dqn-2-action-buy}
     \end{subfigure}
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_sell_rewards.png}
+        \includegraphics[width=\textwidth]{cnn_nn_2_sell_bidask_rewards.png}
         \caption{Mean rewards per epoch (sell)}
         \label{fig:analysis-dqn-2-reward-sell}
     \end{subfigure}
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_sell_mean_actions.png}
+        \includegraphics[width=\textwidth]{cnn_nn_2_sell_bidask_mean_actions.png}
         \caption{Mean of actions per epoch (sell)}
         \label{fig:analysis-dqn-2-action-sell}
     \end{subfigure}
@@ -494,46 +509,44 @@ When we included the two private variables by appending a vector $[inventory, ti
 \end{figure}
 
 Figure \ref{fig:analysis-dqn-1} shows the learning process using data set I.
-During the training process relating to the purchase of assets, the rewards obtained consistently improved over the course of the 5000 epochs (Figure \ref{fig:analysis-dqn-1-reward-buy}), throughout which the agent steadily adjusted the actions to be chosen more negatively (Figure \ref{fig:analysis-dqn-1-action-buy}).
-After 2000 epochs, the average chosen action stagnated just below -20, which is \$2.00 below the market price.
-It is evident that this adjustment is not as linear as it was during the training of the Q-Learning agent, as shown in the previous section.
-However, the adjustment is appropriate since the market price was falling.
-Therefore, the achieved reward during the backtest resulted in 22.06, which is a significant improvement compared to the expected return of -0.05 for a market order.
-
+During the training process relating to the purchase of assets, the rewards obtained consistently improved over the course of the 5000 epochs (Figure \ref{fig:analysis-dqn-1-reward-buy}), throughout which the DQN-CNN agent steadily adjusted its actions to be more negative and the DQN-MLP agent adjusted them to become more positive (Figure \ref{fig:analysis-dqn-1-action-buy}).
+It is evident that this adjustment, for both DQN agents, is not as linear as it was during the training of the Q-Learning agent, as shown in the previous section.
+However, the adjustment made by the DQN-CNN agent is appropriate since the market price was falling.
 The rewards obtained from selling are shown in Figure \ref{fig:analysis-dqn-1-reward-sell} and the average chosen action throughout the epochs is shown in Figure \ref{fig:analysis-dqn-1-action-sell}.
-The rewards did not improve over the course of the training and the agent did not choose to adjust the actions on average.
+The rewards did not improve over the course of the training and both agents did not choose to adjust the actions on average.
 Possibly, this was due to the constantly negative rewards obtained during the training under market conditions that were difficult for the sale of assets while the market price was falling.
-As a result, during the backtest, a negative reward of -39.26 was achieved, much worse than a market orde,r which comes with the expected return of -27.70 and therefore indicate that the agent, despite a falling market, tried to sell with limit orders instead of market orders.
-
-Figure \ref{fig:analysis-dqn-2} shows the agent's learning process using data set II.
-Over the course of 5000 epochs, the agent was not able to improve its reward and instead, stagnated on average at approximately \$0.00 rewards per epoch, as shown in Figure \ref{fig:analysis-dqn-2-reward-buy}.
-The agent adjusted the chosen actions steadily such that the average limit level fell to elow -20 at epoch 2000 and remained at this level, as shown in Figure \ref{fig:analysis-dqn-2-action-buy}.
-Therefore, the reward was a product of market orders as the orders with these limit levels were most likely not filled.
-After all, the backtest resulted in an average reward of -2.26 which is slightly worse than the expected market order reward of -1.06.
-
+Figure \ref{fig:analysis-dqn-2} shows the agents learning processes using data set II.
+Over the course of 5000 epochs, the agents were not able to improve their reward and instead, stagnated at approximately \$-2.50 and \$5.00 rewards per epoch respectively, as shown in Figure \ref{fig:analysis-dqn-2-reward-buy}.
+Both agents adjusted the actions steadily such that the average limit level fell to approximately -20 at epoch 1000 and remained at this level, as shown in Figure \ref{fig:analysis-dqn-2-action-buy}.
+Therefore, the rewards must have been determined by market orders followed after failing to fill the order with their levels chosen.
 The rewards for the agent that learned to sell assets are shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
 The rewards could not be improved during the training, even though the agent lowered the average action chosen to below -20, as shown in Figure \ref{fig:analysis-q-learn-2-action-sell}.
 In such rising market conditions, the rewards observed are a product of the market order, since negative actions will likely not result in a filled order.
+The rewards for selling assets in this rising market was improved and remained above \$0.00, as shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
+Thereby, the average of actions chosen for an epoch were lowered within the first 1000 epochs and, thereafter, remained at approximately -10 (DQN-CNN) and -20 (DQN-MLP), which correlates with the rewards obtained .
+\\
+\\
+Table \ref{tbl:analysis-dqn-orderfeature-summary} summarizes the average rewards observed during the backtest using the DQN agents that made use of Feature I.
+Overall, both DQN agents were able to optimize limit order placement when the given market conditions came in favor of making a purchase or sale respectively.
+More precisely, significant improvements were made during the backtest of the DQN-CNN agent when the task was to buy assets and the market price was falling (dat set I). 
+Thereby the agent was rewarded with 22.06, which is a significant improvement compared to the expected return of -0.05 for a market order.
+Likewise, during rising market conditions (data set I), both agents were able to improve over the expected market order return.
+However, when market conditions were not favorable to the intention to either buy or sell, the agents performed not only most of the times worse than the expected return of a market order but also worse than the Q-Learning agent (see Table \ref{tbl:analysis-q-learn-summary} above).
+That is, the DQN-CNN agent achieved rewards of -39.26 and -2.26 for selling in data set I and buying in data set II, both worse than the expected returns for market orders.
+The exception was when the DQN-MLP agent achieved -22.67 when attempting to make sales in data set I and therefore performed better than the expected market order return.
+However, the backtest that set the DQN-MLP agent to make a purchases in data set II performed with -7.40 much worse than the baseline provided by the expected market order return.
+Overall, the DQN-CNN agent performed the best and minor improvements were achieved by the DQN-MLP agent.
 
-The rewards for selling assets in this rising market could be improved and, after 1000 training epochs, kept constantly above \$0.00, as shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
-Therefore, the average of actions chosen for an epoch was lowered within the first 1000 epochs and, thereafter, remained at approximately -10, which correlates with the rewards obtained .
-Finally, the backtest resulted in an average reward of 0.84, which is an improvement compared to the expected reward of -1.72 for a market.
-\\
-\\
-Table \ref{tbl:analysis-dqn-orderfeature-summary} summarizes the average rewards observed during the backtest using the DQN agent that uses Feature I, which includes 30 historical order book states as features and therefore has knowledge about the change in created and canceled orders.
-Overall, the DQN agent was able to optimize limit order placement when the given market conditions came in favor of making a purchase or sale respectively.
-More precisely, significant improvements were made when the task was to buy assets and the market price was falling. A minor optimization was achieved when the task was to sell assets and the market price was rising.
-Under these conditions, the DQN agent performed better than the Q-Learning agent.
-However, when market conditions were not favorable to the intention to either buy or sell, the agent performed not only worse than the expected return of a market order but also worse than the Q-Learning agent.
 \begin{table}[H]
 \centering
-\begin{tabular}{l|l|l|}
-\cline{2-3}
-& \textbf{DQN (Feature I)} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market\\ Order]\end{tabular}} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 22.06          & -0.05                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -39.26         & -27.70                                                          \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -2.26          & -1.06                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (II)}} & 0.84          & -1.72                                                           \\ \hline
+\begin{tabular}{l|l|l|l|}
+\cline{2-4}
+& \textbf{DQN-CNN} & \textbf{DQN-MLP} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market\\ Order]\end{tabular}} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 22.06  & -4.04 & -0.05                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -39.26 & -22.67        & -27.70                                                          \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -2.26  & -7.40        & -1.06                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & 0.84   & 7.47       & -1.72                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{$\Sigma$}} & -18.62  & -26.64        & -30.53                                                           \\ \hline
 \end{tabular}
 \caption{Summary of rewards during backtest of DQN agent using Feature I (historical orders).}
 \label{tbl:analysis-dqn-orderfeature-summary}
@@ -541,30 +554,30 @@ However, when market conditions were not favorable to the intention to either bu
 
 \subsection{Application of historical trade feature}
 
-The following evaluation of the DQN agent considers historical trades as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-2}),  defined henceforth as Feature II.
-Therefore, a \textit{lookback} of 30 trades are considered.
-Consequently, this feature set is of size: $(lookback, 4) \rightarrow (30, 3)$.
-When we included the two private variables that were appended as a vector $[inventory, time, 0, 0]$ at the beginning of this feature vector, the result was a feature set of size $(31, 4)$, which will serve as the input for the CNN.
+The following evaluation of the DQN agent setups that consider Feature II, as described in Chapter \ref{chap:data} (Section \ref{sec:data-feature-2}).
+In this initial run we consider $n=30$ historical trades.
+This results in a feature set size of $(30, 3)$, as a consequence of the defined size $(n, 4)$.
+When we included the two private variables by appending a vector $[inventory, time, 0, 0]$ at the beginning of this feature vector, the size of the feature set was $(31, 4)$ and, as such, will serve as the input for the neural networks in use.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_buy_trades_rewards.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_1_buy_trades_rewards.png}
         \caption{Reward per epoch (buy)}
         \label{fig:analysis-dqn-1-trades-reward-buy}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_buy_trades_mean_actions.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_1_buy_trades_mean_actions.png}
         \caption{Mean of actions per epoch (buy)}
         \label{fig:analysis-dqn-1-trades-action-buy}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_sell_trades_rewards.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_1_sell_trades_rewards.png}
         \caption{Mean rewards per epoch (sell)}
         \label{fig:analysis-dqn-1-trades-reward-sell}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_1_sell_trades_mean_actions.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_1_sell_trades_mean_actions.png}
         \caption{Mean of actions per epoch (sell)}
         \label{fig:analysis-dqn-1-trades-action-sell}
     \end{subfigure}
@@ -574,23 +587,23 @@ When we included the two private variables that were appended as a vector $[inve
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_buy_trades_rewards.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_2_buy_trades_rewards.png}
         \caption{Reward per epoch (buy)}
         \label{fig:analysis-dqn-2-trades-reward-buy}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_buy_trades_mean_actions.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_2_buy_trades_mean_actions.png}
         \caption{Mean of actions per epoch (buy)}
         \label{fig:analysis-dqn-2-trades-action-buy}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_sell_trades_rewards.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_2_sell_trades_rewards.png}
         \caption{Mean rewards per epoch (sell)}
         \label{fig:analysis-dqn-2-trades-reward-sell}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{cnn_2_sell_trades_mean_actions.png}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{cnn_nn_2_sell_trades_mean_actions.png}
         \caption{Mean of actions per epoch (sell)}
         \label{fig:analysis-dqn-2-trades-action-sell}
     \end{subfigure}
@@ -598,65 +611,73 @@ When we included the two private variables that were appended as a vector $[inve
     \label{fig:analysis-dqn-2-trades}
 \end{figure}
 
-Figure \ref{fig:analysis-dqn-1-trades} illustrates the learning process of the agent for buying and selling using data set I.
-As with the agent that was provided with Feature I, the rewards received could be slightly improved over the course of 5000 epochs, which is shown in Figure \ref{fig:analysis-dqn-1-trades-reward-buy}.
-Interestingly, the average action per epoch converged at just below -40 after an abrupt adjustment was made after 4000 epochs.
-The average reward achieved during the backtest is 31.92 and is a clear improvement compared to the expected market order return of -0.05.
-
-The rewards received for selling remained at -20, as shown in Figure \ref{fig:analysis-dqn-1-trades-reward-sell}.
-However, the average of the actions chosen remain volatile and no clear trend can be seen in Figure \ref{fig:analysis-dqn-1-trades-action-sell}.
-This is by no means a negative sign; perhaps the agent learned to respond to distinct patterns with appropriate measures.
-As a result, during the backtest, an average reward of -35.15 was achieved, which is still worse than the expected return of a market order but significantly better than the DQN agent under the application of Feature I.
-
+Figure \ref{fig:analysis-dqn-1-trades} illustrates the learning processes of the DQN agents for buying and selling using data set I.
+As with the agents that were provided with Feature I, the rewards received for buying slightly improved over the course of 5000 epochs, which is shown in Figure \ref{fig:analysis-dqn-1-trades-reward-buy}.
+Interestingly, the average action chosen per epoch by the DQN-CNN agent was abruptly adjusted after 4000 epochs, while the DQN-MLP's choice remained between 0 and 20 on average.
+However, correlating improvements with respect to the rewards was not evident.
+The rewards received for selling remained just below -10 for the DQN-CNN agent and below -20 for the DQN-MLP agent, as shown in Figure \ref{fig:analysis-dqn-1-trades-reward-sell}.
+The average of the actions chosen by the DQN-CNN agent, even though being volatile, were adjusted towards becoming positive, as shown in Figure \ref{fig:analysis-dqn-1-trades-action-sell}.
+Unfortunately, this is evidence that the average action is not providing enough insights into the actual decision making process of the agent.
+Had the agent consistently chosen positive actions throughout an epoch, an improvement of the reward would have been visible in the aforementioned figure.
+Instead, the agent must have chosen negative actions in the initial steps and shifted towards very positive actions later in the epoch.
 Figure \ref{fig:analysis-dqn-2-trades} illustrates the same learning process with the application of data set II.
-The rewards for the buying process were not improved (Figure \ref{fig:analysis-dqn-2-trades-reward-buy}) and the actions were adjusted towards limit levels deep in the order book (Figure \ref{fig:analysis-dqn-2-trades-action-buy}).
-The backtest resulted in an average reward of -3.56, slightly worse than the expected market return of -1.06.
-
-Rewards for selling increased during the training, as shown in Figure \ref{fig:analysis-dqn-2-trades-reward-sell} and the chosen average action remained just above -40 after 1000 epochs, as shown in Figure \ref{fig:analysis-dqn-2-trades-action-sell}.
-The average reward after the backtest was 0.15, which is an improvement on the expected market order return of -1.72.
+The rewards for the buying process were not improved (Figure \ref{fig:analysis-dqn-2-trades-reward-buy}) for either of the two agents.
+Interestingly, in this scenario the DQN-MLP made a significantly better adjustment regarding the actions chosen (Figure \ref{fig:analysis-dqn-2-trades-action-buy}), indicating the willingness to make more immediate purchases.
+Rewards for selling on data set II increased during the training, as shown in Figure \ref{fig:analysis-dqn-2-trades-reward-sell} and the chosen average action remained at around -30 after 1000 epochs, for both agents, as shown in Figure \ref{fig:analysis-dqn-2-trades-action-sell}.
 \\
 \\
-Table \ref{tbl:analysis-dqn-tradefeature-summary} summarizes the average rewards received for the DQN agent that makes use of Feature II and considers the 25 trades immediately prior to each of the 1000 epochs backtested.
-As with the previous application of Feature I to the agent, significant optimization could be achieved when market conditions became more favorable to buying or selling.
-The application of Feature II meant that the agent was able to outperform the DQN agent with Feature I when it comes to buying when the market price is falling.
-A slightly worse performance resulted when attempting to sell and the market price was rising.
-Nevertheless, the reward obtained was much better than the expected market order return.
-However, when the market conditions came not in favor of the intention to either buy or sell, the agent performed equal to the DQN under application of Feature I.
+Table \ref{tbl:analysis-dqn-tradefeature-summary} summarizes the average rewards received by the DQN agents during the backtest.
+As with the previous application of Feature I to the DQN agents, significant optimization could be achieved when market conditions became more favorable to buying or selling.
+For buying during falling market conditions (data set I), the DQN-CNN achieved a reward of 31.92 and the DQN-MLP a reward of 25.44, a clear improvement compared to the expected market order return of -0.05.
+Likewise, both agents improved sales in data set II (0.15 and 3.80 reward respectively).
+Compared to when Feature I was applied, the agents under the application of Feature II achieved better results in difficult market conditions (selling in data set I and buying in data set II).
+Particularly, sales in data set II were better than the expected returns of market orders.
+Overall, indicated by the positive sum of rewards achieved by both DQN agents, were able to make purchases and sales better than the market price.
+Consequently, the reward obtained was much better than the expected market order return.
+The application of Feature II meant that the agent outperformed the DQN agent with Feature I (see Table \ref{tbl:analysis-dqn-orderfeature-summary} for comparison).
+Thereby, the DQN-CNN setup has proven to improve to a greater extent than the DQN-MLP setup.
 
 \begin{table}[H]
 \centering
-\begin{tabular}{l|l|l|}
-\cline{2-3}
-& \textbf{DQN (Feature II)} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market\\ Order]\end{tabular}} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 31.92          & -0.05                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -25.15         & -27.70                                                          \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -3.56          & -1.06                                                           \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (II)}} & 0.15          & -1.72                                                           \\ \hline
+\begin{tabular}{l|l|l|l|}
+\cline{2-4}
+& \textbf{DQN-CNN} & \textbf{DQN-MLP} & \textbf{\begin{tabular}[c]{@{}l@{}}$\mathbb{E}$[Market\\ Order]\end{tabular}} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & 31.92    & 25.44          & -0.05                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -25.15   & -20.65         & -27.70                                                          \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -3.56    & -6.43          & -1.06                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & 0.15     & 3.80          & -1.72                                                           \\ \hline
+\multicolumn{1}{|l|}{\textbf{$\Sigma$}} & 3.36      & 2.16          & -30.53                                                           \\ \hline
 \end{tabular}
 \caption{Summary of rewards during backtest of DQN agent using Feature II (historical trades).}
 \label{tbl:analysis-dqn-tradefeature-summary}
 \end{table}
 
-\subsection{Comparing environment parameters}
-% Please add the following required packages to your document preamble:
-% \usepackage[normalem]{ulem}
-% \useunder{\uline}{\ul}{}
+\subsection{Comparison with different feature sizes}
+
+Both features constructed in this project allow for adjustments regarding their size, that determines the information content provided to the agent.
+Until now, we have made use of one particular setting for each feature, that is, we have used $m_I=30$ windows with length $n_I=40$ for feature I and a vector length of $n_{II}=30$ for feature II.
+With the use of the DQN-CNN agent, which has resulted in slightly better performance than the DQN-MLP agent, we will investigat whether or not a different size of the feature vector allows to further improve these results.
+We proceed the same evaluation as described in the previous two sections with different feature vector settings.
+For feature I, we will investigate window sizes $m=10,20,30,40,50$ with maximum vector length $n=40$.
+Similarly, for feature II, we will investigate the length of the vector $n=10,20,30,40,50$ (no window present for this feature).
+
+Table \ref{tbl:analysis-dqn-featuresize} below shows the results from the backtest and confirms that the setting we ran earlier n this section performed the best.
+It is evident that a smaller window size for feature I and a smaller vector length for feature II ($m_I<30$ and $n_{II}<30$), both have a negative impact on the resulted performance, indicating that the agent retrieved not enough information.
+However, increasing the dimensionality of our feature space ($m_I>30$ and $n_{II}>30$) did not improve the agents capabilities and therefore indicates arising difficulties related to the curse of dimensionality\cite{keogh2011curse}.
+
 \begin{table}[H]
-\begin{tabular}{l|lllll|llllllllll|}
-\cline{2-16}
-                                          &                                        &                                  & \textbf{1}                       & \textbf{}                        &             &                                         &                                  & \textbf{2}                       & \textbf{}                        & \multicolumn{1}{l|}{}            &                                         &                                  & \textbf{3}                       &                                  &             \\ \cline{2-16} 
-                                          & \multicolumn{1}{l|}{\textbf{m}}       & \multicolumn{1}{l|}{\textbf{B1}} & \multicolumn{1}{l|}{\textbf{S1}} & \multicolumn{1}{l|}{\textbf{B2}} & \textbf{S2} & \multicolumn{1}{l|}{\textbf{$\Delta{t}$}}        & \multicolumn{1}{l|}{\textbf{B1}} & \multicolumn{1}{l|}{\textbf{S2}} & \multicolumn{1}{l|}{\textbf{B2}} & \multicolumn{1}{l|}{\textbf{S2}} & \multicolumn{1}{l|}{\textbf{$\Delta{a}$}}        & \multicolumn{1}{l|}{\textbf{B1}} & \multicolumn{1}{l|}{\textbf{S1}} & \multicolumn{1}{l|}{\textbf{B2}} & \textbf{S2} \\ \hline
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{10}}       & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{x}           & x           & \multicolumn{1}{l|}{\textbf{3s}}        & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{{\ul \textbf{0.1}}} & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{x}           & \multicolumn{1}{l|}{x}           & x           \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{20}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             &                                         &                                  &                                  &                                  &                                  &                                         &                                  &                                  &                                  &             \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{Feature I}}  & \multicolumn{1}{l|}{{\ul \textbf{30}}} & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             & \multicolumn{1}{l|}{\textbf{5s}}        & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{\textbf{0.5}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{40}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             &                                         &                                  &                                  &                                  &                                  & \textbf{}                               &                                  &                                  &                                  &             \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{50}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             & \multicolumn{1}{l|}{{\ul \textbf{10s}}} & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{\textbf{1.0}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             \\ \hline
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{10}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             & \multicolumn{1}{l|}{\textbf{3s}}        & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{{\ul \textbf{0.1}}} & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{20}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             &                                         &                                  &                                  &                                  &                                  &                                         &                                  &                                  &                                  &             \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{Feature II}} & \multicolumn{1}{l|}{{\ul \textbf{30}}} & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             & \multicolumn{1}{l|}{\textbf{5s}}        & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{\textbf{0.5}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{40}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             &                                         &                                  &                                  &                                  &                                  &                                         &                                  &                                  &                                  &             \\ \cline{2-16} 
-\multicolumn{1}{|l|}{\textbf{}}           & \multicolumn{1}{l|}{\textbf{50}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             & \multicolumn{1}{l|}{{\ul \textbf{10s}}} & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{\textbf{1.0}}       & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            & \multicolumn{1}{l|}{}            &             \\ \hline
+\centering
+\begin{tabular}{|c|l|l|}
+\hline
+\textbf{\#}  & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Feature I\\ $\Sigma{[B1,S1,B2,BS2]}$\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Feature II\\ $\Sigma{[B1,S1,B2,BS2]}$\end{tabular}}} \\ \hline
+\textbf{10} & -36.85                                                                                                & -12.36                                                                                                 \\ \hline
+\textbf{20} & -34.62                                                                                                & -13.68                                                                                                 \\ \hline
+\textbf{30} & {\ul -18.62}                                                                                          & {\ul 3.36}                                                                                             \\ \hline
+\textbf{40} & -21.59                                                                                                & -11.97                                                                                                 \\ \hline
+\textbf{50} & -23.37                                                                                                & -1.43                                                                                                  \\ \hline
 \end{tabular}
+\caption{Summary of rewards during backtest of DQN-CNN agent using different feature sizes.}
+\label{tbl:analysis-dqn-featuresize}
 \end{table}
 
 \section{Determining the limitations of the DQN agent}
@@ -765,31 +786,35 @@ This indicates that the agent was able to improve to an near-optimal policy with
 \section{Conclusion of the evaluation}
 
 The evaluation procedure introduced and performed in this chapter showed that reinforcement learning techniques are indeed suitable for optimizing limit order placement for cryptocurrency markets.
-The findings are shown in Table \ref{tbl:analysis-conclusion}
+The findings are summarized in Table \ref{tbl:analysis-conclusion}
 First, we empirically estimated the potential improvements that can be achieved by placing orders at the the optimal limit level compared to an immediate sale or purchase using a market order.
 It has been shown that, when the development of the market price is favorable to limit order placement, namely when the price is falling while buying or when the price is rising while buying, then the reward for the optimal limit order is expected to be significantly higher.
-In situations where the market price is never favorable, then no improvement can be achieved and the optimal limit level is to cross the spread which declares the order to become a market order that fulfills the demand to buy or sell immediately.
+In situations where the market price is never favorable, then no improvement can be achieved and the optimal limit level is to cross the spread (a>0) which declares the order to become a market order that fulfills the demand to buy or sell immediately.
 Subsequently, the Q-Learning agent was trained and tested without the knowledge of market data but with private variables (inventory and time horizon) only.
 The average rewards achieved during a backtest have demonstrated that this agent was not able to take advantage of market price movements that were favorable to the order placement process.
 However, the agent was able to reduce the costs when the market price development was  not favorable to either buying or selling assets.
 In fact, the performance of the Q-Learning agent was the best of all considered agents, when it came to reducing the occurrence of unavoidable losses.
-Subsequently, the DQN agent was evaluated under the independent application of two feature sets.
+Subsequently, the DQN agent was evaluated under the independent application of two feature sets as well as two different types of action-value function approximators.
 It has been shown that the application of feature II (a sequence of historical trades) allows for a slightly better estimation of choosing actions for the limit order placement than the application of feature I (a window of historical order book states).
 Although the DQN was able to learn a policy that optimizes order placement when market conditions become favorable to buying or selling, the agent performed worse than the expected market order when conditions were not ideal.
-In order to understand why no policy could be learned that would constantly result in rewards better than the ones expected from using a market order, the actions taken by the DQN agent were analyzed.
-It has been shown that 1) a wide spread between the best bid and ask price and 2) over-fitting on the given market features prevented the agent from choosing actions which would fill an order at a better price than the market price.
+Nevertheless, the DQN has ultimately achieved a performance which demonstrates the capability of placing and filling limit orders to a better price than what is offered at the market.
+We have taken the better performing DQN setup, the DQN-CNN agent, and proceed further investigations.
+Thereby we have shown that low dimensionality of the feature vectors have negative impact on the learning process, and so does a feature with very large dimensionality.
+Furthermore, in order to understand why no policy could be learned that would constantly result in rewards better than the ones expected from using a market order, the actions taken by the DQN agent were analyzed.
+It has been shown that 1) a wide spread between the best bid and ask price and 2) provided input samples of the market features prevented the agent from choosing actions which would fill an order at a better price than the market price.
 Furthermore, artificially created order books were created and features derived therefrom.
 It was shown that, in a scenario where short-term market fluctuations are absent and liquidity on the buyer and seller side is constantly provided, a deep reinforcement learning agent is able to find a near-optimal placement policy.
 \begin{table}[H]
 \centering
-\caption{Summary of expected and achieved average rewards from empirical evaluations and reinforcement learning applications.}
-\label{tbl:analysis-conclusion}
 \begin{tabular}{l|l|l|l|l|l|}
 \cline{2-6}
-\textbf{}& \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}$\mathbb{E}$[Market \\ Order]\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}$\mathbb{E}$[Limit order]\\ (optimal)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{Q-Learning}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN\\ (Feature I)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN\\ (Feature II)\end{tabular}}} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & -0.05     & 15.20     & -1.17         & 22.06     & {\ul 31.92}   \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -27.70    & -27.70    & {\ul -21.34}  & -39.26    & -25.15        \\ \hline
-\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.06     & -1.06     & {\ul -1.04}   & -2.26     & -3.56         \\ \hline
-\multicolumn{1}{|l|}{\textbf{Sell (II)}} & -1.72     & 3.38      & -4.74         & -0.84     & {\ul 0.15}    \\ \hline
+\textbf{}& \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}$\mathbb{E}$[Market \\ Order]\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}$\mathbb{E}$[Limit order]\\ (optimal)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{Q-Learning}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN-CNN\\ (Feature I)\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}DQN-CNN\\ (Feature II)\end{tabular}}} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (I)}}   & -0.05     & 15.20     & -1.17         & 22.06     & 31.92   \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (I)}}  & -27.70    & -27.70    & -21.34  & -39.26    & -25.15        \\ \hline
+\multicolumn{1}{|l|}{\textbf{Buy (II)}}  & -1.06     & -1.06     & -1.04   & -2.26     & -3.56         \\ \hline
+\multicolumn{1}{|l|}{\textbf{Sell (II)}} & -1.72     & 3.38      & -4.74         & 0.84     & 0.15    \\ \hline
+\multicolumn{1}{|l|}{\textbf{$\Sigma$}} & -30.53     & -9.88      & -28.29         & -18.62     & {\ul 3.36}    \\ \hline
 \end{tabular}
+\caption{Summary of expected and achieved average rewards from empirical evaluations and reinforcement learning applications.}
+\label{tbl:analysis-conclusion}
 \end{table}
