@@ -7,7 +7,7 @@ A sample period from the data set collected will then be investigated in order t
 The goal of the investigation is to find hypotheses which state why certain occurrences might be beneficial to consider for the purpose of limit order placement.
 Thus, the findings serve as the basis for the feature construction process which determines the input for the learner.
 Therefore, in the last section of this chapter, we will construct features which adequately address the stated hypotheses.
-Finally, the features constructed will serve as the observed state that is to be evaluated by the reinforcement learning agents described in Chapter \ref{chap:setup}.
+As a result, the features constructed will serve as the observed state that is to be evaluated by the reinforcement learning agents described in Chapter \ref{chap:setup}.
 
 \section{Collection of market events}
 \label{sec:data-collection}
@@ -359,10 +359,10 @@ In particular, the feature includes historical order prices (hypothesis \ref{sec
 \subsection{Feature: price and size of historical trades}
 \label{sec:data-feature-2}
 The previous feature provides information to the learner in order to reason about the hypotheses which are derived from orders placed and canceled.
-In order to reason about whether or not trade events can provide a positive learning effect to the agent to optimize order placement, we construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time}, as follows.
+In order to determine whether or not trade events can provide a positive learning effect to the agent to optimize order placement, we will construct a feature that covers the hypotheses \ref{sec:data-hypthesis-trade-price-volume} and partially \ref{sec:data-hypthesis-order-trade-volume-time}, as follows.
 A $Trade$ (Eq. \ref{eq:trade}) carries an order side $os$, a quantity $q$ and a price $p$.
-Similar to the previous feature, in this feature, we take $n$ trades into consideration, which occurred prior the time of the order placement.
-More precisely, the feature is generated at some time $t$, when an order is placed, and therefore the time stamp $ts$ of the historical trades must satisfy $ts \leq t$.
+In this feature, we take $n$ trades into consideration, which occurred prior the time of the order placement.
+More precisely, the feature will be generated at some time $t$, when an order is placed, and therefore the time stamp $ts$ of the historical trades must satisfy $ts \leq t$.
 \\
 \\
 A straightforward approach would be to construct the feature $s_{trade}$ as,
@@ -377,8 +377,8 @@ A straightforward approach would be to construct the feature $s_{trade}$ as,
 \end{equation}
 whereas $ts_n - ts_1 \leq m$.
 However, trades do not occur at fixed time intervals and this causes the length of the vector to vary.
-Accordingly, we calculate the time difference $\Delta{ts}$ between each historical trade and the subsequent historical trade.
-For the most recent historical trade, the time difference is measured to the time of the order placement $t$.
+Accordingly, we calculate the time difference $\Delta{ts}$ between each historical trade and its previous historical trade.
+For the most recent historical trade, the time difference is measured from the time of the order placement $t$.
 That is,
 \begin{equation}
     \Delta{ts}_i = \begin{cases}

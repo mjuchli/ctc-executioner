@@ -14,6 +14,8 @@ First, the \textit{expected execution price} is investigated with respect to the
 Based on this analysis, the standard deviation of the resulting prices will identify the \textit{risk} that comes with limit order placement. 
 Finally, by combining the previous two results, an \textit{efficient pricing frontier} can be drawn which highlights the trade-off between risk and returns.
 
+Although this research does not optimize the placement of limit orders per se, it provides a method to measure the expected costs for (1) placing orders at certain limit levels or (2) submitting a market order.
+Therefore, this approach can serve as a measure to determine how well a method which does attempt to optimize the limit order placement performs.
 Regarding the definition stated in Section \ref{sec:execution-placement}, their research can be categorized between order execution and placement.
 No splitting of orders was performed, however a time horizon of several hours was chosen, resulting in an evaluation of order placement with an extended time horizon.
 
@@ -32,37 +34,33 @@ As is evident from the figure, the expected execution price is at its most favor
 The return becomes worse when placing orders deeper in the order book (in other words, offering a lower price) as the orders then do not get filled within an hour and instead, the inventory has to be bought by means of a market order at the end of the period.
 Likewise, the return can be expected to be lower when placing the order higher in the order book (i.e. deeper in the opposing side of the book, meaning one is willing to pay more).
 This is due to the fact that the order is filled instantly by paying a premium.
-\\
-\\
-Although this research does not optimize the placement of limit orders per se, it provides a method to measure the expected costs for (1) placing orders at certain limit levels or (2) submitting a market order.
-Therefore, this approach can serve as a measure to determine how well a method which does attempt to optimize the limit order placement performs.
 
-%\begin{figure}[H]
-%    \centering
-%    \makebox[\linewidth]{
-%        \includegraphics[width=8cm]{kearns-std.png}
-%    }
-%    \caption{Taken from \cite{nevmyvaka2005electronic}. An illustration of the uncertainty of the expected execution price.}
-%    \label{fig:kearns-std}
-%\end{figure}
-%
-%Risk is defined as the standard deviation of the returns and is illustrated on the y-axis in Figure \ref{fig:kearns-std}.
-%This is an important aspect to be considered throughout our project as it illustrates the danger that arises from placing limit orders at less favourable limit levels.
-%As has been already demonstrated, orders which are placed deep in either side of the book are less likely to be executed and their final prices are therefore necessarily less certain.
-%
-%\begin{figure}[H]
-%    \centering
-%    \makebox[\linewidth]{
-%        \includegraphics[width=8cm]{kearns-frontier.png}
-%    }
-%    \caption{Taken from \cite{nevmyvaka2005electronic} An illustration of the trade-off between risk and return indicated by a efficient pricing frontier.}
-%    \label{fig:kearns-frontier}
-%\end{figure}
-%
-%Lastly, both techniques were combined and this resulted in an efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}). 
-%Figure \ref{fig:kearns-frontier} shows the trade-off between the risk (x-axis) and return (y-axis).
-%In this example, the point of minimum risk is at $(8, 18)$ and the point of maximum returns at $(29, 9)$.
-%With this technique, a trader, or in our case a reinforcement learning agent, can decide upon an execution strategy by choosing how much risk and return he is willing to accept.
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{kearns-std.png}
+    }
+    \caption{Taken from \cite{nevmyvaka2005electronic}. An illustration of the uncertainty of the expected execution price.}
+    \label{fig:kearns-std}
+\end{figure}
+
+Risk is defined as the standard deviation of the returns and is illustrated on the y-axis in Figure \ref{fig:kearns-std}.
+This is an important aspect to be considered throughout our project as it illustrates the danger that arises from placing limit orders at less favourable limit levels.
+As has been already demonstrated, orders which are placed deep in either side of the book are less likely to be executed and their final prices are therefore necessarily less certain.
+
+\begin{figure}[H]
+    \centering
+    \makebox[\linewidth]{
+        \includegraphics[width=8cm]{kearns-frontier.png}
+    }
+    \caption{Taken from \cite{nevmyvaka2005electronic} An illustration of the trade-off between risk and return indicated by a efficient pricing frontier.}
+    \label{fig:kearns-frontier}
+\end{figure}
+
+Lastly, both techniques were combined and this resulted in an efficient pricing frontier (based on the \textit{efficient frontier} initially formulated by Harry Markowitz in 1952 \cite{markowitz1952portfolio}). 
+Figure \ref{fig:kearns-frontier} shows the trade-off between the risk (x-axis) and return (y-axis).
+In this example, the point of minimum risk is at $(8, 18)$ and the point of maximum returns at $(29, 9)$.
+With this technique, a trader, or in our case a reinforcement learning agent, can decide upon an execution strategy by choosing how much risk and return he is willing to accept.
 
 \section{Statistical approach}
 \label{sec:related-statistical}

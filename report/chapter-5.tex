@@ -5,7 +5,7 @@ Details of the components and techniques required for optimizing order placement
 The process of collecting historical event data and the construction of a limit order book was explained in Chapter \ref{chap:data}.
 The data was investigated and features were constructed to be used within the reinforcement learning setup.
 The next step is to build a reinforcement learning environment which is flexible enough to enable a) investigations with various types of features and agents to proceed, and b) adjustments to be made to important environment parameters.
-The correctness of this an environment is critical as it emulates a stock exchange and therefore determines how orders would have been transacted in the past.
+The correctness of this environment is critical as it emulates a stock exchange and therefore determines how orders would have been transacted in the past.
 If the implementation varies from the one used in exchanges, or does not cover certain edge cases, the matching of placed orders would differ significantly from the one in a production setup.
 
 Therefore, this chapter aims to build an environment that includes the desired capabilities of a real world exchange in order to determine how limit orders would have been processed, had they been placed at a given point in time in the past.
@@ -16,7 +16,7 @@ A Q-Learning agent will serve as the learner when no market variables are provid
 \section{Order Placement Environment}
 \label{sec:setup-order-placement}
 
-The reinforcement learning environment (see Section \ref{sec:rl-environment}), that emulates order placement on historical market data, is introduced in this section.
+The reinforcement learning environment, that emulates order placement on historical market data, is introduced in this section.
 This environment enables an agent to buy or sell $V$ shares within a time horizon $H$ and makes extensive use of the components previously described in Chapter \ref{chap:preliminaries}.
 It works principally by an agent observing a state $s_t$ (observation state) at some time $t$ and responding with an action $a_t$ that indicates the price at which to place the order in the order book.
 The task of the environment is then to evaluate the outcome of the order placed and report to the agent along with a reward $r_{t+1}$ and the next state $s_{t+1}$.
@@ -52,7 +52,7 @@ If no trades result during the matching process, only the time consumed for the 
 Otherwise, the sum of the sizes of the trades is subtracted from currently stored inventory in the memory.
 Subsequently, the evaluation component calculates the reward based on the completed trades.
 If the order is not completely filled after the last step taken by the agent, a market order is executed by the environment in order to enforce the final state and therefore complete the epoch.
-Finally, the reward, the next observation state and confirmation of whether or not the order was completely filled (e.g. the epoch is done) is finally forwarded to the agent.
+Finally, the reward, the next observation state and confirmation of whether or not the order was completely filled (e.g. the epoch is done) is forwarded to the agent.
 
 \subsection{Configuration parameters}
 \label{setup:parameters}
@@ -87,8 +87,8 @@ The epoch would continue until the agent either wins or loses the game and the s
 In the order placement environment however, it is as if, in each step, not only one or two figures of the chess board change their position, but almost all of them.
 In addition, a reset of the environment would result in an ever changing setup of the figures on the chessboard.
 The reason for this is that the chessboard is, in our case, the order book which is in essence a multivariate, possibly non-stationary, time series which changes over time.
-More precisely, the state space $S$ is defined as a sequence of order book states from which an agent can observe an observation state $O_t$ of the historical order book provided, at some point in time in the past.
-Therefore, the observation state is the result of the order book state applied to the feature in use: $O_t = FT(OS_t)$.
+More precisely, the state space $S$ is defined as a sequence of order book states from which an agent can observe an observation state $o_t$ of the historical order book provided, at some point in time in the past.
+Therefore, the observation state is the result of the order book state applied to the feature in use: $o_t = FT(OS_t)$.
 The final state is reached when the entire inventory is bought or sold, that is $i=0$--Checkmate!.
 \\
 \\
@@ -271,12 +271,12 @@ Lastly, no preprocessing is being done in $\phi(.)$, as this is handled by the e
 \State Initialize replay memory $D$ to capacity $N$
 \State Initialize action-value function $Q$ with random weights
 \For{episode$=1,M$}
-    \State Initialize sequence $s_1={x_1}$ with observation and preprocessed sequenced $\phi{}_1=\phi{(s_1)}$
+    \State Initialize sequence $s_1={o_{random}}$ with observation and preprocessed sequenced $\phi{}_1=\phi{(s_1)}$
     \For{t=1,T}
         \State With probability $\epsilon$ select a random action $a_t$
         \State otherwise select $a_t=\max{}_aQ^{*}(\phi{(s_t)}, a; \theta)$
-        \State Execute action $a_t$ in emulator and observe reward $r_t$ and observation state $x_{t+1}$
-        \State Set $s_{t+1}=s_t,a_t,x_{t+1}$ and preprocess $\phi_{t+1}=\phi{(s_{t+1})}$
+        \State Execute action $a_t$ in emulator and observe reward $r_t$ and observation state $o_{t+1}$
+        \State Set $s_{t+1}=s_t,a_t,o_{t+1}$ and preprocess $\phi_{t+1}=\phi{(s_{t+1})}$
         \State Store transition $(\phi_t,a_t,r_t,\phi_{t+1})$ in $D$
         \State Sample random minibatch of transitions $(\phi_j,a_j,r_j,\phi_{j+1})$ from $D$
         \State Set

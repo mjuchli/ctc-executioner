@@ -26,20 +26,20 @@ However, the Q-Learner was able to reduce the costs when the market price develo
 The DQN agent was backtested under the application of two different neural network architectures as well as two aforementioned feature settings.
 Thereby, we have found that the DQN-CNN agent (convolutional neural network), that is widely used in many fields of literature, is superior to the DQN-MLP agent (multilayer perceptron).
 Furthermore, we have achieved significantly better performance by using feature I (historical trades) compared to feature (II) historical order book states.
-Our experiments have shown that a feature vector containing the 30 most recent historical trades performed best among different sizes tested.
-After all, the learned policy was able to optimize order placement when market conditions were favorable to making a purchase or sale.
+Our experiments have shown that a feature vector containing the 30 most recent historical trades performed best among a range of settings tested.
+The final outcome was that the policy learned was able to optimize order placement when market conditions were favorable to making a purchase or sale.
 In addition, when conditions were not ideal, the agent still performed better than the expected costs of a market order, improving the purchase and sale of 1.0 Bitcoin by \$33.89.
-Moreover, we observed the decision-making process of the agent and have found remaining limitations in our setup, which suggest that with further tuning our results could possibly be improved.
-Furthermore, it has been shown that the DQN agent is capable of finding a near-optimal policy on artificially smoothed market data.
+Moreover, we observed the decision-making process of the agent and found further limitations in our setup, which suggest that, with further tuning, our results could improve.
+Furthermore, it has been shown that the DQN agent is capable of finding a near-optimal policy on artificially generated market data.
 
 Our work confirms that there is indeed a way in which deep reinforcement learning is capable of optimizing the placement of limit orders.
-However, under the application of real world market data, the agent can be exposed to severe conditions in the form of wide spreads or an absence of liquidity, which prevent the agent from applying an optimal policy.
-Therefore, and in order to constantly be able to perform better or equal placements than what is offered on financial markets at any given time, the approaches presented in this work have to be further improved and extended.
+However, under the application of real world market data, the agent can be exposed to severe conditions in the form of wide spreads or an absence of liquidity, both of which prevent the agent from applying an optimal policy.
+Therefore, and in order to constantly be able to perform placements that are better than or equal to what is offered on financial markets at any given time, the approaches presented in this work have to be extended.
 
 \section{Findings with regard to the research questions}
 
 In Chapter \ref{chap:introduction} (Section \ref{sec:intro-rq}), the purpose of this thesis and the research objectives were stated.
-This section aims to revisit these research questions, conclude what has been achieved in their regards, and then summarize and discuss the findings in greater detail.
+This section aims to revisit these research questions, conclude what has been achieved in respect of each of them, and then summarize and discuss the findings in greater detail.
 
 \subsection{RQ 1.1: Which historical market data patterns drive market participants to buy or sell assets, and how can these patterns be incorporated into features used by a deep reinforcement learning agent?}
 
@@ -66,10 +66,10 @@ Recent advances in deep reinforcement learning have demonstrated the ability to 
 We followed the same principles and constructed features which reflect (1) the order book states and (2) the trades that occurred over time.
 Feature I, as described in Section \ref{sec:data-feature-1}, is a vector that contains the most recent order book state and reflects the historical evolution of this state with a window $m$.
 Feature II, as described in Section \ref{sec:data-feature-2}, is a vector that lists the $n$ most recent historical trades including the frequency of their occurrence.
-As a result, the features constructed will contain new information as soon as a new market event is published, a new sample can be added to the feature set without the need of a preprocessing step.
-One of the difficulties with the features constructed was to determine the appropriate amount of historical data to be considered.
-Attempts were made by measuring entropy and correlation of order prices and sizes but ultimately did not give clear suggestions of how many historical order book states or trade to consider.
-Subsequently, we evaluated the different feature settings during the learning process in Section \ref{subsec:eval-comparison-feature-size} and were able to find the desired settings.
+As a result, the features constructed will contain new information as soon as a new market event is published; at that point, a new sample can be added to the feature set without the need for a preprocessing step.
+One of the difficulties with the features constructed was determining the appropriate amount of historical data to be considered.
+Attempts were made by measuring the entropy and correlation of order prices and sizes but ultimately, this did not give clear indications of how many historical order book states or trades should be considered.
+Subsequently, we evaluated the various feature settings during the learning process (see Section \ref{subsec:eval-comparison-feature-size}) and were able to find the desired settings.
 It was shown that for feature I the window size $m=30$ performed best among the sizes 10, 20, 30, 40, and 50.
 Likewise, improvements with respect to the outcome of the placed orders could be achieved by considering up to $n=30$ historical trades with feature II.
 
@@ -77,9 +77,9 @@ Likewise, improvements with respect to the outcome of the placed orders could be
 
     The challenging task of mapping the order placement problem into the reinforcement learning context demanded an investigation of components involved in the financial setting as well as in the reinforcement learning setting; this was described in Chapter \ref{chap:preliminaries}.
     In Chapter \ref{chap:setup}, these components were combined and a reinforcement learning environment was built (see Figure \ref{fig:rl-env-overview}).
-    The environment built configures a discrete action space that enables an agent to explore the state space that is determined by the underlying historical market data.
+    This environment configures a discrete action space that enables an agent to explore the state space that is determined by the underlying historical market data.
     The reward function used represents the outcome of the matching process of an order submitted.
-    We were able to assign the most complex tasks to the environment and thereby reduced the level of complexity of the agents drastically.
+    We were able to assign the most complex tasks to the environment and thereby drastically reduce the level of complexity of the agents.
     Two agents with the purposes of learning with and without market features were developed and will be discussed below.
     \begin{figure}[H]
     \centering
@@ -99,22 +99,22 @@ Likewise, improvements with respect to the outcome of the placed orders could be
     In supervised learning this implies to predict a sequence of actions (prices at which to place the order) by a classifier \cite{sequence-prediction}.
     In our context, two problems would arise with such an approach:
     a match engine (or an exchange in the real world setup) is always laid out to process only one order at a time and therefore an additional scheduling mechanism would be required to handle the submission of a sequence of orders.
-    The second difficulty is related to the fact that the reward (label) are not known prior the submission of an order.
-    Therefore, one had to generate a sample data set by first, precomputing a number of sequences of actions, and second processing their outcome using the match engine.
-    This process is not only computationally expensive but also requires a method to reduce the vast number of combinations possible.
-    Contrarily, with reinforcement learning, an end-to-end learning process can be modelled, which is known to be successful in other domains\cite{amodei2016deep, mnih2015human, mnih2013playing}.
-    As is shown in the Figure above, the process becomes not only simpler but also uses the given functionality of a match engine and therefore makes it applicable in a real world environment.
-    The steps involved are as follows: one order is submitted at a time and with each step taken by the agent.
-    The order is then updated according to the action chosen as well as the time left and inventory remaining.
-    As the agent is proceeding exploration and exploitation, it is able to reduce the combinations of actions to be taken to a great extent and learns a policy (order placement strategy) by receiving immediate and future rewards for each step taken.
+    The second difficulty is related to the fact that the rewards (labels) are not known prior the submission of an order.
+    Therefore, one would have to generate a sample data set by first precomputing a number of sequences of actions, and second, processing their outcome using the match engine.
+    This process is not only computationally expensive but would also require a method to reduce the vast number of combinations possible.
+    In contrast, with reinforcement learning, it is possible to model an end-to-end learning process that is known to be successful in other domains\cite{amodei2016deep, mnih2015human, mnih2013playing}.
+    As shown in the Figure above, this process becomes not only simpler but also uses the given functionality of a match engine and therefore makes it applicable in a real world environment.
+    The steps involved are as follows: one order is submitted at a time by the agent.
+    The order is then updated according to the action chosen as well as the time and inventory remaining, with each step taken.
+    As the agent proceeds with its exploration and exploitation, it is able to reduce the combinations of actions to be taken by a great extent and learns a policy (i.e. an order placement strategy) by receiving immediate and future rewards for each step taken.
     
     A successful application of reinforcement learning in the context of limit order placement is known in literature\cite{nevmyvaka2006reinforcement} and was introduced earlier, in Section \ref{sec:related-reinforcement}.
-    However, while one of the goals of our work was to make use of raw market data, the authors' approach made use of hand-crafted features;  therefore, the only solution available to us was to use an action-value function approximator (see Section \ref{sec:deep-reinforcement-learning}).
+    While one of the goals of our work was to make use of raw market data, the authors' approach made use of hand-crafted features;  therefore, the only solution available to us was to use an action-value function approximator (see Section \ref{sec:deep-reinforcement-learning}).
     This in turn demanded the application of our own reinforcement learning framework.
     \\
     \\
-    The construction of the reinforcement learning environment came with many difficulties and important findings were made.
-    The order book (Section \ref{sec:order-book}) and the match engine (Section \ref{sec:match-engine}) proved to be the key components which ultimately enabled to emulate a local broker and therefore facilitates the simulation of limit order placement using historical order books.
+    Many difficulties arose during the construction of the reinforcement learning environment and important findings were made.
+    The order book (Section \ref{sec:order-book}) and the match engine (Section \ref{sec:match-engine}) proved to be the key components which ultimately enabled a local broker to be emulated and therefore also to facilitate the simulation of limit order placement using historical order books.
     The difficulties that arose during the development of these components were related to performance and the inevitable approximations required during the matching process.
     The vast number of market events led the matching process to be become unbearably slow.
     Improvements were made by using caching and indexing mechanisms but slow speed remains a limitation of this project. The run-time for an agent to train over 5000 epochs took more than 4 hours.
@@ -131,7 +131,7 @@ Likewise, improvements with respect to the outcome of the placed orders could be
     
     Due to the complexity of the limit order placement process it was necessary to equip the environment with a variety of configuration parameters, as defined in Section \ref{setup:parameters}.
     While this provides the ability to define evaluation setups very precisely, it also introduces the inevitable obligation of limiting the scope of our approach.
-    We have decided to define a discrete time step size $\Delta{t}=10 seconds$, which represents the duration of how long an order remains in the order book for each step taken by the agent and therefore limits the number of steps to be taken throughout one epoch to $\frac{H}{\Delta{t}}=10$.
+    We have decided to define a discrete time step size $\Delta{t}=10s$, which represents the duration of how long an order remains in the order book for each step taken by the agent and therefore limits the number of steps to be taken throughout one epoch to $\frac{H}{\Delta{t}}=10$.
     With an empirical investigation (Section \ref{sec:eval-empirical}), we have shown that a placement of 10 seconds diverges from the expected rewards received from placing the order for a total of 100 seconds.
     Naturally, if the agent decided in each step to choose the same action, the result would be equivalent to a placement over 100 seconds.
     Therefore, the benefit of the time-step parameter is the agent's ability to intercept and change the action accordingly, in the event of a sudden change in the market data.
@@ -150,17 +150,17 @@ Likewise, improvements with respect to the outcome of the placed orders could be
     The use of the OpenAI Gym toolkit\cite{brockman2016openai} allowed us to design our environment in a way such that multiple agent could make use of the environment.
     The Q-Learning and DQN agents developed are similar in terms of the reward function as both underlie the principles of the Bellman equation (Eq. \ref{eq:bellman}).
     However, much complexity is added to the DQN agent, such as the use of an \textit{experience replay} and most importantly a \textit{value function approximator}.
-    The neural network in use served to approximate the patterns found and described earlier within our data set.
-    Therefore, we were able to feed private and market variables to this agent.
-    Furthermore, this agent allowed for great flexibility when constructing the feature vectors.
-    Contrarily, the Q-Learning agent was not found to be a useful choice in this regard.
-    While the Q-Learning agent can be suitable when no market variables, or approximations thereof, are applied, it was found not to be an appropriate choice for the purpose of optimizing the limit order placement problem.
-    Market features, such as the ones constructed in Chapter \ref{chap:data}, did not provide any benefit when applied to the Q-Learning agent.
+    The neural network used served to approximate the patterns within our data set that were found and described earlier.
+    This enabled us to feed private and market variables to this agent.
+    Furthermore, this agent provided great flexibility when constructing the feature vectors.
+    In contrast, the Q-Learning agent was not found to be a useful choice in this regard.
+    While the Q-Learning agent can be suitable when no market variables or approximations thereof are applied, it was found not to be an appropriate choice for the purpose of optimizing the limit order placement problem.
+    Market features such as the ones constructed in Chapter \ref{chap:data} did not provide any benefit when applied to the Q-Learning agent.
     The reason for this is that Q-Learning makes use of a look-up table which records a combination of all observed states and chosen actions.
-    Since the observation states are derived from market data at a given point in time, most observation states become unique and thus learning time is expected to scale exponentially with the size of the state space\cite{whitehead1991complexity, kaelbling1996reinforcement}.
+    Since the observation states are derived from market data at a given point in time, most of them are unique and thus learning time is expected to scale exponentially with the size of the state space\cite{whitehead1991complexity, kaelbling1996reinforcement}.
     To overcome this limitation, market features would have to be approximated drastically, as demonstrated in \cite{nevmyvaka2006reinforcement}.
     
-    Furthermore, we briefly investigated the architecture of the neural network and ultimately equipped the DQN agent with the widely-used convolutional neural network architecture\cite{mnih2015human}, denoted as DQN-CNN, as well as a more simple multilayer perceptron with two hidden layers, denoted as DQN-MLP.
+    Furthermore, we briefly investigated the architecture of the neural network and ultimately equipped the DQN agent with the widely-used convolutional neural network architecture\cite{mnih2015human}, defined as DQN-CNN, as well as with a simpler multilayer perceptron with two hidden layers, defined as DQN-MLP.
     Our investigations (Section \ref{sec:eval-dqn}) showed that the results were similar and the DQN-CNN setup performed best among all tested.
     We found that having a second network architecture helpful as it provided supporting numbers within our results and further confirmed the effectiveness of deep reinforcement learning applied in our context.
     However, there is room for improvements with regard to parameter tuning, which we neglected in this work in favor of prioritizing the architectural aspects of the reinforcement learning setup; we therefore suggest this as future work.
@@ -186,8 +186,8 @@ Likewise, improvements with respect to the outcome of the placed orders could be
     Furthermore, we were able to determine the expected costs for market and limit orders and the results have shown that the expected behavior for limit order placement is similar to what was proposed by Kearns et al. \cite{nevmyvaka2005electronic}, who worked with traditional stocks.
     However, we have given more details of this behavior with respect to the given time horizon for the placements of orders.
     The authors of \cite{nevmyvaka2005electronic} stated that, overall, the optimal price at which to place an order is just below the spread price.
-    This statement is true for the cryptocurrency market as well, however, only on condition that the time horizon chosen is either very small ($H\leq10 seconds$) or large ($H>15 minutes$).
-    Otherwise, for example when $H=100 seconds$, we have demonstrated that the optimal price at which to place an order changes drastically depending on the fluctuations of the market price.
+    This statement is true for the cryptocurrency market as well, however, only on condition that the time horizon chosen is either very small ($H\leq10s$) or large ($H>100s$).
+    Otherwise, for example when $H=100s$, we have demonstrated that the optimal price at which to place an order changes drastically depending on the fluctuations of the market price.
     Namely, when buying, limit orders should be placed deep in the order book when market prices are falling, and high in the book when the price is rising.
     On the contrary, when selling, orders should be place high in the book when the market price is falling and low in the book when the price is rising.
     These insights not only provide knowledge of how to optimize the placement of orders but also generated the means to compare the performance achieved by reinforcement learning agents.
@@ -223,19 +223,19 @@ Likewise, improvements with respect to the outcome of the placed orders could be
     That suggests that the absence of market variables (our constructed features) allows the agent to learn the general principles of determining the price level at which to submit orders. 
     Nevertheless, the agent was still not able to perform better than a market order.
     
-    The results found for our best setup of the DQN agent were unlike the ones for the Q-Learning agent.
-    During the empirical investigation we stated the sum of the expected market order returns to be \$-30.53 and the sum of optimally placed orders as \$-9.88.
-    The agent under the application of feature I (historical order book states) achieved a total reward of \$-18.62 and under the application of feature II a total reward of \$3.36.
-    This came at a surprise since the structure of feature I is much more alike the one used in \cite{mnih2013playing} and better results were expected therefrom.
-    However, this suggests that the information provided by historical trades is much more beneficial than the one from historical order book states.
-    Furthermore, we found the DQN agent to have the most difficulties to detect changes in the market price trend, as shown in Section \ref{sec:eval-dqn-limitations} (Figure \ref{fig:analysis-limit-impatient}).
-    Thereby the agent assumed the process of the order placement to result according to the input sample provided and therefore did not consider a possible reversal of the trend.
-    However, during the evaluation of the limitation of the DQN agent (Section \ref{sec:eval-dqn-limitations}), we found no improvements regarding the performance when enlarging the window size of the feature provided to the agent and thereby covering long-term market movements.
-    In addition, we increased the number of training epochs up to 25'000 in the hope that the agent can improve on the selection of actions in such market conditions, however, no improvements were found.
-    At this point it is to be assumed that increasing the data sets and at the same time enlarging the feature vectors may improve the performance.
+    The results found for our best setup of the DQN agent are an improvement over ones for the Q-Learning agent.
+    During the empirical investigation, we stated that the sum of the expected market order returns was \$-30.53 and the sum of optimally placed orders was \$-9.88.
+    The agent under the application of feature I (historical order book states) achieved a total reward of \$-18.62 and, under the application of feature II, a total reward of \$3.36.
+    This was surprising since the structure of feature I is much more like the one used in \cite{mnih2013playing} and better results were expected therefrom.
+    However, this suggests that the information provided by historical trades is much more beneficial than information from historical order book states.
+    Furthermore, we found that the DQN agent had the most difficulties detecting changes in the market price trend, as shown in Section \ref{sec:eval-dqn-limitations} (Figure \ref{fig:analysis-limit-impatient}).
+    Thereby the agent expected rewards according to the input sample provided and therefore did not consider a possible reversal of the trend.
+    However, during the evaluation of the limitation of the DQN agent (Section \ref{sec:eval-dqn-limitations}), we found no improvements to its performance when enlarging the window size of the feature provided to the agent and thereby covering long-term market movements.
+    In addition, we increased the number of training epochs to 25,000 in the hope that the agent could improve its selection of actions in difficult market conditions, however, no improvements were found.
+    At this point it is to be assumed that increasing the data sets and, at the same time, enlarging the feature vectors may improve the performance.
     
-    The next step taken was the use of the artificial order books generated where we applied the equivalent feature vector setup as in the experiments with historical market data.
-    Thereby we found that the DQN agent is capable of finding a near-optimal policy for both, an order book that underlies a linear function as well as one that underlies a sine function.
+    The next step taken involved the use of the artificial order books generated to which we applied the same feature vector setup as in the experiments undertaken with historical market data.
+    Thereby, we found that the DQN agent was capable of finding a near-optimal policy for an order book that underlies a linear function as well as one that underlies a sine function.
     This suggests that the features consisting of non-stationary as well as noisy market data prevented the agent from achieving similar results.
 
 \section{Recommendations and future work}

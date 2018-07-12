@@ -5,8 +5,7 @@ Financial institutions make decisions to buy or sell assets for many reasons, in
 High-level trading strategies oftentimes define how an institution positions itself in financial markets and, if applicable, towards its customers.
 Regardless of the high-level trading strategy that is applied, the invariable outcome is a decision to buy or sell assets.
 This work aims to take a step towards answering the important question of how one can optimize a purchase or sale of an asset on a stock exchange with the use of reinforcement learning techniques.
-The subsequent sections will elaborate this problem briefly and state the research objectives of this work.
-We will list the contributions made to research communities throughout this work, followed by a brief overview of the structure of this report.
+The subsequent sections will elaborate this problem briefly and state the research objectives of this work, followed by a brief overview of the structure of this report.
 
 \section{Context and Problem Statement}
 \label{sec:problem-statement}
@@ -21,7 +20,7 @@ Their servers are oftentimes located within exchanges and specialized computer n
 Ever since, traders without such equipment and techniques have felt that they are at a disadvantage in such an environment \cite{patterson2012dark}.
 While anything except trading through electronic channels would be unthinkable today, a certain gap still exists between trading companies that have fibre access to the exchanges or supporting algorithms and investors who do not.
 As a result, investors are forced to take an initial loss into account when buying or selling securities, which they might not even be aware of.
-In order to understand why these losses are incurred, we have to have a basic understanding of a so-called order book and how securities are bought at an exchange.
+In order to understand why these losses are incurred, we have to have a basic understanding of a so-called order book and how securities are traded at an exchange.
 
 \begin{figure}[H]
     \centering
@@ -123,12 +122,11 @@ Therefore we have formulated the following research question to be answered in t
     Further, we require that the framework provide the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to a historical order book.
     Ultimately, a reinforcement learning environment should be built to simulate and evaluate order placement.
     The environment should allow direct user interaction in order to place orders on demand and allow interaction with agents which act as intelligent traders.
-    Therefore, we have made use of the OpenAI Gym\footnote{https://github.com/openai/gym} library and we contribute our work to the community to enable further investigations to be carried out.
     
     Further, we shall then build two reinforcement learners which will both act as intelligent traders and thereby place limit orders that provide an incentive to buy or sell an asset at a favorable price.
     Both agents should be driven by an end-to-end learning process by which the agent improves based on the outcome of the orders placed and ultimately learns a strategy for  buying and selling shares at favorable prices.
     The former agent is an adaptation of the well- known Q-Learning algorithm and optimizes only in accordance with the amount of assets to buy or sell and the given time horizon.
-    This agent is a deep reinforcement learning agent that makes use of a convolutional neural network in order to detect patterns in market data.
+    The second agent is a deep reinforcement learning agent that makes use of a neural network in order to detect patterns in market data.
 
 \begin{description}
     \item[RQ 1.3:] How can one evaluate a reinforcement learning environment and agent in the context of order placement?
