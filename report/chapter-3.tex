@@ -118,7 +118,7 @@ As a result, the trade-off between profit and risk was defined as,
 \label{sec:related-supervised}
 
 Fletcher et al. \cite{fletcher2010multiple} investigated order books with the aim of forecasting the movements of bid and ask prices at time $t+\Delta{t}$.
-Although this was not directly applied to the optimization of order placement, it was suggested that the resulting predictions can be used as the limit price to be set while placing an order.
+Although this was not directly applied to the optimization of order placement, it was suggested that the resulted predictions can be used as the limit price to be set while placing an order.
 
 SVM classification techniques with different kernels along with two Multiple Kernel Learning (MKL) techniques were used.
 The authors' approach is a multi-class setup with three labels, A: $P_{t+\Delta{t}}^{Bid} > P_t^{Ask}$, B: $P_{t+\Delta{t}}^{Ask} < P_t^{Bid}$ and C: $P_{t+\Delta{t}}^{Bid} < P_t^{Ask}, P_{t+\Delta{t}}^{Ask} > P_t^{Bid}$.
@@ -126,7 +126,7 @@ The feature used is the volume at time $t$ at each of the price levels of the or
 A set of features was constructed that contains volumes from the current time $t$ and previous time step $t-1$.
 
 With a time delta ($\Delta{t}$) of 100 seconds, an accuracy of 51\% was achieved.
-When a shorter time delta was chosen, this resulted in significantly better performance. However, this was mostly due to the fact that the zero movement prediction was accurate.
+When a shorter time delta was chosen, this resulted in significantly better performance. However, this is mostly due to the fact that the zero movement prediction was accurate.
 An increased time delta resulted in significantly worse prediction accuracy.
 \\
 \\

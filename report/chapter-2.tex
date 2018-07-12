@@ -1,9 +1,9 @@
 \chapter{Preliminaries}
 \label{chap:preliminaries}
 
-In this chapter, we will provide background information in order to understand the previous work done in this field that was introduced in Chapter \ref{chap:related-work}.
-We will also rely on the knowledge provided in this chapter when describing data collection and processing in Chapter \ref{chap:data} as well as when constructing the experimental setup in Chapter \ref{chap:setup}.
-We rely on the reader to be patient while reading this chapter as, although the interplay between the components we will introduce may not be immediately obvious, this will become clear in Chapter \ref{chap:setup} when the components are used to build a reinforcement learning environment and agents. 
+In this chapter, we will provide background information in order to understand the previous work in this field that was introduced in Chapter \ref{chap:related-work}.
+We will also rely on the knowledge provided in this chapter when describing data collection and processing in Chapter \ref{chap:data}, as well as when constructing the experimental setup in Chapter \ref{chap:setup}.
+We rely on the reader to be patient while reading this chapter as, although the interaction between the components we will introduce may not be immediately obvious, this will become clear in Chapter \ref{chap:setup} when the components are used to build a reinforcement learning environment and agents. 
 Firstly, the concept of the order book (which was introduced above) is described in greater detail, as this serves as the data structure for the  historical data collected.
 Subsequently, a simplified match engine is described. We will use this to emulate a local broker that can match orders using the historical order book.
 %The concept of a time series will then be introduced as the order book is essentially a multivariate time series.
@@ -15,8 +15,6 @@ Finally, deep reinforcement learning is introduced as an extension to the previo
 
 Traders post orders in a limit order book in order to state their intentions to buy (or sell) a given asset, as described in Section \ref{sec:problem-statement}).
 Orders listed in the limit order book provide \textit{liquidity} to the market as other traders can accept these offers by posting an order with the equivalent price to sell (or buy) the asset.
-%The first group of traders is known as \textit{liquidity traders} and is rewarded by a broker with lower fees than the latter group. This is because they provide liquidity and therefore keep the market vibrant (which is why the feed is known as \textit{maker fee}).
-%The latter group, which accepts the orders of the former group, implicitly takes liquidity out of the market and therefore has to pay an increased fee to do so (hence why the feed is known as \textit{taker fee}).
 This section introduces the most popular order types under which traders can post their offers in a limit order book.
 We will identify the types that are better with respect to ensuring market liquidity and which therefore benefit from lower fees and those that enable traders to state their wish to immediately buy or sell assets and take liquidity from the market.
 Furthermore, the characteristics of a historical order book that is filled with orders from traders is explained as knowing them will assist when the match engine is explained in the subsequent section.

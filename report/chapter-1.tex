@@ -3,7 +3,7 @@
 
 Financial institutions make decisions to buy or sell assets for many reasons, including: customer requests, fundamental analysis\cite{fundamental-analysis}, technical analysis\cite{technical-analysis}, top-down investing\cite{td-investing}, and bottom-up investing\cite{bu-investing}.
 High-level trading strategies oftentimes define how an institution positions itself in financial markets and, if applicable, towards its customers.
-Regardless of the high-level trading strategy that is being applied, the invariable outcome is a decision to buy or sell assets.
+Regardless of the high-level trading strategy that is applied, the invariable outcome is a decision to buy or sell assets.
 This work aims to take a step towards answering the important question of how one can optimize a purchase or sale of an asset on a stock exchange with the use of reinforcement learning techniques.
 The subsequent sections will elaborate this problem briefly and state the research objectives of this work.
 We will list the contributions made to research communities throughout this work, followed by a brief overview of the structure of this report.
@@ -102,7 +102,7 @@ Therefore we have formulated the following research question to be answered in t
 %\textbf{RQ 1 (B):} Which cryptocurrency market events enable us to foresee opportunities to place limit orders at a favorable price with the use of deep reinforcement learning?
 \\
 \\
-\textit{We chose to divide the research question into sub-questions as this follows the logical structure of this document and provides an understanding of the steps taken in order to give an answer to the main research question.}
+\textit{We chose to divide the research question into sub-questions as this choice follows the logical structure of this document and provides an understanding of the steps taken in order to give an answer to the main research question.}
 
 \begin{quote}
 \begin{description}
@@ -113,14 +113,14 @@ Therefore we have formulated the following research question to be answered in t
     We intend to find patterns in the data which reflect the behavior of these market participants.
     The patterns found will form the basis of hypotheses suggesting that some behavioral patterns are more likely to lead traders either to buy or sell an asset in the short term.
     Whenever a hypothesis is true, one can determine a favorable price at which to buy or sell the asset, and hence, mitigate the impact of the order placement problem.
-    Thus, we have to determine how to shape historical market data and construct features with the patterns found and incorporated that enable deep reinforcement learning agents to learn an order placement strategy.
+    Thus, we have to determine how to and construct features with the patterns found incorporated that enable deep reinforcement learning agents to learn an order placement strategy.
 
 \begin{description}
     \item[RQ 1.2:] How can one design a reinforcement learning environment and agents, in the context of order placement?
 \end{description}
     In order to simulate and understand the outcome of order placement and, more importantly, build a reinforcement learning environment that allows interaction with agents, this work will suggest a way of translating the given problem into a reinforcement learning context.
     Consequently, we are required to build a framework which should provide collection and market data processing capabilities in order to reproduce a historical order book that serves as a data source.
-    Further, we require that the framework provide the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to the historical order book.
+    Further, we require that the framework provide the functionality of a match engine which emulates the functionality of a stock exchange that can match orders and determine the resulting price paid (or received) according to a historical order book.
     Ultimately, a reinforcement learning environment should be built to simulate and evaluate order placement.
     The environment should allow direct user interaction in order to place orders on demand and allow interaction with agents which act as intelligent traders.
     Therefore, we have made use of the OpenAI Gym\footnote{https://github.com/openai/gym} library and we contribute our work to the community to enable further investigations to be carried out.
@@ -140,7 +140,7 @@ Therefore we have formulated the following research question to be answered in t
     As a result, the evaluation shall serve as a reliable measure of how well a learned order placement strategy performs.
     
 \begin{description}
-    \item[RQ 1.4:] In which way do the previously constructed features enable a reinforcement learning agent to improve the way it places orders?
+    \item[RQ 1.4:] In which way do the constructed features enable a reinforcement learning agent to improve the way it places orders?
 \end{description}
 
     The significance of deep reinforcement learning and the use of features derived from market data has to be determined in the application of order placement.

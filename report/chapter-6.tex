@@ -50,7 +50,7 @@ In addition, as explained in the following section, the expected return of a lea
 More precisely, \textit{data set I}, as shown in Figure \ref{fig:sample-down-price}), is a downward trend (indicated by the bid/ask mid-price) and consists of 1132 order book states with an overall duration of 1681.8 seconds, resulting in 0.67 states per second.
 In contrast, \textit{data set II}, as shown in Figure \ref{fig:sample-up-price}, consists of 1469 order book states with an overall duration of 1746.0 seconds, resulting in 0.84 states per second, which indicates that there was slightly more pressure in terms of orders placed and canceled in this data set.
 When reinforcement learning is applied, the data sets are split with ratio $2:1$, resulting in a training set of $\sim$20 minutes and a test set of $\sim$10 minutes.
-Although more than two data sets would contribute towards a more generalizes outcome of the evaluation, this was computationally not feasible within this work.
+Although more than two data sets would produce a more generalized outcome of this evaluation, this was computationally not feasible within this work.
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -285,9 +285,9 @@ In order to have a measure of comparison for the reinforcement learning agents t
 \label{tbl:analysis-empirical-summary}
 \end{table}
 
-Furthermore, we have proceeded the same experiment by using different action step parameters $\Delta{a}$, as shown in Table \ref{tbl:analysis-empirical-summary-a}.
-Thereby we have found that a more coarse step size does not allow to improve the expected return for an optimal placed limit order.
-As a result, we will henceforth use the setting $\Delta{a}=\$0.1$ for investigations proceeded with reinforcement learning agents.
+Furthermore, we ran the same experiment by using different action step parameters $\Delta{a}$, as shown in Table \ref{tbl:analysis-empirical-summary-a}.
+Thereby, we found that a coarser step size does not improve the expected return for an optimal placed limit order.
+As a result, we will henceforth use the setting $\Delta{a}=\$0.1$ for investigations undertaken with reinforcement learning agents.
 \begin{table}[H]
 \centering
 \begin{tabular}{l|l|l|l|l|}
@@ -513,28 +513,28 @@ During the training process relating to the purchase of assets, the rewards obta
 It is evident that this adjustment, for both DQN agents, is not as linear as it was during the training of the Q-Learning agent, as shown in the previous section.
 However, the adjustment made by the DQN-CNN agent is appropriate since the market price was falling.
 The rewards obtained from selling are shown in Figure \ref{fig:analysis-dqn-1-reward-sell} and the average chosen action throughout the epochs is shown in Figure \ref{fig:analysis-dqn-1-action-sell}.
-The rewards did not improve over the course of the training and both agents did not choose to adjust the actions on average.
+The rewards did not improve over the course of the training and both agents did not choose to adjust the average actions.
 Possibly, this was due to the constantly negative rewards obtained during the training under market conditions that were difficult for the sale of assets while the market price was falling.
 Figure \ref{fig:analysis-dqn-2} shows the agents learning processes using data set II.
 Over the course of 5000 epochs, the agents were not able to improve their reward and instead, stagnated at approximately \$-2.50 and \$5.00 rewards per epoch respectively, as shown in Figure \ref{fig:analysis-dqn-2-reward-buy}.
 Both agents adjusted the actions steadily such that the average limit level fell to approximately -20 at epoch 1000 and remained at this level, as shown in Figure \ref{fig:analysis-dqn-2-action-buy}.
-Therefore, the rewards must have been determined by market orders followed after failing to fill the order with their levels chosen.
+Therefore, the rewards must have been determined by market orders followed after those which failed to fill the order with their levels chosen.
 The rewards for the agent that learned to sell assets are shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
 The rewards could not be improved during the training, even though the agent lowered the average action chosen to below -20, as shown in Figure \ref{fig:analysis-q-learn-2-action-sell}.
 In such rising market conditions, the rewards observed are a product of the market order, since negative actions will likely not result in a filled order.
 The rewards for selling assets in this rising market was improved and remained above \$0.00, as shown in Figure \ref{fig:analysis-q-learn-2-reward-sell}.
-Thereby, the average of actions chosen for an epoch were lowered within the first 1000 epochs and, thereafter, remained at approximately -10 (DQN-CNN) and -20 (DQN-MLP), which correlates with the rewards obtained .
+Thereby, the average of the actions chosen for an epoch reduced within the first 1000 epochs and, thereafter, remained at approximately -10 (DQN-CNN) and -20 (DQN-MLP), which correlates with the rewards obtained .
 \\
 \\
 Table \ref{tbl:analysis-dqn-orderfeature-summary} summarizes the average rewards observed during the backtest using the DQN agents that made use of Feature I.
-Overall, both DQN agents were able to optimize limit order placement when the given market conditions came in favor of making a purchase or sale respectively.
-More precisely, significant improvements were made during the backtest of the DQN-CNN agent when the task was to buy assets and the market price was falling (dat set I). 
-Thereby the agent was rewarded with 22.06, which is a significant improvement compared to the expected return of -0.05 for a market order.
-Likewise, during rising market conditions (data set I), both agents were able to improve over the expected market order return.
-However, when market conditions were not favorable to the intention to either buy or sell, the agents performed not only most of the times worse than the expected return of a market order but also worse than the Q-Learning agent (see Table \ref{tbl:analysis-q-learn-summary} above).
-That is, the DQN-CNN agent achieved rewards of -39.26 and -2.26 for selling in data set I and buying in data set II, both worse than the expected returns for market orders.
-The exception was when the DQN-MLP agent achieved -22.67 when attempting to make sales in data set I and therefore performed better than the expected market order return.
-However, the backtest that set the DQN-MLP agent to make a purchases in data set II performed with -7.40 much worse than the baseline provided by the expected market order return.
+Overall, both DQN agents were able to optimize limit order placement when the given market conditions became favorable to making a purchase or sale respectively.
+More precisely, significant improvements were made during the backtest of the DQN-CNN agent when the task was to buy assets and the market price was falling (data set I). 
+Thereby, the agent was rewarded with 22.06, which is a significant improvement compared to the expected return of -0.05 for a market order.
+Likewise, during rising market conditions (data set I), both agents were able to improve by more than the expected market order return.
+However, when market conditions were not favorable to an intention to either buy or sell, the agents mostly performed not only worse than the expected return of a market order but also worse than the Q-Learning agent (see Table \ref{tbl:analysis-q-learn-summary} above).
+That is, the DQN-CNN agent achieved rewards of -39.26 and -2.26 when selling in data set I and buying in data set II, which were both worse than the expected returns for market orders.
+The exception was when the DQN-MLP agent achieved -22.67 when attempting to make sales in data set I and therefore, it performed better than the expected market order return.
+However, the backtest that set the DQN-MLP agent to make purchases in data set II performed, with -7.40, much worse than the baseline provided by the expected market order return.
 Overall, the DQN-CNN agent performed the best and minor improvements were achieved by the DQN-MLP agent.
 
 \begin{table}[H]
@@ -611,31 +611,31 @@ When we included the two private variables by appending a vector $[inventory, ti
     \label{fig:analysis-dqn-2-trades}
 \end{figure}
 
-Figure \ref{fig:analysis-dqn-1-trades} illustrates the learning processes of the DQN agents for buying and selling using data set I.
-As with the agents that were provided with Feature I, the rewards received for buying slightly improved over the course of 5000 epochs, which is shown in Figure \ref{fig:analysis-dqn-1-trades-reward-buy}.
-Interestingly, the average action chosen per epoch by the DQN-CNN agent was abruptly adjusted after 4000 epochs, while the DQN-MLP's choice remained between 0 and 20 on average.
-However, correlating improvements with respect to the rewards was not evident.
-The rewards received for selling remained just below -10 for the DQN-CNN agent and below -20 for the DQN-MLP agent, as shown in Figure \ref{fig:analysis-dqn-1-trades-reward-sell}.
-The average of the actions chosen by the DQN-CNN agent, even though being volatile, were adjusted towards becoming positive, as shown in Figure \ref{fig:analysis-dqn-1-trades-action-sell}.
-Unfortunately, this is evidence that the average action is not providing enough insights into the actual decision making process of the agent.
-Had the agent consistently chosen positive actions throughout an epoch, an improvement of the reward would have been visible in the aforementioned figure.
+Figure \ref{fig:analysis-dqn-1-trades} illustrates the learning processes of the DQN agents when buying and selling in data set I.
+As with the agents that were provided by Feature I, the rewards received when buying slightly improved over the course of the 5000 epochs, which is shown in Figure \ref{fig:analysis-dqn-1-trades-reward-buy}.
+Interestingly, the average action chosen per epoch by the DQN-CNN agent was abruptly adjusted after 4000 epochs, while the DQN-MLP's choice remained between 0 and 20, on average.
+However, correlating improvements with respect to the rewards were not evident.
+The rewards received when selling remained just below -10 for the DQN-CNN agent and below -20 for the DQN-MLP agent, as shown in Figure \ref{fig:analysis-dqn-1-trades-reward-sell}.
+The average of the actions chosen by the DQN-CNN agent, though volatile, were adjusted towards becoming positive, as shown in Figure \ref{fig:analysis-dqn-1-trades-action-sell}.
+Unfortunately, this is evidence that the average action does not provide enough insights into the actual decision-making process of the agent.
+Had the agent consistently chosen positive actions throughout an epoch, an improvement in the reward would have been visible in the aforementioned figure.
 Instead, the agent must have chosen negative actions in the initial steps and shifted towards very positive actions later in the epoch.
 Figure \ref{fig:analysis-dqn-2-trades} illustrates the same learning process with the application of data set II.
 The rewards for the buying process were not improved (Figure \ref{fig:analysis-dqn-2-trades-reward-buy}) for either of the two agents.
-Interestingly, in this scenario the DQN-MLP made a significantly better adjustment regarding the actions chosen (Figure \ref{fig:analysis-dqn-2-trades-action-buy}), indicating the willingness to make more immediate purchases.
-Rewards for selling on data set II increased during the training, as shown in Figure \ref{fig:analysis-dqn-2-trades-reward-sell} and the chosen average action remained at around -30 after 1000 epochs, for both agents, as shown in Figure \ref{fig:analysis-dqn-2-trades-action-sell}.
+Interestingly, in this scenario, the DQN-MLP made a significantly better adjustment regarding the actions chosen (Figure \ref{fig:analysis-dqn-2-trades-action-buy}), indicating its willingness to make more immediate purchases.
+Rewards for selling in data set II increased during the training, as shown in Figure \ref{fig:analysis-dqn-2-trades-reward-sell} and the average action chosen remained at around -30 after 1000 epochs, for both agents, as shown in Figure \ref{fig:analysis-dqn-2-trades-action-sell}.
 \\
 \\
 Table \ref{tbl:analysis-dqn-tradefeature-summary} summarizes the average rewards received by the DQN agents during the backtest.
 As with the previous application of Feature I to the DQN agents, significant optimization could be achieved when market conditions became more favorable to buying or selling.
-For buying during falling market conditions (data set I), the DQN-CNN achieved a reward of 31.92 and the DQN-MLP a reward of 25.44, a clear improvement compared to the expected market order return of -0.05.
+For buying during falling market conditions (data set I), the DQN-CNN achieved a reward of 31.92 and the DQN-MLP a reward of 25.44, clear improvements compared to the expected market order return of -0.05.
 Likewise, both agents improved sales in data set II (0.15 and 3.80 reward respectively).
 Compared to when Feature I was applied, the agents under the application of Feature II achieved better results in difficult market conditions (selling in data set I and buying in data set II).
 Particularly, sales in data set II were better than the expected returns of market orders.
-Overall, indicated by the positive sum of rewards achieved by both DQN agents, were able to make purchases and sales better than the market price.
-Consequently, the reward obtained was much better than the expected market order return.
+Overall, as indicated by the positive sum of rewards achieved, both DQN agents were able to make purchases and sales of better than the market price.
+Consequently, the rewards obtained were much better than the expected market order return.
 The application of Feature II meant that the agent outperformed the DQN agent with Feature I (see Table \ref{tbl:analysis-dqn-orderfeature-summary} for comparison).
-Thereby, the DQN-CNN setup has proven to improve to a greater extent than the DQN-MLP setup.
+Thereby, it is evident that the DQN-CNN setup has yielded greater improvements than the DQN-MLP setup.
 
 \begin{table}[H]
 \centering
@@ -653,17 +653,18 @@ Thereby, the DQN-CNN setup has proven to improve to a greater extent than the DQ
 \end{table}
 
 \subsection{Comparison with different feature sizes}
+\label{subsec:eval-comparison-feature-size}
 
-Both features constructed in this project allow for adjustments regarding their size, that determines the information content provided to the agent.
+Both features constructed in this project allow for size-related adjustments that determine the information content provided to the agent.
 Until now, we have made use of one particular setting for each feature, that is, we have used $m_I=30$ windows with length $n_I=40$ for feature I and a vector length of $n_{II}=30$ for feature II.
-With the use of the DQN-CNN agent, which has resulted in slightly better performance than the DQN-MLP agent, we will investigat whether or not a different size of the feature vector allows to further improve these results.
-We proceed the same evaluation as described in the previous two sections with different feature vector settings.
+With the use of the DQN-CNN agent, which has resulted in slightly better performance than the DQN-MLP agent, we will investigate whether or not a different size of the feature vector improve these results further.
+We will proceed with the same evaluation as described in the previous two sections, but with different feature vector settings.
 For feature I, we will investigate window sizes $m=10,20,30,40,50$ with maximum vector length $n=40$.
 Similarly, for feature II, we will investigate the length of the vector $n=10,20,30,40,50$ (no window present for this feature).
 
-Table \ref{tbl:analysis-dqn-featuresize} below shows the results from the backtest and confirms that the setting we ran earlier n this section performed the best.
-It is evident that a smaller window size for feature I and a smaller vector length for feature II ($m_I<30$ and $n_{II}<30$), both have a negative impact on the resulted performance, indicating that the agent retrieved not enough information.
-However, increasing the dimensionality of our feature space ($m_I>30$ and $n_{II}>30$) did not improve the agents capabilities and therefore indicates arising difficulties related to the curse of dimensionality\cite{keogh2011curse}.
+Table \ref{tbl:analysis-dqn-featuresize} below shows the results from the backtest and confirms that the setting we ran earlier in this section performed the best.
+It is evident that a smaller window size for feature I and a smaller vector length for feature II ($m_I<30$ and $n_{II}<30$) both have a negative impact on the resulting performance, indicating that the agent retrieved insufficient information.
+However, increasing the dimensionality of our feature space ($m_I>30$ and $n_{II}>30$) did not improve the agents' capabilities and therefore indicates difficulties arising from the curse of dimensionality\cite{keogh2011curse}.
 
 \begin{table}[H]
 \centering

@@ -406,8 +406,8 @@ As a result, we constructed a feature vector of length $n$ (number of trades) th
 \section{Conclusion}
 
 Event data was collected from the Bittrex cryptocurrency exchange and a limit order book was reconstructed therefrom.
-This limit order book serves as the historical data set and source for the match engine in order to simulate order placement. 
+This limit order book served as the historical data set and source for the match engine in order to simulate order placement. 
 Subsequently the price chart, derived from the order book generated, was shown and the underlying event data were investigated.
 Patterns were found which give insight into how market participants positioned their orders, with respect to price and size.
-It was shown that the price movement was likely to be due to (1) an imbalance between bid and ask orders; (2) a distinctive way of posting or canceling orders; and (3) consecutive or impulsive trades.
+It was shown that the price movements were likely to be due to (1) an imbalance between bid and ask orders; (2) a certain way of posting or canceling orders; and (3) consecutive or impulsive trades.
 These findings were incorporated within the two features constructed, and will serve as the observation state for the reinforcement learning agents that are described in the following chapter.
