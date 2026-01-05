@@ -4,6 +4,17 @@ CTC-Executioner is a tool that provides an on-demand execution/placement strateg
 
 The methods being used are based on a research project (master thesis) currently proceeding at TU Delft.
 
+## Requirements
+
+- **Python**: 3.10 or higher (tested with Python 3.13.7)
+- **Gymnasium**: 1.0.0 or higher (migrated from OpenAI Gym)
+
+## Installation
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Documentation
 
 Comprehensive documentation and concepts explained in the [academic report](https://github.com/backender/ctc-executioner/blob/master/docs/report.pdf)
@@ -28,6 +39,7 @@ orderbook_test.summary()
 Create and configure environments
 
 ```python
+import gymnasium as gym
 import gym_ctc_executioner
 env = gym.make("ctc-executioner-v0")
 env.setOrderbook(orderbook)

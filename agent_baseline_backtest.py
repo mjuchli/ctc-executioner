@@ -1,6 +1,5 @@
-import gym
+import gymnasium as gym
 from ctc_executioner.orderbook import Orderbook
-from baselines import deepq
 import gym_ctc_executioner
 import gym_ctc_marketmaker
 import numpy as np
@@ -31,16 +30,22 @@ def main():
         side=side
     )
 
-    act = deepq.load("models/"+file_name_prefix+".pkl")
+    # Note: baselines.deepq is deprecated. You may need to use a different RL library
+    # act = deepq.load("models/"+file_name_prefix+".pkl")
+    act = None  # TODO: Replace with compatible RL library
     rewards = []
     episode = 0
     for _ in range(epochs):
         episode += 1
-        obs, done = env.reset(), False
+        obs, info = env.reset()
+        terminated = False
+        truncated = False
+        done = terminated or truncated
         episode_rew = 0
         while not done:
             env.render()
-            obs, rew, done, _ = env.step(act(obs[None])[0])
+            obs, rew, terminated, truncated, _ = env.step(act(obs[None])[0])
+            done = terminated or truncated
             episode_rew += rew
         print("Episode "+str(episode)+" reward", episode_rew)
         rewards.append(episode_rew)

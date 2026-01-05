@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from rl.callbacks import Callback
+try:
+    from rl.callbacks import Callback
+except ImportError:
+    from ctc_executioner.agent_utils.callback_base import Callback
 from ctc_executioner.order_side import OrderSide
 
 class ActionPlotCallback(Callback):
