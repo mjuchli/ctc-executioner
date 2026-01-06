@@ -6,6 +6,7 @@ import copy
 import logging
 import numpy as np
 
+
 class MatchEngine(object):
 
     def __init__(self, orderbook, index=0, maxRuntime=100):
@@ -14,6 +15,7 @@ class MatchEngine(object):
         self.maxRuntime = maxRuntime
         self.matches = set()
         self.recordMatches = False
+        self._state_cache = {}  # Cache for orderbook states
 
     def _removePosition(self, side, price, qty):
         if self.recordMatches == True:
@@ -24,6 +26,7 @@ class MatchEngine(object):
 
     def setIndex(self, index):
         self.index = index
+        self._state_cache.clear()  # Clear cache when index changes
 
     def matchLimitOrder(self, order, orderbookState):
         """
@@ -46,34 +49,52 @@ class MatchEngine(object):
         else:
             bookSide = orderbookState.getBuyers()
 
-        def isMatchingPosition(p):
-            if order.getSide() == OrderSide.BUY:
-                return bookSide[sidePosition].getPrice() <= order.getPrice()
-            else:
-                return bookSide[sidePosition].getPrice() >= order.getPrice()
-
         partialTrades = []
         remaining = order.getCty()
         sidePosition = 0
-        while len(bookSide) > sidePosition and isMatchingPosition(sidePosition) and remaining > 0.0:
+        orderPrice = order.getPrice()
+
+        # Check if position matches price condition directly in loop
+        while len(bookSide) > sidePosition and remaining > 0.0:
             p = bookSide[sidePosition]
             price = p.getPrice()
+
+            # Check price matching condition
+            if order.getSide() == OrderSide.BUY:
+                if price > orderPrice:
+                    break  # No more matching prices
+            else:  # SELL
+                if price < orderPrice:
+                    break  # No more matching prices
+
             qty = p.getQty()
 
-            # skip if position was already machted
+            # skip if position was already matched
             if self._isRemoved(side=order.getSide(), price=price, qty=qty):
                 continue
 
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
-                t = Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())
-                #self._removePosition(side=order.getSide(), price=price, qty=qty)
+                t = Trade(
+                    orderSide=order.getSide(),
+                    orderType=OrderType.LIMIT,
+                    cty=remaining,
+                    price=price,
+                    timestamp=orderbookState.getTimestamp(),
+                )
+                # self._removePosition(side=order.getSide(), price=price, qty=qty)
                 return [t]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
-                t = Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=min(qty, remaining), price=price, timestamp=orderbookState.getTimestamp())
+                t = Trade(
+                    orderSide=order.getSide(),
+                    orderType=OrderType.LIMIT,
+                    cty=min(qty, remaining),
+                    price=price,
+                    timestamp=orderbookState.getTimestamp(),
+                )
                 partialTrades.append(t)
-                #self._removePosition(side=order.getSide(), price=price, qty=qty)
+                # self._removePosition(side=order.getSide(), price=price, qty=qty)
                 sidePosition = sidePosition + 1
                 remaining = remaining - qty
 
@@ -89,12 +110,23 @@ class MatchEngine(object):
                     logging.debug("On average executed qty: " + str(average_qty))
                     if average_qty == 0.0:
                         average_qty = 0.5
-                        logging.debug("Since no trades were executed (e.g. true average executed qty == 0.0), defaul is choosen: " + str(average_qty))
-                    derivative_price = abs(np.mean(np.gradient([x.getPrice() for x in partialTrades])))
-                    logging.debug("Derivative of price from executed trades: " + str(derivative_price))
+                        logging.debug(
+                            "Since no trades were executed (e.g. true average executed qty == 0.0), defaul is choosen: "
+                            + str(average_qty)
+                        )
+                    derivative_price = abs(
+                        np.mean(np.gradient([x.getPrice() for x in partialTrades]))
+                    )
+                    logging.debug(
+                        "Derivative of price from executed trades: "
+                        + str(derivative_price)
+                    )
                     if derivative_price == 0.0:
                         derivative_price = 10.0
-                        logging.debug("Since no trades were executed (e.g. derivative executed price == 0.0), defaul is choosen: " + str(derivative_price))
+                        logging.debug(
+                            "Since no trades were executed (e.g. derivative executed price == 0.0), defaul is choosen: "
+                            + str(derivative_price)
+                        )
                     while remaining > 0.0:
                         if order.getSide() == OrderSide.BUY:
                             price = price + derivative_price
@@ -106,8 +138,18 @@ class MatchEngine(object):
                                 break
 
                         qty = min(average_qty, remaining)
-                        logging.debug("Partial execution: assume " + str(qty) + " available")
-                        partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.LIMIT, cty=qty, price=price, timestamp=orderbookState.getTimestamp()))
+                        logging.debug(
+                            "Partial execution: assume " + str(qty) + " available"
+                        )
+                        partialTrades.append(
+                            Trade(
+                                orderSide=order.getSide(),
+                                orderType=OrderType.LIMIT,
+                                cty=qty,
+                                price=price,
+                                timestamp=orderbookState.getTimestamp(),
+                            )
+                        )
                         remaining = remaining - qty
 
         return partialTrades
@@ -144,11 +186,27 @@ class MatchEngine(object):
             qty = p.getQty()
             if not partialTrades and qty >= order.getCty():
                 logging.debug("Full execution: " + str(qty) + " pcs available")
-                return [Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=remaining, price=price, timestamp=orderbookState.getTimestamp())]
+                return [
+                    Trade(
+                        orderSide=order.getSide(),
+                        orderType=OrderType.MARKET,
+                        cty=remaining,
+                        price=price,
+                        timestamp=orderbookState.getTimestamp(),
+                    )
+                ]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
                 qtyExecute = min(qty, remaining)
-                partialTrades.append(Trade(orderSide=order.getSide(), orderType=OrderType.MARKET, cty=qtyExecute, price=price, timestamp=orderbookState.getTimestamp()))
+                partialTrades.append(
+                    Trade(
+                        orderSide=order.getSide(),
+                        orderType=OrderType.MARKET,
+                        cty=qtyExecute,
+                        price=price,
+                        timestamp=orderbookState.getTimestamp(),
+                    )
+                )
                 sidePosition = sidePosition + 1
                 remaining = remaining - qtyExecute
                 logging.debug("Remaining: " + str(remaining))
@@ -189,13 +247,19 @@ class MatchEngine(object):
         remaining = order.getCty()
         trades = []
 
+        # Cache start state timestamp for time calculations
+        start_state = self.orderbook.getState(self.index)
+        t_start = start_state.getTimestamp()
+
         while len(self.orderbook.getStates()) - 1 > i and remaining > 0:
-            orderbookState = self.orderbook.getState(i)
+            # Use cached state if available, otherwise fetch and cache
+            if i not in self._state_cache:
+                self._state_cache[i] = self.orderbook.getState(i)
+            orderbookState = self._state_cache[i]
             logging.debug("Evaluate state " + str(i) + ":\n" + str(orderbookState))
 
             # Stop matching process after defined seconds are consumed
             if seconds is not None:
-                t_start = self.orderbook.getState(self.index).getTimestamp()
                 t_now = orderbookState.getTimestamp()
                 t_delta = (t_now - t_start).total_seconds()
                 logging.debug(str(t_delta) + " of " + str(seconds) + " consumed.")
@@ -209,10 +273,12 @@ class MatchEngine(object):
                 counterTrades = self.matchMarketOrder(order, orderbookState)
             elif order.getType() == OrderType.LIMIT_T_MARKET:
                 if seconds is None:
-                    raise Exception(str(OrderType.LIMIT_T_MARKET) + ' requires a time limit.')
+                    raise Exception(
+                        str(OrderType.LIMIT_T_MARKET) + " requires a time limit."
+                    )
                 counterTrades = self.matchLimitOrder(order, orderbookState)
             else:
-                raise Exception('Order type not known or not implemented yet.')
+                raise Exception("Order type not known or not implemented yet.")
 
             if counterTrades:
                 trades = trades + counterTrades
@@ -227,17 +293,23 @@ class MatchEngine(object):
             i = i + 1
 
         # Execute remaining qty as market if LIMIT_T_MARKET
-        if remaining > 0.0 and (order.getType() == OrderType.LIMIT_T_MARKET or order.getType() == OrderType.MARKET):
-            logging.debug('Execute remaining as MARKET order.')
-            #i = i - 1  # back to previous state
+        if remaining > 0.0 and (
+            order.getType() == OrderType.LIMIT_T_MARKET
+            or order.getType() == OrderType.MARKET
+        ):
+            logging.debug("Execute remaining as MARKET order.")
+            # i = i - 1  # back to previous state
             if not len(self.orderbook.getStates()) > i:
-                raise Exception('Not enough data for following market order.')
+                raise Exception("Not enough data for following market order.")
 
-            orderbookState = self.orderbook.getState(i)
+            # Use cached state if available
+            if i not in self._state_cache:
+                self._state_cache[i] = self.orderbook.getState(i)
+            orderbookState = self._state_cache[i]
             logging.debug("Evaluate state " + str(i) + ":\n" + str(orderbookState))
             counterTrades = self.matchMarketOrder(order, orderbookState)
             if not counterTrades:
-                raise Exception('Remaining market order matching failed.')
+                raise Exception("Remaining market order matching failed.")
             trades = trades + counterTrades
             logging.debug("Trades executed:")
             for counterTrade in counterTrades:
@@ -249,7 +321,7 @@ class MatchEngine(object):
         logging.debug("Total number of trades: " + str(len(trades)))
         logging.debug("Remaining qty of order: " + str(remaining))
         logging.debug("Index at end of match period: " + str(i))
-        return trades, remaining, i-1
+        return trades, remaining, i - 1
 
 
 # logging.basicConfig(level=logging.DEBUG)
