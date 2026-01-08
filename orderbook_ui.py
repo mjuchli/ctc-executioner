@@ -131,6 +131,11 @@ class OrderbookUI:
         self.btn_prev.on_clicked(self._prev_state)
         self.btn_next.on_clicked(self._next_state)
 
+        # Add chart plot button
+        ax_chart = plt.axes([0.88, 0.02, 0.08, 0.03])
+        self.btn_chart = Button(ax_chart, "Chart")
+        self.btn_chart.on_clicked(self._show_chart)
+
         # Add keyboard shortcuts
         self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
 
@@ -499,6 +504,23 @@ class OrderbookUI:
             self._prev_state(None)
         elif event.key == "right" or event.key == "down":
             self._next_state(None)
+
+    def _show_chart(self, event):
+        """Show the orderbook chart plot using orderbook.plot()."""
+        import matplotlib.pyplot as plt
+
+        # Call orderbook.plot() with show_bidask=True and max_level=0 to show best bid/ask
+        # max_level=0 gets the best bid/ask (first in list), not max_level=-1 (last/worst)
+        # This will open in a separate window
+        try:
+            self.orderbook.plot(show_bidask=True, max_level=0, show=True)
+        except (IndexError, AttributeError) as e:
+            # Fallback if there's an issue with bid/ask data (e.g., empty orderbook)
+            print(f"Error showing chart with bid/ask: {e}")
+            try:
+                self.orderbook.plot(show_bidask=False, show=True)
+            except Exception as e2:
+                print(f"Error showing chart: {e2}")
 
     def show(self):
         """Display the orderbook UI."""
