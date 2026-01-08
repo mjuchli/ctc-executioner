@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from rl.callbacks import Callback
+try:
+    from rl.callbacks import Callback
+except ImportError:
+    from ctc_executioner.agent_utils.callback_base import Callback
 
 class LivePlotCallback(Callback):
     def __init__(self, nb_episodes=4000, avgwindow=20):

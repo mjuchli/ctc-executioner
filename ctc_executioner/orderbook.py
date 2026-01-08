@@ -1,6 +1,7 @@
 from dateutil import parser
 from ctc_executioner.order_side import OrderSide
-#from order_side import OrderSide
+
+# from order_side import OrderSide
 import numpy as np
 import random
 from sklearn.preprocessing import MinMaxScaler
@@ -9,6 +10,7 @@ import pandas as pd
 from diskcache import Cache
 from datetime import datetime
 import time
+
 
 class OrderbookEntry(object):
 
@@ -41,14 +43,14 @@ class OrderbookState(object):
         self.market = {}
 
     def __str__(self):
-        s = '----------ORDERBOOK STATE----------\n'
+        s = "----------ORDERBOOK STATE----------\n"
         # s = s + "Index: " + str(self.index) + "\n"
         s = s + "DateTime: " + str(self.timestamp) + "\n"
         s = s + "Price: " + str(self.tradePrice) + "\n"
         s = s + "Buyers: " + str(self.buyers) + "\n"
         s = s + "Sellers: " + str(self.sellers) + "\n"
         s = s + "Market Vars: " + str(self.market) + "\n"
-        s = s + '----------ORDERBOOK STATE----------\n'
+        s = s + "----------ORDERBOOK STATE----------\n"
         return s
 
     def __repr__(self):
@@ -122,14 +124,14 @@ class OrderbookState(object):
         return self.getSidePositions(side)[0].getPrice()
 
     def getPriceAtLevel(self, side, level):
-        """ Returns price at a certain level of the orderbook.
+        """Returns price at a certain level of the orderbook.
         In case not enough levels are present in the orderbook, we assume
         linear price increase (seller side) / decrease (buyer side) for the
         following levels.
         """
         positions = self.getSidePositions(side)
-        delta = 0.1 # 10 cents
-        #delta = 0.0001 * self.getBestAsk()  # 1 basis point
+        delta = 0.1  # 10 cents
+        # delta = 0.0001 * self.getBestAsk()  # 1 basis point
         if side == OrderSide.BUY:
             # print("level: " + str(level) + ", price: " + str(self.getBestAsk()) + " -> " + str(level * delta) + " -> " + str(self.getBestAsk() + level * delta))
             return self.getBestAsk() + level * delta
@@ -152,7 +154,7 @@ class OrderbookState(object):
 class Orderbook(object):
 
     def __init__(self, extraFeatures=False):
-        self.cache = Cache('/tmp/ctc-executioner')
+        self.cache = Cache("/tmp/ctc-executioner")
         self.dictBook = None
         self.trades = {}
         self.states = []
@@ -160,11 +162,11 @@ class Orderbook(object):
         self.tmp = {}
 
     def __str__(self):
-        s = ''
+        s = ""
         i = 1
         for state in self.states:
-            s = s + 'State ' + str(i) + "\n"
-            s = s + '-------' + "\n"
+            s = s + "State " + str(i) + "\n"
+            s = s + "-------" + "\n"
             s = s + str(state)
             s = s + "\n\n"
             i = i + 1
@@ -185,24 +187,26 @@ class Orderbook(object):
 
     def getState(self, index):
         if len(self.states) <= index:
-            raise Exception('Index out of orderbook state.')
+            raise Exception("Index out of orderbook state.")
         return self.states[index]
 
     def getDictState(self, index):
         if len(self.dictBook) <= index:
-            raise Exception('Index out of orderbook state.')
+            raise Exception("Index out of orderbook state.")
         return self.dictBook[list(self.dictBook.keys())[index]]
 
     def summary(self):
         """Prints a summary of the characteristics of the order book"""
         nrStates = len(self.getStates())
-        duration = (self.getState(-1).getTimestamp() - self.getState(0).getTimestamp()).total_seconds()
+        duration = (
+            self.getState(-1).getTimestamp() - self.getState(0).getTimestamp()
+        ).total_seconds()
         statesPerSecond = nrStates / duration
 
         i = 0
         s = self.getState(0)
         priceChanges = []
-        while i < nrStates-1:
+        while i < nrStates - 1:
             i = i + 1
             s_next = self.getState(i)
             if (s_next.getTimestamp() - s.getTimestamp()).total_seconds() < 1.0:
@@ -212,10 +216,10 @@ class Orderbook(object):
                 s = s_next
         rateOfPriceChange = np.mean([abs(x[0] - x[1]) for x in priceChanges])
 
-        print('Number of states: ' + str(nrStates))
-        print('Duration: ' + str(duration))
-        print('States per second: ' + str(statesPerSecond))
-        print('Change of price per second: ' + str(rateOfPriceChange))
+        print("Number of states: " + str(nrStates))
+        print("Duration: " + str(duration))
+        print("States per second: " + str(statesPerSecond))
+        print("Change of price per second: " + str(rateOfPriceChange))
 
     def getOffsetHead(self, offset):
         """The index (from the beginning of the list) of the first state past
@@ -235,15 +239,20 @@ class Orderbook(object):
         startState = states[0]
         offsetIndex = 0
         consumed = 0.0
-        while(consumed < offset and offsetIndex < len(states)-1):
+        while consumed < offset and offsetIndex < len(states) - 1:
             offsetIndex = offsetIndex + 1
             state = states[offsetIndex]
-            consumed = (state.getTimestamp() - startState.getTimestamp()).total_seconds()
+            consumed = (
+                state.getTimestamp() - startState.getTimestamp()
+            ).total_seconds()
 
         if consumed < offset:
-            raise Exception('Not enough data for offset. Found states for '
-                            + str(consumed) + ' seconds, required: '
-                            + str(offset))
+            raise Exception(
+                "Not enough data for offset. Found states for "
+                + str(consumed)
+                + " seconds, required: "
+                + str(offset)
+            )
 
         return offsetIndex
 
@@ -265,23 +274,28 @@ class Orderbook(object):
         offsetIndex = len(states) - 1
         startState = states[offsetIndex]
         consumed = 0.0
-        while(consumed < offset and offsetIndex > 0):
+        while consumed < offset and offsetIndex > 0:
             offsetIndex = offsetIndex - 1
             state = states[offsetIndex]
-            consumed = (startState.getTimestamp() - state.getTimestamp()).total_seconds()
+            consumed = (
+                startState.getTimestamp() - state.getTimestamp()
+            ).total_seconds()
 
         if consumed < offset:
-            raise Exception('Not enough data for offset. Found states for '
-                            + str(consumed) + ' seconds, required: '
-                            + str(offset))
+            raise Exception(
+                "Not enough data for offset. Found states for "
+                + str(consumed)
+                + " seconds, required: "
+                + str(offset)
+            )
 
         return offsetIndex
 
-    def getRandomState(self, runtime, min_head = 10):
-        offsetTail = self.tmp.get('offset_tail_'+str(runtime), None)
+    def getRandomState(self, runtime, min_head=10):
+        offsetTail = self.tmp.get("offset_tail_" + str(runtime), None)
         if offsetTail is None:
             offsetTail = self.getOffsetTail(offset=runtime)
-            self.tmp['offset_tail_'+str(runtime)] = offsetTail
+            self.tmp["offset_tail_" + str(runtime)] = offsetTail
 
         index = random.choice(range(min_head, offsetTail))
         return self.getState(index), index
@@ -305,34 +319,39 @@ class Orderbook(object):
             }
 
         """
-        startPrice = config['startPrice']
-        endPrice = config.get('endPrice')
-        priceFunction = config.get('priceFunction')
-        levels = config['levels']
-        qtyPosition = config['qtyPosition']
-        startTime = config['startTime']
-        duration = config['duration']
-        interval = config['interval']
+        startPrice = config["startPrice"]
+        endPrice = config.get("endPrice")
+        priceFunction = config.get("priceFunction")
+        levels = config["levels"]
+        qtyPosition = config["qtyPosition"]
+        startTime = config["startTime"]
+        duration = config["duration"]
+        interval = config["interval"]
         steps = duration / interval
 
         steps = int(steps + 1)
         if endPrice is not None:
-            gradient = (endPrice - startPrice) / (steps-1)
-            prices = [startPrice + i*gradient for i in range(steps)]
+            gradient = (endPrice - startPrice) / (steps - 1)
+            prices = [startPrice + i * gradient for i in range(steps)]
         elif priceFunction is not None:
             prices = [priceFunction(startPrice, i, steps) for i in np.arange(steps)]
         else:
-            raise Exception('Define \"endPrice\" or \"priceFunction\"')
+            raise Exception('Define "endPrice" or "priceFunction"')
 
-
-        times = [startTime + i*interval for i in range(steps)]
+        times = [startTime + i * interval for i in range(steps)]
         for i in range(steps):
             p = prices[i]
             t = times[i]
-            #bps = 0.0001 * p
-            bps = 0.1 # 10 cents
-            asks = [OrderbookEntry(price=(p + i * bps), qty=qtyPosition) for i in range(levels)]
-            bids = [OrderbookEntry(price=(p - (i+1) * bps), qty=qtyPosition) for i in range(levels)]
+            # bps = 0.0001 * p
+            bps = 0.1  # 10 cents
+            asks = [
+                OrderbookEntry(price=(p + i * bps), qty=qtyPosition)
+                for i in range(levels)
+            ]
+            bids = [
+                OrderbookEntry(price=(p - (i + 1) * bps), qty=qtyPosition)
+                for i in range(levels)
+            ]
             s = OrderbookState(tradePrice=p, timestamp=t)
             s.addBuyers(bids)
             s.addSellers(asks)
@@ -340,7 +359,7 @@ class Orderbook(object):
         self.generateDict()
 
     def generateDict(self):
-        """ (Re)Generates dictBook.
+        """(Re)Generates dictBook.
 
         This is particularly required for artifically created books or books
         loaded other than from the events source.
@@ -357,15 +376,16 @@ class Orderbook(object):
                 asks[x.getPrice()] = x.getQty()
 
             ts = state.getTimestamp().timestamp()
-            d[ts] = {'bids': bids, 'asks': asks}
+            d[ts] = {"bids": bids, "asks": asks}
 
-        assert(len(d) == len(self.getStates()))
+        assert len(d) == len(self.getStates())
         self.dictBook = d
 
     def loadFromFile(self, file):
         import csv
-        with open(file, 'rt') as tsvin:
-            tsvin = csv.reader(tsvin, delimiter='\t')
+
+        with open(file, "rt") as tsvin:
+            tsvin = csv.reader(tsvin, delimiter="\t")
             for row in tsvin:
                 p = float(row[1])
                 vol = float(row[2])
@@ -395,14 +415,14 @@ class Orderbook(object):
                     OrderbookEntry(b2, bq2),
                     OrderbookEntry(b3, bq3),
                     OrderbookEntry(b4, bq4),
-                    OrderbookEntry(b5, bq5)
+                    OrderbookEntry(b5, bq5),
                 ]
                 sellers = [
                     OrderbookEntry(a1, aq1),
                     OrderbookEntry(a2, aq2),
                     OrderbookEntry(a3, aq3),
                     OrderbookEntry(a4, aq4),
-                    OrderbookEntry(a5, aq5)
+                    OrderbookEntry(a5, aq5),
                 ]
                 s = OrderbookState(tradePrice=p, timestamp=dt)
                 s.addBuyers(buyers)
@@ -413,17 +433,18 @@ class Orderbook(object):
                     mean60 = float(row[26])
                     vol60 = float(row[27])
                     std60 = float(row[28])
-                    s.setMarketVar('mean60', mean60)
-                    s.setMarketVar('vol60', vol60)
-                    s.setMarketVar('std60', std60)
+                    s.setMarketVar("mean60", mean60)
+                    s.setMarketVar("vol60", vol60)
+                    s.setMarketVar("std60", std60)
 
                 self.addState(s)
 
     def loadFromBitfinexFile(self, file):
         import csv
         import json
-        with open(file, 'rt') as tsvin:
-            tsvin = csv.reader(tsvin, delimiter='\t')
+
+        with open(file, "rt") as tsvin:
+            tsvin = csv.reader(tsvin, delimiter="\t")
             for row in tsvin:
                 priceBid = float(row[1])
                 priceAsk = float(row[2])
@@ -434,26 +455,33 @@ class Orderbook(object):
                 asks = json.loads(row[7])
                 timestamp = parser.parse(row[8])
 
-                buyers = [OrderbookEntry(price=float(x['price']), qty=float(x['amount'])) for x in bids]
-                sellers = [OrderbookEntry(price=float(x['price']), qty=float(x['amount'])) for x in asks]
+                buyers = [
+                    OrderbookEntry(price=float(x["price"]), qty=float(x["amount"]))
+                    for x in bids
+                ]
+                sellers = [
+                    OrderbookEntry(price=float(x["price"]), qty=float(x["amount"]))
+                    for x in asks
+                ]
 
                 s = OrderbookState(tradePrice=priceAsk, timestamp=timestamp)
                 s.addBuyers(buyers)
                 s.addSellers(sellers)
                 s.setVolume(volume)
                 if self.extraFeatures:
-                    s.setMarketVar(key='volumeBid', value=volumeBid)
-                    s.setMarketVar(key='volumeAsk', value=volumeAsk)
+                    s.setMarketVar(key="volumeBid", value=volumeBid)
+                    s.setMarketVar(key="volumeAsk", value=volumeAsk)
                 self.addState(s)
 
     @staticmethod
     def generateDictFromEvents(events_pd):
-        """ Generates dictionary based order book.
+        """Generates dictionary based order book.
 
         dict :: {timestamp: state}
         state :: {'bids': {price: size}, 'asks': {price, size}}
         """
         import copy
+
         most_recent_orderbook = {"bids": {}, "asks": {}}
         orderbook = {}
         for e in events_pd.itertuples():
@@ -468,8 +496,12 @@ class Orderbook(object):
                     # print('Cancel ' + str(e.price) + ' not in recent book')
                     continue
             else:
-                current_size = most_recent_orderbook["bids" if e.is_bid else "asks"].get(e.price, 0.0)
-                most_recent_orderbook["bids" if e.is_bid else "asks"][e.price] = current_size + e.size
+                current_size = most_recent_orderbook[
+                    "bids" if e.is_bid else "asks"
+                ].get(e.price, 0.0)
+                most_recent_orderbook["bids" if e.is_bid else "asks"][e.price] = (
+                    current_size + e.size
+                )
 
             orderbook[e.ts] = copy.deepcopy(most_recent_orderbook)
         return orderbook
@@ -493,16 +525,23 @@ class Orderbook(object):
             state = d[ts]
             bids = collections.OrderedDict(sorted(state["bids"].items(), reverse=True))
             asks = collections.OrderedDict(sorted(state["asks"].items()))
-            buyers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in bids.items()]
-            sellers = [OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in asks.items()]
+            buyers = [
+                OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in bids.items()
+            ]
+            sellers = [
+                OrderbookEntry(price=float(x[0]), qty=float(x[1])) for x in asks.items()
+            ]
             if len(sellers) > 0:
-                s = OrderbookState(tradePrice=max(state["asks"].keys()), timestamp=datetime.fromtimestamp(ts))
+                s = OrderbookState(
+                    tradePrice=max(state["asks"].keys()),
+                    timestamp=datetime.fromtimestamp(ts),
+                )
                 s.addBuyers(buyers)
                 s.addSellers(sellers)
                 s.setVolume(0.0)
                 self.addState(s)
 
-        #for s in self.getStates():
+        # for s in self.getStates():
         #    assert(s.getBestBid() <= s.getBestAsk())
 
     def loadFromEventsFrame(self, events_pd):
@@ -512,51 +551,58 @@ class Orderbook(object):
 
     @staticmethod
     def generateTradesFromEvents(events_pd):
-        """ Generates dictionary based on historical trades.
+        """Generates dictionary based on historical trades.
 
         dict :: {timestamp: trade}
         state :: {'price': float, 'size': float, side: OrderSide}
         """
         import copy
+
         trades = {}
         for e in events_pd.itertuples():
             if e.is_trade:
                 if e.is_bid:
-                    #side = OrderSide.BUY
+                    # side = OrderSide.BUY
                     side = 0
                 else:
-                    #side = OrderSide.SELL
+                    # side = OrderSide.SELL
                     side = 1
-                trades[e.ts] = {'price': e.price, 'size': e.size, 'side': side}
+                trades[e.ts] = {"price": e.price, "size": e.size, "side": side}
         return trades
 
-
-    def loadFromEvents(self, file, cols = ["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"], clean=50):
-        print('Attempt to load from cache.')
-        o = self.cache.get(file + '.class')
+    def loadFromEvents(
+        self,
+        file,
+        cols=["ts", "seq", "size", "price", "is_bid", "is_trade", "ttype"],
+        clean=50,
+    ):
+        print("Attempt to load from cache.")
+        o = self.cache.get(file + ".class")
         if o is not None:
-            print('Order book in cache. Load...')
+            print("Order book in cache. Load...")
             self.states = o.states
             self.dictBook = o.dictBook
             self.trades = o.trades
         else:
-            print('Order book not in cache. Read from file...')
+            print("Order book not in cache. Read from file...")
             import pandas as pd
-            events = pd.read_table(file, sep='\t', names=cols, index_col="seq")
+
+            events = pd.read_table(file, sep="\t", names=cols, index_col="seq")
             self.loadFromEventsFrame(events.sort_index())
             # We remove the first few states as they are lacking bids and asks
             for i in range(clean):
                 self.states.pop(0)
                 del self.dictBook[list(self.dictBook.keys())[0]]
             # Store in cache
-            print('Cache order book')
-            self.cache.add(file + '.class', self)
+            print("Cache order book")
+            self.cache.add(file + ".class", self)
 
     def plot(self, show_bidask=False, max_level=-1, show=True):
         import matplotlib.pyplot as plt
+
         plt.figure(figsize=(24, 18))
-        plt.tick_params(axis='both', which='major', labelsize=25)
-        plt.tick_params(axis='both', which='minor', labelsize=25)
+        plt.tick_params(axis="both", which="major", labelsize=25)
+        plt.tick_params(axis="both", which="minor", labelsize=25)
         price = [x.getBidAskMid() for x in self.getStates()]
         times = [x.getTimestamp() for x in self.getStates()]
         plt.plot(times, price)
@@ -578,10 +624,12 @@ class Orderbook(object):
         volumesRelative = list(map(round, volumesScaled))
         i = 0
         for state in self.getStates():
-            state.setMarketVar('volumeRelativeTotal', volumesRelative[i])
+            state.setMarketVar("volumeRelativeTotal", volumesRelative[i])
             i = i + 1
 
-    def getBidAskFeature(self, bids, asks, qty=None, price=True, size=True, normalize=False, levels=20):
+    def getBidAskFeature(
+        self, bids, asks, qty=None, price=True, size=True, normalize=False, levels=20
+    ):
         """Creates feature to represent bids and asks.
 
         The prices and sizes of the bids and asks are normalized by the provided
@@ -600,17 +648,17 @@ class Orderbook(object):
         ]
 
         """
-        assert(price is True or size is True)
+        assert price is True or size is True
 
         def toArray(d):
-            s = pd.Series(d, name='size')
-            s.index.name='price'
+            s = pd.Series(d, name="size")
+            s.index.name = "price"
             s = s.reset_index()
             return np.array(s)
 
         def force_levels(a, n=levels):
             """Shrinks or expands array to n number of records."""
-            gap = (n - a.shape[0])
+            gap = n - a.shape[0]
             if gap > 0:
                 gapfill = np.zeros((gap, 2))
                 a = np.vstack((a, gapfill))
@@ -623,36 +671,46 @@ class Orderbook(object):
         bids = toArray(bids)
         asks = toArray(asks)
         if normalize is True:
-            assert(qty is not None)
-            bestAsk = np.min(asks[:,0])
-            bids = np.column_stack((bids[:,0] / bestAsk, bids[:,1] / qty))
-            asks = np.column_stack((asks[:,0] / bestAsk, asks[:,1] / qty))
+            assert qty is not None
+            bestAsk = np.min(asks[:, 0])
+            bids = np.column_stack((bids[:, 0] / bestAsk, bids[:, 1] / qty))
+            asks = np.column_stack((asks[:, 0] / bestAsk, asks[:, 1] / qty))
 
         bidsAsks = np.array([force_levels(bids), force_levels(asks)])
         if price is True and size is True:
             return bidsAsks
         if price is True:
-            return bidsAsks[:,:,0]
+            return bidsAsks[:, :, 0]
         if size is True:
-            return bidsAsks[:,:,1]
+            return bidsAsks[:, :, 1]
 
-
-    def getBidAskFeatures(self, state_index, lookback, qty=None, price=True, size=True, normalize=True, levels=20):
-        """ Creates feature to represent bids and asks with a lookback of previous states.
+    def getBidAskFeatures(
+        self,
+        state_index,
+        lookback,
+        qty=None,
+        price=True,
+        size=True,
+        normalize=True,
+        levels=20,
+    ):
+        """Creates feature to represent bids and asks with a lookback of previous states.
 
         Shape: (2*lookback, levels, count(features))
         """
-        assert(state_index >= lookback)
+        assert state_index >= lookback
 
-        state = self.getDictState(state_index)
-        asks = state['asks']
-        bids = state['bids']
-        i = 0
-        while i < lookback:
-            state_index = state_index - 1
-            state = self.getDictState(state_index)
-            asks = state['asks']
-            bids = state['bids']
+        # Pre-allocate array for better performance
+        feature_count = 2 if (price and size) else 1
+        features_shape = (2 * lookback, levels, feature_count)
+        features = np.zeros(features_shape, dtype=np.float64)
+
+        # Collect all states first to avoid repeated dict lookups
+        current_idx = state_index
+        for i in range(lookback):
+            state = self.getDictState(current_idx)
+            asks = state["asks"]
+            bids = state["bids"]
             features_next = self.getBidAskFeature(
                 bids=bids,
                 asks=asks,
@@ -660,14 +718,12 @@ class Orderbook(object):
                 price=price,
                 size=size,
                 normalize=normalize,
-                levels=levels
+                levels=levels,
             )
+            # Fill pre-allocated array (reverse order to match original behavior)
+            features[2 * (lookback - 1 - i) : 2 * (lookback - i)] = features_next
+            current_idx = current_idx - 1
 
-            if i == 0:
-                features = np.array(features_next)
-            else:
-                features = np.vstack((features, features_next))
-            i = i + 1
         return features
 
     def get_hist_trades(self, ts, lookback=20):
@@ -680,12 +736,18 @@ class Orderbook(object):
                     break
         return acc_trades
 
-    def getHistTradesFeature(self, ts, lookback=20, normalize=True, norm_price=None, norm_size=None):
+    def getHistTradesFeature(
+        self, ts, lookback=20, normalize=True, norm_price=None, norm_size=None
+    ):
         trades = self.get_hist_trades(ts, lookback=lookback)
-        trades = list(map(lambda v: [v['price'], v['size'], v['side']], trades.values()))
+        trades = list(
+            map(lambda v: [v["price"], v["size"], v["side"]], trades.values())
+        )
         arr = np.array(trades)
         if normalize:
-            arr = np.column_stack((arr[:,0]/norm_price, arr[:,1]/norm_size, arr[:,2]))
+            arr = np.column_stack(
+                (arr[:, 0] / norm_price, arr[:, 1] / norm_size, arr[:, 2])
+            )
         return arr
 
 
@@ -694,22 +756,22 @@ class Orderbook(object):
 # ts = o.getStates()[100].getUnixTimestamp()
 # print(ts)
 # o.getHistTradesFeature(ts, normalize=True, norm_price=2.0, norm_size=2.0)
-#trades = o.getHistTradesFeature(ts)
+# trades = o.getHistTradesFeature(ts)
 # print(trades[0:1])
 
 
-#o.generateDict()
-#print(o.dictBook[list(o.dictBook.keys())[0]])
-#o.plot()
+# o.generateDict()
+# print(o.dictBook[list(o.dictBook.keys())[0]])
+# o.plot()
 
-#o = Orderbook()
-#o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
-#o.loadFromFile('query_result_train_15m.tsv')
-#o.plot()
-#o.createFeatures()
-#print([x.getMarketVar('volumeRelativeTotal') for x in o.getStates()])
-#print(o.getState(0))
-#print(o.getState(200))
+# o = Orderbook()
+# o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
+# o.loadFromFile('query_result_train_15m.tsv')
+# o.plot()
+# o.createFeatures()
+# print([x.getMarketVar('volumeRelativeTotal') for x in o.getStates()])
+# print(o.getState(0))
+# print(o.getState(200))
 
 # print(o.getState(0))
 # print(o.getState(1))
@@ -732,8 +794,8 @@ class Orderbook(object):
 # print('states: ' + str(len(orderbook.getStates())))
 # st, index = orderbook.getRandomState(runtime=60, offset_max=60)
 # print(index)
-#o = Orderbook()
-#o.loadFromFile('query_result_small.tsv')
+# o = Orderbook()
+# o.loadFromFile('query_result_small.tsv')
 
 # print(o.getTotalDuration(offset=0))
 # print(o.getOffsetTail(offset=0))

@@ -1,6 +1,5 @@
-import gym
+import gymnasium as gym
 from ctc_executioner.orderbook import Orderbook
-from baselines import deepq
 import gym_ctc_executioner
 import gym_ctc_marketmaker
 import numpy as np
@@ -49,21 +48,24 @@ def main():
         featureType=FeatureType.ORDERS
     )
     print(env.observation_space.shape)
-    model = deepq.models.cnn_to_mlp( convs=[(int(env.observation_space.shape[1]/2), int(env.observation_space.shape[1]/2), env.observation_space.shape[0])], hiddens=[200])
-    act = deepq.learn(
-        env,
-        q_func=model,
-        lr=1e-3,
-        max_timesteps=50000,
-        buffer_size=50000,
-        exploration_fraction=0.1,
-        exploration_final_eps=0.05,
-        #target_network_update_freq=1,
-        print_freq=10,
-        #callback=liveplot.baseline_callback
-    )
-    print("Saving model as "+file_name_prefix+".pkl")
-    act.save("models/"+file_name_prefix+".pkl")
+    # Note: baselines.deepq is deprecated and not compatible with Gymnasium
+    # You may need to use a different RL library like stable-baselines3 or cleanrl
+    # model = deepq.models.cnn_to_mlp( convs=[(int(env.observation_space.shape[1]/2), int(env.observation_space.shape[1]/2), env.observation_space.shape[0])], hiddens=[200])
+    # act = deepq.learn(
+    #     env,
+    #     q_func=model,
+    #     lr=1e-3,
+    #     max_timesteps=50000,
+    #     buffer_size=50000,
+    #     exploration_fraction=0.1,
+    #     exploration_final_eps=0.05,
+    #     #target_network_update_freq=1,
+    #     print_freq=10,
+    #     #callback=liveplot.baseline_callback
+    # )
+    # print("Saving model as "+file_name_prefix+".pkl")
+    # act.save("models/"+file_name_prefix+".pkl")
+    print("TODO: Replace baselines.deepq with a Gymnasium-compatible RL library")
 
 
 if __name__ == '__main__':

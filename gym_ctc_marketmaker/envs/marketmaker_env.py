@@ -1,6 +1,8 @@
 import logging
 import itertools
-from gym import spaces
+import random
+import numpy as np
+from gymnasium import spaces
 from ctc_executioner.action import Action
 from ctc_executioner.action_state import ActionState
 from ctc_executioner.order import Order
@@ -157,10 +159,17 @@ class MarketMakerEnv(execution_env.ExecutionEnv):
             state_next = self.actionStateBuy
         else:
             state_next = self.actionStateSell
-        return state_next.toArray(), reward, (done_buy and done_sell), {}
+        terminated = done_buy and done_sell
+        truncated = False
+        return state_next.toArray(), reward, terminated, truncated, {}
 
-    def reset(self):
-        return self._reset(t=self.T[-1], i=self.I[-1])
+    def reset(self, seed=None, options=None):
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+        observation = self._reset(t=self.T[-1], i=self.I[-1])
+        info = {}
+        return observation, info
 
     def _reset(self, t, i):
         #self.orderbook = copy.deepcopy(self.orderbookOriginal) # TODO: Slow but currently required to reset after every episode due to change of order book states during matching
@@ -179,8 +188,5 @@ class MarketMakerEnv(execution_env.ExecutionEnv):
 
         return state.toArray()
 
-    def render(self, mode='human', close=False):
-        pass
-
-    def seed(self, seed):
+    def render(self):
         pass

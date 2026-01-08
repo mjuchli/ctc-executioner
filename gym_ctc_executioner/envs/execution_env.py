@@ -2,9 +2,8 @@ import logging
 import copy
 import random
 import numpy as np
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium import spaces
 from ctc_executioner.action import Action
 from ctc_executioner.action_state import ActionState
 from ctc_executioner.order import Order
@@ -239,10 +238,17 @@ class ExecutionEnv(gym.Env):
         )
         self.orderbookIndex = self.execution.getOrderbookIndex()
         self.actionState = state_next
-        return state_next.toArray(), reward, done, {}
+        terminated = done
+        truncated = False
+        return state_next.toArray(), reward, terminated, truncated, {}
 
-    def reset(self):
-        return self._reset(t=self.T[-1], i=self.I[-1])
+    def reset(self, seed=None, options=None):
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+        observation = self._reset(t=self.T[-1], i=self.I[-1])
+        info = {}
+        return observation, info
 
     def _reset(self, t, i):
         orderbookState, orderbookIndex = self._get_random_orderbook_state()
@@ -253,10 +259,7 @@ class ExecutionEnv(gym.Env):
         self.actionState = state
         return state.toArray()
 
-    def render(self, mode='human', close=False):
-        pass
-
-    def seed(self, seed):
+    def render(self):
         pass
 
 
