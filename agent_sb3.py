@@ -299,19 +299,24 @@ if __name__ == "__main__":
     # Create models directory if it doesn't exist
     os.makedirs("models", exist_ok=True)
 
-    # Create artificial orderbook for testing
+    # Load orderbook - try real data first, fallback to artificial
     orderbook = Orderbook()
-    config = {
-        "startPrice": 10000.0,
-        "priceFunction": lambda p0, s, samples: p0
-        + 10 * np.sin(2 * np.pi * 10 * (s / samples)),
-        "levels": 50,
-        "qtyPosition": 0.1,
-        "startTime": datetime.datetime.now(),
-        "duration": datetime.timedelta(seconds=1000),
-        "interval": datetime.timedelta(seconds=1),
-    }
-    orderbook.createArtificial(config)
+    try:
+        orderbook.loadFromEvents("data/events/ob-train.tsv")
+        print("Loaded orderbook from data/events/ob-train.tsv")
+    except (FileNotFoundError, IOError):
+        print("Data file not found, creating artificial orderbook...")
+        config = {
+            "startPrice": 10000.0,
+            "priceFunction": lambda p0, s, samples: p0
+            + 10 * np.sin(2 * np.pi * 10 * (s / samples)),
+            "levels": 50,
+            "qtyPosition": 0.1,
+            "startTime": datetime.datetime.now(),
+            "duration": datetime.timedelta(seconds=1000),
+            "interval": datetime.timedelta(seconds=1),
+        }
+        orderbook.createArtificial(config)
     orderbook.summary()
 
     # Create environment
