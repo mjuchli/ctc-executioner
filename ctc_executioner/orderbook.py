@@ -81,15 +81,13 @@ class OrderbookState(object):
         self.buyers.append(entry)
 
     def addBuyers(self, entries):
-        for entry in entries:
-            self.buyers.append(entry)
+        self.buyers.extend(entries)
 
     def addSeller(self, entry):
         self.sellers.append(entry)
 
     def addSellers(self, entries):
-        for entry in entries:
-            self.sellers.append(entry)
+        self.sellers.extend(entries)
 
     def getBuyers(self):
         return self.buyers
@@ -179,8 +177,7 @@ class Orderbook(object):
         self.states.append(state)
 
     def addStates(self, states):
-        for state in states:
-            self.states.append(state)
+        self.states.extend(states)
 
     def getStates(self):
         return self.states
@@ -749,64 +746,3 @@ class Orderbook(object):
                 (arr[:, 0] / norm_price, arr[:, 1] / norm_size, arr[:, 2])
             )
         return arr
-
-
-# o = Orderbook()
-# o.loadFromEvents('data/events/ob-1-small.tsv')
-# ts = o.getStates()[100].getUnixTimestamp()
-# print(ts)
-# o.getHistTradesFeature(ts, normalize=True, norm_price=2.0, norm_size=2.0)
-# trades = o.getHistTradesFeature(ts)
-# print(trades[0:1])
-
-
-# o.generateDict()
-# print(o.dictBook[list(o.dictBook.keys())[0]])
-# o.plot()
-
-# o = Orderbook()
-# o.loadFromBitfinexFile('../ctc-executioner/orderbook_bitfinex_btcusd_view.tsv')
-# o.loadFromFile('query_result_train_15m.tsv')
-# o.plot()
-# o.createFeatures()
-# print([x.getMarketVar('volumeRelativeTotal') for x in o.getStates()])
-# print(o.getState(0))
-# print(o.getState(200))
-
-# print(o.getState(0))
-# print(o.getState(1))
-# print(o.getState(2))
-
-# import datetime
-# orderbook = Orderbook()
-# config = {
-#     'startPrice': 10010.0,
-#     #'endPrice': 10000.0,
-#     'priceFunction': lambda p0, s, samples: p0 + 10 * np.sin(2*np.pi*5 * (s/samples)), # 10*sine with interval=5
-#     'levels': 25,
-#     'qtyPosition' : 1.0,
-#     'startTime': datetime.datetime.now(),
-#     'duration': datetime.timedelta(minutes=10),
-#     'interval': datetime.timedelta(seconds=10),
-# }
-# orderbook.createArtificial(config)
-# orderbook.plot()
-# print('states: ' + str(len(orderbook.getStates())))
-# st, index = orderbook.getRandomState(runtime=60, offset_max=60)
-# print(index)
-# o = Orderbook()
-# o.loadFromFile('query_result_small.tsv')
-
-# print(o.getTotalDuration(offset=0))
-# print(o.getOffsetTail(offset=0))
-# print(o.getOffsetTail(offset=16))
-#
-# print(o.getRandomOffset(offset_max=60))
-# print(o.getIndexWithTimeRemain(seconds=60, offset=50))
-# s0 = o.getState(0).getTimestamp()
-# s1 = o.getState(1).getTimestamp()
-# print(s0)
-# print("")
-# print(s1)
-# print("")
-# print((s1-s0).total_seconds())

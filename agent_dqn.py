@@ -195,5 +195,5 @@ unwrapped_env = env.unwrapped if hasattr(env, "unwrapped") else env
 unwrapped_env.setOrderbook(orderbook)
 
 agent = AgentDQN(env=env)
-agent.simulate(1)
+agent.simulate()
 # agent.train(10)

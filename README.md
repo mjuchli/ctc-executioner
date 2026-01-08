@@ -76,6 +76,26 @@ python test_basic.py
 
 This runs basic functionality tests to verify the environment works.
 
+### 4. Visualize Orderbook Data
+
+An interactive orderbook viewer is available to explore orderbook states:
+
+```bash
+# Load from default location (data/events/ob-train.tsv)
+python orderbook_ui.py
+
+# Load from a specific file
+python orderbook_ui.py data/events/ob-test.tsv
+```
+
+**Features:**
+- **Exchange-style UI**: Dark theme with color-coded bids (green) and asks (red)
+- **Interactive navigation**: Use the slider or arrow keys (←/→) to traverse through timestamps
+- **Real-time display**: Shows best bid/ask, spread, mid price, and cumulative depth
+- **Best levels highlighted**: Top of book prices are highlighted for easy identification
+
+The UI displays up to 20 levels on each side and updates in real-time as you navigate through different timestamps, allowing you to see how the orderbook evolves over time.
+
 ## Configuration
 
 ### Modify Training Parameters
