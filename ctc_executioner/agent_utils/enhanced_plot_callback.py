@@ -60,6 +60,25 @@ class EnhancedPlotCallback:
         self.fig = None
         self.ax = None
         self.verbose = verbose
+        
+        # Track cumulative P/L across all episodes
+        self.cumulative_profit = 0.0
+        self.cumulative_reward = 0.0
+        self.total_trades = 0
+        self.total_filled = 0
+        self.total_partial = 0
+        self.total_unfilled = 0
+        self.pl_text = None
+        
+        # Initialize plot immediately for real-time streaming (if orderbook is available)
+        try:
+            self._init_plot()
+            plt.ion()  # Turn on interactive mode
+            plt.show(block=False)  # Show plot without blocking
+        except Exception as e:
+            if self.verbose > 0:
+                print(f"Warning: Could not initialize plot immediately: {e}")
+            # Will try again on first step
 
     def _collect_step_data(self, action=None, reward=None, execution=None):
         """Collect step data from various sources."""
@@ -139,6 +158,13 @@ class EnhancedPlotCallback:
             **step_data,
         }
         self.current_episode["steps"][self.step_count] = self.current_step
+        
+        # Update cumulative stats
+        self._update_cumulative_stats(step_data)
+        
+        # Plot this step immediately for real-time streaming
+        self._plot_step(self.current_step)
+        
         self.step_count += 1
 
         dones = self.locals.get("dones", [False]) if hasattr(self, 'locals') else [False]
@@ -196,35 +222,59 @@ class EnhancedPlotCallback:
             **step_data,
         }
         self.current_episode["steps"][self.step_count] = self.current_step
+        
+        # Update cumulative stats
+        self._update_cumulative_stats(step_data)
+        
+        # Plot this step immediately for real-time streaming
+        self._plot_step(self.current_step)
+        
         self.step_count += 1
 
     def end_episode(self):
         """Manually end an episode (for custom agents)."""
-        if self.episode_count == 0:
-            self._init_plot()
-        self._plot_episode(self.current_episode)
-        if self.episode_count == (self.nb_episodes - 1):
-            if self.fig:
-                plt.tight_layout()
-                plt.show()
+        # Update P/L summary display
+        self._update_pl_summary()
+        # Force redraw
+        if self.fig:
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+        
         self.episodes[self.episode_count] = self.current_episode
         self.episode_count += 1
         self.step_count = 0
         self.current_episode = {"episode": self.episode_count, "steps": {}}
+        
+        # Show plot at the end of all episodes
+        if self.episode_count == (self.nb_episodes - 1):
+            if self.fig:
+                plt.ioff()  # Turn off interactive mode
+                plt.tight_layout()
+                plt.show(block=True)  # Block until closed
 
     def _on_episode_end(self):
         """Internal method called when episode ends."""
-        if self.episode_count == 0:
-            self._init_plot()
-        self._plot_episode(self.current_episode)
+        # Update P/L summary display
+        self._update_pl_summary()
+        # Force redraw
+        if self.fig:
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+        
+        self.episodes[self.episode_count] = self.current_episode
+        
+        # Show plot at the end of all episodes
         if self.episode_count == (self.nb_episodes - 1):
             if self.fig:
+                plt.ioff()  # Turn off interactive mode
                 plt.tight_layout()
-                plt.show()
-        self.episodes[self.episode_count] = self.current_episode
+                plt.show(block=True)  # Block until closed
 
     def _init_plot(self):
         """Initialize the plot with orderbook price chart."""
+        if self.fig is not None:
+            return  # Already initialized
+        
         # Create figure with subplots
         self.fig, self.ax = plt.subplots(figsize=(20, 12))
         self.fig.patch.set_facecolor("#1e1e1e")
@@ -254,7 +304,7 @@ class EnhancedPlotCallback:
         
         self.ax.set_xlabel("Time", fontsize=12, color="white")
         self.ax.set_ylabel("Price", fontsize=12, color="white")
-        self.ax.set_title("Agent Order Execution Visualization", fontsize=16, fontweight="bold", color="white")
+        self.ax.set_title("Agent Order Execution Visualization (Real-time)", fontsize=16, fontweight="bold", color="white")
         self.ax.legend(loc="upper left", fontsize=10)
         self.ax.grid(True, alpha=0.3, color="#444444")
         self.ax.tick_params(colors="white")
@@ -262,6 +312,205 @@ class EnhancedPlotCallback:
         self.ax.spines['top'].set_color('white')
         self.ax.spines['right'].set_color('white')
         self.ax.spines['left'].set_color('white')
+        
+        # Initialize P/L summary text (will be updated)
+        self.pl_text = None
+        self._update_pl_summary()
+        
+        # Draw initial plot
+        plt.tight_layout()
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+    def _update_cumulative_stats(self, step_data):
+        """Update cumulative statistics across all episodes."""
+        self.cumulative_profit += step_data.get("total_profit", 0)
+        self.cumulative_reward += step_data.get("reward", 0)
+        
+        fill_status = step_data.get("fill_status", "unfilled")
+        if fill_status == "filled":
+            self.total_filled += 1
+        elif fill_status == "partial":
+            self.total_partial += 1
+        else:
+            self.total_unfilled += 1
+        
+        if step_data.get("trades"):
+            self.total_trades += len(step_data.get("trades", []))
+
+    def _update_pl_summary(self):
+        """Update and display P/L summary text box."""
+        if not self.ax:
+            return
+        
+        # Remove old text if exists
+        if self.pl_text:
+            self.pl_text.remove()
+        
+        # Create summary text
+        summary_lines = [
+            "P/L Summary (All Episodes)",
+            f"Total P&L: {self.cumulative_profit:+.2f}",
+            f"Total Reward: {self.cumulative_reward:+.2f}",
+            f"Episodes: {self.episode_count}/{self.nb_episodes}",
+            "",
+            "Order Status:",
+            f"  Filled: {self.total_filled}",
+            f"  Partial: {self.total_partial}",
+            f"  Unfilled: {self.total_unfilled}",
+            f"  Total Trades: {self.total_trades}",
+        ]
+        
+        summary_text = "\n".join(summary_lines)
+        
+        # Determine text color based on P/L
+        text_color = "#00ff88" if self.cumulative_profit >= 0 else "#ff4444"
+        
+        # Place summary in upper right corner
+        self.pl_text = self.ax.text(
+            0.98, 0.98,
+            summary_text,
+            transform=self.ax.transAxes,
+            fontsize=10,
+            verticalalignment='top',
+            horizontalalignment='right',
+            color=text_color,
+            bbox=dict(
+                boxstyle="round,pad=0.5",
+                facecolor="#1e1e1e",
+                edgecolor=text_color,
+                linewidth=2,
+                alpha=0.9
+            ),
+            family='monospace',
+        )
+
+    def _plot_step(self, step_data):
+        """Plot a single step immediately for real-time streaming."""
+        if not self.ax:
+            return
+        
+        index = step_data.get("index")
+        if index is None:
+            return
+        
+        try:
+            state = self.unwrapped_env.orderbook.getState(index)
+            time = state.getTimestamp()
+            mid_price = state.getBidAskMid()
+            
+            action_val = step_data.get("action", 0)
+            if isinstance(action_val, (np.ndarray, list)):
+                action_val = int(action_val[0] if len(action_val) > 0 else 0)
+            else:
+                action_val = int(action_val)
+            
+            action_delta = 0.1 * self.unwrapped_env.levels[action_val]
+            if self.unwrapped_env.side == OrderSide.BUY:
+                order_price = mid_price + action_delta
+            else:
+                order_price = mid_price - action_delta
+            
+            step = {
+                "time": time,
+                "mid_price": mid_price,
+                "order_price": order_price,
+                "action": action_val,
+                "reward": step_data.get("reward", 0),
+                "fill_status": step_data.get("fill_status", "unfilled"),
+                "qty_executed": step_data.get("qty_executed", 0),
+                "qty_remaining": step_data.get("qty_remaining", 0),
+                "trades": step_data.get("trades", []),
+                "avg_fill_price": step_data.get("avg_fill_price"),
+                "total_profit": step_data.get("total_profit", 0),
+            }
+        except Exception as e:
+            if self.verbose > 0:
+                print(f"Error plotting step: {e}")
+            return
+
+        # Color based on fill status
+        if step["fill_status"] == "filled":
+            color = "#00ff88"  # Green
+            marker = "o"
+            size = 100
+        elif step["fill_status"] == "partial":
+            color = "#ffaa00"  # Orange/Yellow
+            marker = "s"
+            size = 80
+        else:  # unfilled
+            color = "#ff4444"  # Red
+            marker = "x"
+            size = 60
+
+        # Plot order placement
+        self.ax.scatter(
+            step["time"],
+            step["order_price"],
+            c=color,
+            marker=marker,
+            s=size,
+            edgecolors="white",
+            linewidths=1,
+            zorder=5,
+            alpha=0.8,
+        )
+
+        # Draw line from order price to mid price (or fill price if available)
+        target_price = step["avg_fill_price"] if step["avg_fill_price"] else step["mid_price"]
+        line_color = color if step["fill_status"] != "unfilled" else "#666666"
+        line_style = "-" if step["fill_status"] == "filled" else "--" if step["fill_status"] == "partial" else ":"
+        line_width = 2 if step["fill_status"] == "filled" else 1.5 if step["fill_status"] == "partial" else 1
+        
+        self.ax.plot(
+            [step["time"], step["time"]],
+            [step["order_price"], target_price],
+            color=line_color,
+            linestyle=line_style,
+            linewidth=line_width,
+            alpha=0.6,
+            zorder=3,
+        )
+
+        # Annotate with key information (same detailed format as before)
+        annotation_parts = []
+        if step["fill_status"] == "filled":
+            annotation_parts.append("✓ FILLED")
+        elif step["fill_status"] == "partial":
+            fill_pct = (step["qty_executed"] / (step["qty_executed"] + step["qty_remaining"]) * 100) if (step["qty_executed"] + step["qty_remaining"]) > 0 else 0
+            annotation_parts.append(f"⚠ {fill_pct:.0f}% FILLED")
+        else:
+            annotation_parts.append("✗ UNFILLED")
+        
+        if step["total_profit"] != 0:
+            profit_str = f"+{step['total_profit']:.2f}" if step["total_profit"] > 0 else f"{step['total_profit']:.2f}"
+            annotation_parts.append(f"P&L: {profit_str}")
+        
+        if step["reward"] != 0:
+            reward_str = f"+{step['reward']:.2f}" if step["reward"] > 0 else f"{step['reward']:.2f}"
+            annotation_parts.append(f"R: {reward_str}")
+        
+        if annotation_parts:
+            annotation = "\n".join(annotation_parts)
+            # Use alternating offset to avoid overlap
+            step_idx = len([s for s in self.current_episode["steps"].values() if s.get("index") is not None])
+            self.ax.annotate(
+                annotation,
+                xy=(step["time"], step["order_price"]),
+                xytext=(10, 20 if step_idx % 2 == 0 else -30),
+                textcoords="offset points",
+                fontsize=8,
+                color=color,
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="#1e1e1e", edgecolor=color, linewidth=1),
+                arrowprops=dict(arrowstyle="->", color=color, lw=1),
+            )
+
+        # Update P/L summary
+        self._update_pl_summary()
+        
+        # Update plot immediately
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
 
     def _plot_episode(self, episode):
         """Plot episode with enhanced visualization."""
