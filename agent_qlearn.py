@@ -7,6 +7,7 @@ from ctc_executioner.order_side import OrderSide
 from ctc_executioner.qlearn import QLearn
 from ctc_executioner.orderbook import Orderbook
 from ctc_executioner.agent_utils.ui import UI
+from ctc_executioner.agent_utils.enhanced_plot_callback import EnhancedPlotCallback
 
 class AgentQlearn:
     def __init__(self, env):
@@ -61,7 +62,17 @@ class AgentQlearn:
 
     def backtest(self, q=None, episodes=10, average=False, fixed_a=None):
         Ms = []
-        for _ in range(episodes):
+        
+        # Initialize enhanced plot callback
+        # Create a mock unwrapped_env-like object for the callback
+        class MockUnwrappedEnv:
+            def __init__(self, env):
+                self.orderbook = env.orderbook
+                self.side = env.side
+                self.levels = env.levels
+        plot_callback = EnhancedPlotCallback(MockUnwrappedEnv(self.env), nb_episodes=episodes, verbose=1)
+        
+        for episode_idx in range(episodes):
             actions = []
             t = self.env.T[-1]
             i = self.env.I[-1]
@@ -79,6 +90,19 @@ class AgentQlearn:
             #print("before...")
             #print(action)
             action.run(self.env.orderbook)
+            
+            # Add step to plot callback
+            # Get orderbook index from action
+            orderbook_index = action.getOrderbookIndex() if hasattr(action, 'getOrderbookIndex') else None
+            plot_callback.add_step(
+                action=a,
+                reward=action.getReward() if hasattr(action, 'getReward') else 0,
+                execution=action,
+                index=orderbook_index,
+                t=t,
+                i=i,
+            )
+            
             #print("after...")
             #print(action)
             i_next = self.env.determineNextInventory(action)
@@ -98,9 +122,24 @@ class AgentQlearn:
                 action.setState(state_next)
                 action.update(a_next, runtime_next)
                 action.run(self.env.orderbook)
+                
+                # Add step to plot callback
+                orderbook_index = action.getOrderbookIndex() if hasattr(action, 'getOrderbookIndex') else None
+                plot_callback.add_step(
+                    action=a_next,
+                    reward=action.getReward() if hasattr(action, 'getReward') else 0,
+                    execution=action,
+                    index=orderbook_index,
+                    t=t_next,
+                    i=i_next,
+                )
+                
                 #print(action)
                 i_next = self.env.determineNextInventory(action)
                 t_next = self.env.determineNextTime(t_next)
+
+            # End episode in plot callback
+            plot_callback.end_episode()
 
             price = action.getAvgPrice()
             if action.getOrder().getSide() == OrderSide.BUY:

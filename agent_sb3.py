@@ -14,8 +14,7 @@ import torch.nn as nn
 
 from ctc_executioner.order_side import OrderSide
 from ctc_executioner.orderbook import Orderbook
-from ctc_executioner.agent_utils.action_plot_callback import ActionPlotCallback
-from ctc_executioner.agent_utils.live_plot_callback import LivePlotCallback
+from ctc_executioner.agent_utils.enhanced_plot_callback import EnhancedPlotCallback
 
 import gymnasium as gym
 import gym_ctc_executioner
@@ -105,139 +104,6 @@ class EpisodeRewardCallback(BaseCallback):
             if self.verbose > 0:
                 print(f"Episode reward: {self.episode_reward}")
         return True
-
-
-class ActionPlotCallbackSB3(BaseCallback):
-    """
-    Stable-Baselines3 compatible version of ActionPlotCallback.
-    Adapts the original ActionPlotCallback to work with SB3's callback system.
-    """
-
-    def __init__(self, unwrapped_env, nb_episodes=10, verbose=0):
-        super(ActionPlotCallbackSB3, self).__init__(verbose)
-        self.unwrapped_env = unwrapped_env
-        self.nb_episodes = nb_episodes
-        self.episodes = {}
-        self.current_episode = {"episode": 0, "steps": {}}
-        self.current_step = {}
-        self.step_count = 0
-        self.episode_count = 0
-        self.plt = None
-
-    def _on_step(self) -> bool:
-        # Get action, observation, reward from locals
-        actions = self.locals.get("actions", [None])[0]
-        infos = self.locals.get("infos", [{}])
-
-        # Convert action to scalar if it's a numpy array
-        if isinstance(actions, np.ndarray):
-            action = int(actions.item() if actions.size == 1 else actions[0])
-        else:
-            action = int(actions) if actions is not None else 0
-
-        # Store step information
-        self.current_step = {
-            "action": action,
-            "index": getattr(self.unwrapped_env, "orderbookIndex", None),
-            "t": getattr(self.unwrapped_env.actionState, "getT", lambda: 0)(),
-            "i": getattr(self.unwrapped_env.actionState, "getI", lambda: 0)(),
-            "reward": float(self.locals.get("rewards", [0])[0]),
-        }
-        self.current_episode["steps"][self.step_count] = self.current_step
-        self.step_count += 1
-
-        # Check if episode ended
-        dones = self.locals.get("dones", [False])
-        if dones[0]:
-            self._on_episode_end()
-            self.episode_count += 1
-            self.step_count = 0
-            self.current_episode = {"episode": self.episode_count, "steps": {}}
-
-        return True
-
-    def _on_episode_end(self):
-        """Called when an episode ends."""
-        if self.episode_count == 0:
-            self.plt = self.unwrapped_env.orderbook.plot(
-                show_bidask=True, max_level=0, show=False
-            )
-        self._plot_episode(self.current_episode)
-        if self.episode_count == (self.nb_episodes - 1):
-            if self.plt:
-                self.plt.show()
-        self.episodes[self.episode_count] = self.current_episode
-
-    def _plot_episode(self, episode):
-        """Plot episode actions and rewards."""
-        from ctc_executioner.order_side import OrderSide
-
-        (
-            indices,
-            times,
-            actions,
-            prices,
-            order_prices,
-            runtimes,
-            inventories,
-            rewards,
-        ) = (
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-        )
-
-        for key, value in episode["steps"].items():
-            index = value.get("index")
-            if index is None:
-                continue
-            indices.append(index)
-            runtimes.append(value.get("t", 0))
-            inventories.append(value.get("i", 0))
-            rewards.append(value.get("reward", 0))
-            actions.append(value.get("action", 0))
-            state = self.unwrapped_env.orderbook.getState(index)
-            prices.append(state.getBidAskMid())
-            times.append(state.getTimestamp())
-            action_val = value.get("action", 0)
-            # Ensure action is an integer
-            if isinstance(action_val, (np.ndarray, list)):
-                action_val = int(action_val[0] if len(action_val) > 0 else 0)
-            else:
-                action_val = int(action_val)
-            action_delta = 0.1 * self.unwrapped_env.levels[action_val]
-            if self.unwrapped_env.side == OrderSide.BUY:
-                order_prices.append(state.getBidAskMid() + action_delta)
-            else:
-                order_prices.append(state.getBidAskMid() - action_delta)
-
-        if self.plt and times:
-            self.plt.scatter(times, order_prices, s=20)
-            for i, time in enumerate(times):
-                style = "k-" if (i == 0 or i == len(times) - 1) else "k--"
-                self.plt.plot(
-                    [time, time],
-                    [
-                        prices[i] - 0.005 * prices[i],
-                        prices[i] + 0.005 * prices[i],
-                    ],
-                    style,
-                    lw=1,
-                )
-                txt = (
-                    "a="
-                    + str(self.unwrapped_env.levels[actions[i]])
-                    + "\nr="
-                    + str(round(rewards[i], 2))
-                )
-                self.plt.annotate(txt, (times[i], prices[i]))
-                txt = "t=" + str(runtimes[i]) + "\ni=" + str(round(inventories[i], 2))
-                self.plt.annotate(txt, (times[i], prices[i] - 0.005 * prices[i]))
 
 
 def create_sb3_model(env, model_path=None):
@@ -352,9 +218,12 @@ if __name__ == "__main__":
     # Save model after training
     save_sb3_model(model, model_name)
 
-    # Testing with ActionPlotCallback
+    # Testing with Enhanced Plot Callback (shows order placement, fills, and rewards)
     print(f"\nTesting for {nrTest} episodes...")
-    test_callback = ActionPlotCallbackSB3(unwrapped_env, nb_episodes=nrTest, verbose=1)
+    print(
+        "Using Enhanced Plot Callback - shows order placement, fill status, and reward/loss"
+    )
+    test_callback = EnhancedPlotCallback(unwrapped_env, nb_episodes=nrTest, verbose=1)
 
     obs = env.reset()
     episode_rewards = []

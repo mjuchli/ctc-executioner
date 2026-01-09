@@ -3,6 +3,7 @@ import numpy as np
 from ctc_executioner.order_side import OrderSide
 from ctc_executioner.orderbook import Orderbook
 from ctc_executioner.agent_utils.ui import UI
+from ctc_executioner.agent_utils.enhanced_plot_callback import EnhancedPlotCallback
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
 from keras import optimizers
@@ -117,6 +118,10 @@ class AgentDQN:
         Ms = []
         t = self.unwrapped_env.T[-1]
         i = self.unwrapped_env.I[-1]
+        
+        # Initialize enhanced plot callback
+        plot_callback = EnhancedPlotCallback(self.unwrapped_env, nb_episodes=int(episodes), verbose=1)
+        
         for episode in range(int(episodes)):
             actions = []
             state = self.unwrapped_env._reset(t, i)
@@ -124,6 +129,17 @@ class AgentDQN:
             state_next, reward, terminated, truncated, _ = self.env.step(action)
             done = terminated or truncated
             actions.append(action)
+            
+            # Add step to plot callback
+            plot_callback.add_step(
+                action=action,
+                reward=reward,
+                execution=self.unwrapped_env.execution,
+                index=self.unwrapped_env.orderbookIndex,
+                t=self.unwrapped_env.actionState.getT() if hasattr(self.unwrapped_env, "actionState") else None,
+                i=self.unwrapped_env.actionState.getI() if hasattr(self.unwrapped_env, "actionState") else None,
+            )
+            
             midPrice = self.unwrapped_env.execution.getReferencePrice()
             while not done:
                 action_next = self.guess(state_next)
@@ -134,12 +150,26 @@ class AgentDQN:
                 print("i: " + str(i_next))
                 print("Action: " + str(action_next))
                 actions.append(action_next)
+                
+                # Add step to plot callback
+                plot_callback.add_step(
+                    action=action_next,
+                    reward=reward,
+                    execution=self.unwrapped_env.execution,
+                    index=self.unwrapped_env.orderbookIndex,
+                    t=t_next,
+                    i=i_next,
+                )
+                
                 # print("Action transition " + str((t, i)) + " -> " + str(aiState_next) + " with " + str(runtime_next) + "s runtime.")
                 state_next, reward, terminated, truncated, _ = self.env.step(
                     action_next
                 )
                 done = terminated or truncated
                 # print(action)
+
+            # End episode in plot callback
+            plot_callback.end_episode()
 
             price = self.unwrapped_env.execution.getAvgPrice()
             if self.unwrapped_env.execution.getOrder().getSide() == OrderSide.BUY:
