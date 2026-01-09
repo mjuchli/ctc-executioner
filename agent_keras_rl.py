@@ -13,8 +13,7 @@ except ImportError:
 
 from ctc_executioner.order_side import OrderSide
 from ctc_executioner.orderbook import Orderbook
-from ctc_executioner.agent_utils.action_plot_callback import ActionPlotCallback
-from ctc_executioner.agent_utils.live_plot_callback import LivePlotCallback
+from ctc_executioner.agent_utils.enhanced_plot_callback import EnhancedPlotCallbackKerasRL
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, LSTM, Reshape
@@ -163,5 +162,6 @@ dqn.compile(Adam(learning_rate=1e-3), metrics=["mae"])
 
 cbs_train = []
 cbs_test = []
-cbs_test = [ActionPlotCallback(nb_episodes=nrTest)]
+# Use enhanced plot callback instead of basic ActionPlotCallback
+cbs_test = [EnhancedPlotCallbackKerasRL(unwrapped_env, nb_episodes=nrTest, verbose=1)]
 dqn.test(env, nb_episodes=nrTest, visualize=True, verbose=2, callbacks=cbs_test)

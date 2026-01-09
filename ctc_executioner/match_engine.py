@@ -86,17 +86,20 @@ class MatchEngine(object):
                 return [t]
             else:
                 logging.debug("Partial execution: " + str(qty) + " pcs available")
+                executed_qty = min(qty, remaining)
                 t = Trade(
                     orderSide=order.getSide(),
                     orderType=OrderType.LIMIT,
-                    cty=min(qty, remaining),
+                    cty=executed_qty,
                     price=price,
                     timestamp=orderbookState.getTimestamp(),
                 )
                 partialTrades.append(t)
                 # self._removePosition(side=order.getSide(), price=price, qty=qty)
                 sidePosition = sidePosition + 1
-                remaining = remaining - qty
+                remaining = (
+                    remaining - executed_qty
+                )  # Fix: subtract executed quantity, not full qty
 
                 if sidePosition == len(bookSide) - 1:
                     # At this point there is no more liquidity in this state of the order
@@ -178,10 +181,8 @@ class MatchEngine(object):
         partialTrades = []
         remaining = order.getCty()
         sidePosition = 0
-        price = 0.0
         while len(bookSide) > sidePosition and remaining > 0.0:
             p = bookSide[sidePosition]
-            derivative_price = p.getPrice() - price
             price = p.getPrice()
             qty = p.getQty()
             if not partialTrades and qty >= order.getCty():
